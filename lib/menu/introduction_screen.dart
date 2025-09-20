@@ -1,0 +1,109 @@
+import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
+import 'package:introduction_screen/introduction_screen.dart';
+
+import 'package:falun_dafa_practice_supports/main.dart';
+import 'package:falun_dafa_practice_supports/menu/intro_list_widget_body.dart';
+
+/*
+introduction_screen: ^3.1.14
+link: https://pub.dev/packages/introduction_screen/install
+ */
+
+// Class tạo widget chứa intro screen
+class IntroductionScreenWidget extends StatefulWidget {
+
+  final List<PageViewModel> listPageViewModel; // danh sách các trang của intro PageViewModel
+  final SetPageIntro setPageIntro; // enum tạo key xác định trang sẽ trả về sau khi dùng intro
+  IntroductionScreenWidget({required this.listPageViewModel, required this.setPageIntro, super.key});
+
+  @override
+  OnBoardingPageState createState() => OnBoardingPageState();
+}
+
+class OnBoardingPageState extends State<IntroductionScreenWidget> {
+
+  //A. Dữ liệu
+  final introKey = GlobalKey<IntroductionScreenState>(); // key thứ tự trang
+  var styleTextBody2 = TextStyle(fontSize: 16.0, color: Colors.black);
+  var styleTextNumberPage = TextStyle(fontSize: 16.0, color: Colors.grey);
+
+  // Nhận danh sách các trang của intro (PageViewModel) từ trang khởi tạo
+  List<PageViewModel> get listPageViewModel => widget.listPageViewModel; // list widget PageViewModel ở file intro_list_widget_body.dart
+
+  //D. Widget build (Xây dựng widget)
+  @override
+  Widget build(BuildContext context) {
+
+    //* Màn hình Introduction Screen
+    return IntroductionScreen(
+      key: introKey, // key thứ tự page
+      globalBackgroundColor: Colors.red, // Màu nền dưới cùng của toàn bộ intro
+      allowImplicitScrolling: false, // Cho phép cuộn ngầm trang
+      // autoScrollDuration: 3000, // Thời lượng cuộn tự động (không đặt thì không cuộn)
+      infiniteAutoScroll: false, // Cuộn tự động vô hạn
+
+      //I. Danh sách các trang của intro (truyền vào khi khởi tạo)
+      pages: listPageViewModel,
+
+      //II. Các setup khác
+      onDone: () => _onIntroEnd(context), // hàm thực hiện sau khi bấm done (xem xong)
+      onSkip: () => _onIntroEnd(context), // hàm thực hiện sau khi skip
+      showSkipButton: true, // Chọn show nút skip hoặc back (1 trong 2)
+      showBackButton: false,
+      skipOrBackFlex: 0,
+      nextFlex: 0,
+      //rtl: false, // hướng hiển thị right-to-left
+      back: const Icon(Icons.arrow_back),
+      skip: const Text('Skip', style: TextStyle(fontWeight: FontWeight.w600)),
+      next: const Icon(Icons.arrow_forward),
+      done: const Text('Done', style: TextStyle(fontWeight: FontWeight.w600)),
+      curve: Curves.fastLinearToSlowEaseIn,
+      controlsMargin: const EdgeInsets.all(16), // Khoảng cách của menu control
+      controlsPadding: kIsWeb ? const EdgeInsets.all(12.0) : const EdgeInsets.fromLTRB(8.0, 4.0, 8.0, 4.0),
+
+      dotsDecorator: const DotsDecorator( // Nút cuộn trang
+        size: Size(10.0, 10.0),
+        color: Color(0xFFBDBDBD),
+        activeSize: Size(22.0, 10.0), // Kích thước khi được chọn
+        activeShape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.all(Radius.circular(25.0)), // bo viền nút khi được chọn
+        ),
+      ),
+      dotsContainerDecorator: const ShapeDecoration( // Nền của thanh control
+        color: Colors.black87,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.all(Radius.circular(8.0)),
+        ),
+      ),
+    );
+  }
+
+  //E.1 build image trong từng page
+  // Widget _buildImage(String assetName, [double width = 250]) {
+  //   return Image.asset('assets/$assetName', width: width, fit: BoxFit.cover,);
+  // }
+
+  //E.2 Trang image full screen page
+  // Widget _buildFullscreenImage() {
+  //   return Image.asset(
+  //     'assets/images/menu_item_1.jpg',
+  //     fit: BoxFit.cover,
+  //     height: double.infinity,
+  //     width: double.infinity,
+  //     alignment: Alignment.center,
+  //   );
+  // }
+
+  //F. Hàm thực hiện sau khi kết thúc intro -> Trả về trang home
+  void _onIntroEnd(context) {
+    if(widget.setPageIntro == SetPageIntro.molandau){
+      Navigator.of(context).pushReplacement(MaterialPageRoute(builder: (_) => RunAppFalunDafaExercise()),); // Mở trang home
+    } else if (widget.setPageIntro == SetPageIntro.gioithieuapp) {
+      Navigator.pop(context); // Quay lại trang home (Hiệu ứng phù hợp)
+    } else if (widget.setPageIntro == SetPageIntro.tapcoban){
+      Navigator.pop(context); // Quay về trang Hướng dẫn/Tập cơ bản
+    }
+  }
+}
+
