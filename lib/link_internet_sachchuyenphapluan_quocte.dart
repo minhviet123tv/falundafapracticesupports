@@ -1,5 +1,6 @@
 
 //I. Danh sách tất cả các kinh văn, sách của tất cả các ngôn ngữ hiện có (Theo thứ tự trong trang falundafa.org)
+// Cấu truc: Tên ngôn ngữ gốc, tên tiếng Anh, link dẫn về trang chủ falundafa, link dấn đến kinh sách
 enum LanguageAllPageFalundafa {
   english("English", "english", "https://en.falundafa.org/?v=bks04", "https://en.falundafa.org/falun-dafa-books.html?v=bks04"),
   chinese("中文简体", "chinese", "https://gb.falundafa.org/?v=bks04", "https://gb.falundafa.org/falun-dafa-books.html"),
@@ -50,7 +51,7 @@ enum LanguageAllPageFalundafa {
   korean("Korean / 한국어", 'korean', "https://ko.falundafa.org/?v=bks04", "https://ko.falundafa.org/falun-dafa-books.html"),
   thai("Thai / ไทย", 'thai', "https://th.falundafa.org/?v=bks04", "https://th.falundafa.org/falun-dafa-books.html?v=bks04"),
   tibetan("Tibetan / བོད་ཡིག", 'tibetan', "https://www.falundafa.org/eng/language/tibetan.html?v=bks04", "https://tr.falundafa.org/books.html?v=bks04"),
-  vietnamese("Tiếng Việt", 'vietnamese', "https://vi.falundafa.org/?v=bks04", "https://daiphap.me/vi.falundafa.org/falun-dafa-books.html"), //https://vi.falundafa.org/falun-dafa-books.html?v=bks04
+  vietnamese("Tiếng Việt", 'vietnamese', "https://daiphap.me/vi.falundafa.org/index.html", "https://daiphap.me/vi.falundafa.org/falun-dafa-books.html"), // https://vi.falundafa.org/falun-dafa-books.html?v=bks04 | https://daiphap.me/vi.falundafa.org/falun-dafa-books.html
   turkce("Türkçe", 'turkce', "https://tr.falundafa.org/?v=bks04", "https://tr.falundafa.org/books.html?v=bks04"),
   ukrainian("Ukrainian / Українська", 'ukrainian', "https://uk.falundafa.org/?v=bks04", "https://uk.falundafa.org/falun-dafa-books.html?v=bks05")
   ;
