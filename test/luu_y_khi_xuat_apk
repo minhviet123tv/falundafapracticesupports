@@ -1,0 +1,6 @@
+Phải điền mật khẩu cho upload-keystore.jkd tại android/key.properties
+
+storePassword=minhviet.4.0
+keyPassword=minhviet.4.0
+keyAlias=upload
+storeFile=../../keystore/upload-keystore.jks
