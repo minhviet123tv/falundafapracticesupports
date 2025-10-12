@@ -19,7 +19,7 @@ publish_to: 'none' # Remove this line if you wish to publish to pub.dev
 version: 2.2.9+29 # mã phiên bản+thứ tự phát hành
 
 environment:
-  sdk: '>=3.2.3 <4.0.0'
+  sdk: '>=3.1.0 <4.0.0'
 
 # Dependencies specify other packages that your package needs in order to work.
 # To automatically upgrade your package dependencies to the latest versions
@@ -39,13 +39,13 @@ dependencies:
   url_launcher: ^6.2.6 # dùng launch("link") để mở link
   flutter_linkify: ^6.0.0 # open linkify
   webview_flutter: ^4.8.0 # Dùng webview để mở link video embed
-  flutter_widget_from_html: ^0.15.0 # widget, code html
+  flutter_widget_from_html: ^0.17.1 # widget, code html
   flutter_pdfview: ^1.3.2 # flutter_pdfview
   http: ^0.13.4
 
-  flutter_file_downloader: ^1.1.0+1 #download any file
+  flutter_file_downloader: ^2.1.0 #download any file
 
-  connectivity_plus: ^2.0.2
+  connectivity_plus: ^6.0.5
   in_app_update: ^4.2.3 #update khi mở app (OK)
 
 #  get: ^4.6.6 #Quản lý state (Cập nhật giao diện, trạng thái)
