@@ -360,7 +360,7 @@ enum FalundafaEnum {
   korean("https://ko.falundafa.org/?v=bks04", "Korean / 한국어", 'korean'),
   thai("https://th.falundafa.org/?v=bks04", "Thai / ไทย", 'thai'),
   tibetan("https://www.falundafa.org/eng/language/tibetan.html?v=bks04", "Tibetan / བོད་ཡིག", 'tibetan'),
-  vietnamese("https://daiphap.me/vi.falundafa.org/", "Tiếng Việt", 'vietnamese'), // https://vi.falundafa.org/?v=bks04
+  vietnamese("https://daiphap.org/access?url=https%3A%2F%2Fvi.falundafa.org", "Tiếng Việt", 'vietnamese'), // https://vi.falundafa.org/?v=bks04
   turkce("https://tr.falundafa.org/?v=bks04", "Türkçe", 'turkce'),
   ukrainian("https://uk.falundafa.org/?v=bks04", "Ukrainian / Українська", 'ukrainian')
   ;
