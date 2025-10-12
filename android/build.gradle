@@ -15,6 +15,11 @@ subprojects {
                 }
             }
         }
+        if (project.hasProperty('kotlin')) {
+            project.kotlin {
+                jvmToolchain(17)
+            }
+        }
     }
 }
 
