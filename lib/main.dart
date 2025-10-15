@@ -249,31 +249,31 @@ class _FalunDafaExerciseHomePageState extends State<FalunDafaExerciseHomePage>
       //II. Bottom NavigationBar - Tối ưu hóa bộ nhớ
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: indexMenu, //Chỉ định index được chọn trong menu (Tương ứng với listWidgetBody)
-        selectedItemColor: Colors.red,
+        selectedItemColor: Colors.blue,
         type: BottomNavigationBarType.fixed, // Tối ưu hóa bộ nhớ
         items: const [
 
           //4. Menu lựa chọn
           BottomNavigationBarItem(
-              icon: Icon(Icons.home, color: Colors.black,),
+              icon: Icon(Icons.home, color: Colors.black54,),
               label: "Home"
           ),
 
           //3. Menu đọc sách
           BottomNavigationBarItem(
-              icon: Icon(Icons.menu_book, color: Colors.black),
+              icon: Icon(Icons.menu_book, color: Colors.black54),
               label: "Books"
           ),
 
           //2. Menu audio 09 bài giảng
           BottomNavigationBarItem(
-            icon: Icon(Icons.audiotrack, color: Colors.black), // Sử dụng icon thay vì Image.asset để tiết kiệm bộ nhớ
+            icon: Icon(Icons.audiotrack, color: Colors.black54), // Sử dụng icon thay vì Image.asset để tiết kiệm bộ nhớ
             label: "9 Lesson",
           ),
 
           //1. Menu nhạc luyện công
           BottomNavigationBarItem(
-            icon: Icon(Icons.self_improvement, color: Colors.black), // Sử dụng icon thay vì Image.asset để tiết kiệm bộ nhớ
+            icon: Icon(Icons.self_improvement, color: Colors.black54), // Sử dụng icon thay vì Image.asset để tiết kiệm bộ nhớ
             label: "Practice",
           ),
 
