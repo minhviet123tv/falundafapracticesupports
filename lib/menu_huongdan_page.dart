@@ -75,6 +75,7 @@ class MenuHuongDanPage extends StatelessWidget {
           onTap: (){
             Navigator.push(context, PageRouteBuilder(
                 transitionDuration: Duration.zero,
+                // Nhập phần trang đích của liên kết để tạo open url ra trình duyệt bên ngoài
                 pageBuilder: (_, __, ___) => OpenUrlPage(trangDichCuaLienKet: TrangDichCuaLienKet.falundafa,), // OpenUrlPage() | FalundafaWebview()
               ),
             );
@@ -86,6 +87,7 @@ class MenuHuongDanPage extends StatelessWidget {
           onTap: (){
             Navigator.push(context, PageRouteBuilder(
                 transitionDuration: Duration.zero,
+                // Dùng trình duyệt ngay trong ứng dụng nên không điền trang đích liên kết
                 pageBuilder: (_, __, ___) => MinghuiWebview(), // OpenUrlPage(trangDichCuaLienKet: TrangDichCuaLienKet.visaoconhanloai,) | MinghuiWebview()
               ),
             );

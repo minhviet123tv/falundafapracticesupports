@@ -7,6 +7,8 @@ import 'package:webview_flutter_wkwebview/webview_flutter_wkwebview.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 /*
+Chưa sử dụng
+
 webview_flutter: ^4.8.0
 https://pub.dev/packages/webview_flutter/example
  */
@@ -130,7 +132,7 @@ class _FalundafaWebviewState extends State<FalundafaWebview> {
   //B.1 Lấy code ngôn ngữ lưu shared (modelOpenUrlFavorite)
   _getLanguageLink() async {
     final shared = await SharedPreferences.getInstance(); // shared
-    String languageCode = await shared.getString("languageCodeFalundafa") ?? "vietnamese"; // Lấy code
+    String languageCode = await shared.getString("languageCodeFalundafa") ?? "vietnamese"; // Lấy code, đặt mặc định
     falundafaEnum = FalundafaEnum.values.byName(languageCode); // Lấy enum từ code
     _controller.loadRequest(Uri.parse('${falundafaEnum.url}')); // Tải lại trang theo ngôn ngữ
     setState(() {}); // Cập nhật ngôn ngữ

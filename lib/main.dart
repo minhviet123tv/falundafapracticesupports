@@ -145,7 +145,7 @@ class _RunAppFalunDafaExerciseState extends State<RunAppFalunDafaExercise>
       theme: ThemeData(
         useMaterial3: true,
         // Giảm thiểu việc tạo ra các object không cần thiết
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.red),
+        colorScheme: ColorScheme.fromSeed(seedColor: Colors.blue),
       ),
     );
   }
@@ -255,26 +255,30 @@ class _FalunDafaExerciseHomePageState extends State<FalunDafaExerciseHomePage>
 
           //4. Menu lựa chọn
           BottomNavigationBarItem(
-              icon: Icon(Icons.home, color: Colors.black54,),
-              label: "Home"
+              icon: Icon(Icons.home, color: Color.fromARGB(255, 71, 71, 71),),
+              label: "Home",
+              activeIcon: Icon(Icons.home, color: Colors.blue,),
           ),
 
           //3. Menu đọc sách
           BottomNavigationBarItem(
-              icon: Icon(Icons.menu_book, color: Colors.black54),
-              label: "Books"
+              icon: Icon(Icons.menu_book, color: Color.fromARGB(255, 71, 71, 71)),
+              label: "Books",
+            activeIcon: Icon(Icons.menu_book, color: Colors.blue,),
           ),
 
           //2. Menu audio 09 bài giảng
           BottomNavigationBarItem(
-            icon: Icon(Icons.audiotrack, color: Colors.black54), // Sử dụng icon thay vì Image.asset để tiết kiệm bộ nhớ
+            icon: Icon(Icons.audiotrack, color: Color.fromARGB(255, 71, 71, 71)), // Sử dụng icon thay vì Image.asset để tiết kiệm bộ nhớ
             label: "9 Lesson",
+            activeIcon: Icon(Icons.audiotrack, color: Colors.blue,),
           ),
 
           //1. Menu nhạc luyện công
           BottomNavigationBarItem(
-            icon: Icon(Icons.self_improvement, color: Colors.black54), // Sử dụng icon thay vì Image.asset để tiết kiệm bộ nhớ
+            icon: Icon(Icons.self_improvement, color: Color.fromARGB(255, 71, 71, 71)), // Sử dụng icon thay vì Image.asset để tiết kiệm bộ nhớ
             label: "Practice",
+            activeIcon: Icon(Icons.self_improvement, color: Colors.blue,),
           ),
 
         ],

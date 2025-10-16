@@ -243,7 +243,7 @@ List<ModelOpenUrl> listOpenUrlFalundafa = [
   ModelOpenUrl("https://ko.falundafa.org/?v=bks04", "Korean / 한국어", 'korean'),
   ModelOpenUrl("https://th.falundafa.org/?v=bks04", "Thai / ไทย", 'thai'),
   ModelOpenUrl("https://www.falundafa.org/eng/language/tibetan.html?v=bks04", "Tibetan / བོད་ཡིག", 'tibetan'),
-  ModelOpenUrl("https://vi.falundafa.org/?v=bks04", "Tiếng Việt", 'vietnamese'),
+  ModelOpenUrl("https://daiphap.org/access?url=https%3A%2F%2Fvi.falundafa.org", "Tiếng Việt", 'vietnamese'), // https://vi.falundafa.org/?v=bks04
   ModelOpenUrl("https://tr.falundafa.org/?v=bks04", "Türkçe", 'turkce'),
   ModelOpenUrl("https://uk.falundafa.org/?v=bks04", "Ukrainian / Українська", 'ukrainian'),
 ];

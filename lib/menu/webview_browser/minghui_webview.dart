@@ -231,7 +231,7 @@ class _MinghuiWebviewState extends State<MinghuiWebview> {
                   _controller.goBack();
                 }
               },
-              icon: Icon(Icons.arrow_back_ios, size: 20,),
+              icon: Icon(Icons.arrow_circle_left_outlined, size: 20,),
             ),
 
             //II. Nút back lại phần trước của web
@@ -241,7 +241,7 @@ class _MinghuiWebviewState extends State<MinghuiWebview> {
                   _controller.goForward();
                 }
               },
-              icon: Icon(Icons.arrow_forward_ios, size: 20,),
+              icon: Icon(Icons.arrow_circle_right_outlined, size: 20,),
             ),
 
             //III. Icon open web (out app)
