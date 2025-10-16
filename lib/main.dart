@@ -257,28 +257,28 @@ class _FalunDafaExerciseHomePageState extends State<FalunDafaExerciseHomePage>
           BottomNavigationBarItem(
               icon: Icon(Icons.home, color: Color.fromARGB(255, 71, 71, 71),),
               label: "Home",
-              activeIcon: Icon(Icons.home, color: Colors.blue,),
+              activeIcon: Icon(Icons.home, color: Color(0xFF2196f3)), // rgba(49, 108, 208)
           ),
 
           //3. Menu đọc sách
           BottomNavigationBarItem(
               icon: Icon(Icons.menu_book, color: Color.fromARGB(255, 71, 71, 71)),
               label: "Books",
-            activeIcon: Icon(Icons.menu_book, color: Colors.blue,),
+            activeIcon: Icon(Icons.menu_book, color: Color(0xFF2196f3),),
           ),
 
           //2. Menu audio 09 bài giảng
           BottomNavigationBarItem(
             icon: Icon(Icons.audiotrack, color: Color.fromARGB(255, 71, 71, 71)), // Sử dụng icon thay vì Image.asset để tiết kiệm bộ nhớ
             label: "9 Lesson",
-            activeIcon: Icon(Icons.audiotrack, color: Colors.blue,),
+            activeIcon: Icon(Icons.audiotrack, color: Colors.orange,),
           ),
 
           //1. Menu nhạc luyện công
           BottomNavigationBarItem(
             icon: Icon(Icons.self_improvement, color: Color.fromARGB(255, 71, 71, 71)), // Sử dụng icon thay vì Image.asset để tiết kiệm bộ nhớ
             label: "Practice",
-            activeIcon: Icon(Icons.self_improvement, color: Colors.blue,),
+            activeIcon: Icon(Icons.self_improvement, color: Colors.orange,),
           ),
 
         ],
