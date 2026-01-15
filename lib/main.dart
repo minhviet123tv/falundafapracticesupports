@@ -80,7 +80,7 @@ class _RunAppFalunDafaExerciseState extends State<RunAppFalunDafaExercise>
     // Lưu vào shared với tối ưu hóa bộ nhớ
     await _sharedPreferences!.setInt(countKeyName, count);
     
-    // Chỉ cập nhật UI nếu widget vẫn mounted để tránh memory leak
+    // Chỉ cập nhật UI nếu widget vẫn mounted (gắn kết) để tránh memory leak
     if (mounted) {
       setState(() { }); // Phải cập nhật lại (UI) theo biến toàn cục (vì khi mới mở chưa có giá trị)
     }
