@@ -48,7 +48,7 @@ class HuongDanTapCoBanPage extends StatelessWidget {
       mainAxisSpacing: 10,
       children: [
         InkWell(
-          onTap: (){_openIntro(context, listPageViewModelHuongDanTapCoBan);},
+          onTap: (){_openIntro(context, listPageViewModelHuongDanTapCoBan);}, // list này đặt tại file intro_list_widget_body.dart
           child: itemMenu("assets/images/menu_item_2.jpg", "Hướng dẫn tập cơ bản"),
         ),
         InkWell(
@@ -158,7 +158,7 @@ class HuongDanTapCoBanPage extends StatelessWidget {
     );
   }
 
-  //E.1 Hàm mở trang intro: Truyền list các trang nội dung
+  //E.1 Hàm mở trang intro: Truyền list các trang sẽ chứa trong nội dung
   void _openIntro(BuildContext context, List<PageViewModel> listPageViewModel) {
     Navigator.of(context).push(MaterialPageRoute(builder: (_) => IntroductionScreenWidget(listPageViewModel: listPageViewModel, setPageIntro: SetPageIntro.tapcoban,)),);
   }

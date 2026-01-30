@@ -50,10 +50,10 @@ List<PageViewModel> listPageViewModelGioiThieuApp = [
       child: Column(
         children: [
           Text(
-            "Hiện nay có rất nhiều người đã biết đến sự tốt đẹp của Pháp Luân Công (Pháp Luân Đại Pháp) và bắt đầu tu luyện. Để sử dụng tài liệu học tập, các học viên thường in sách hoặc tải dữ liệu về như copy vào đài, điện thoại, máy tính hoặc truy cập trực tuyến trên internet để học.\n"
-            "\nNgoài sách chính là Chuyển Pháp Luân thì còn có các kinh văn và sách khác của Pháp Luân Đại Pháp. Việc in tất cả các kinh sách cho từng người sử dụng hoặc tự tải hết học liệu về là một việc không dễ dàng. Vì vậy ứng dụng này đã được tạo ra bởi học viên Pháp Luân Công nhằm hỗ trợ các học viên khác trong việc truy cập dữ liệu học tập trực tuyến trên trang chủ.\n"
-            "\nỨng dụng đã cài sẵn truy cập đến: 9 bài giảng, sách và kinh văn, nhạc luyện công, nút mở trình duyệt đến trang chủ falundafa.org, trang thông tin minghui.org...\n"
-            "\nNgoài ra ứng dụng còn có phần hướng dẫn tập cơ bản nhằm giúp học viên mới tiếp cận môn học, có nút hỗ trợ tải audio về máy để sử dụng khi không dùng internet (bằng cách mở thư mục của máy sau khi đã tải về hoặc sử dụng trình mở nhạc của máy). Để tải về file PDF học viên vui lòng bấm nút mở ra trình duyệt của máy để tải.\n"
+            "Hiện nay có rất nhiều người đã biết đến sự tốt đẹp của Pháp Luân Công (Pháp Luân Đại Pháp) và bắt đầu tu luyện.\n"
+            "\nĐể nghe 9 bài giảng hoặc đọc sách, trong đó sách chính là \"Chuyển Pháp Luân\" (có nội dung như 9 bài giảng), học viên có thể truy cập tại chủ www.falundafa.org hoặc in thành sách, tải file âm thanh về để sử dụng.\n"
+            "\nỨng dụng này được tạo ra bởi học viên Pháp Luân Công nhằm hỗ trợ các học viên khác truy cập dữ liệu học tập trực tuyến trên trang chủ www.falundafa.org\n"
+            "\nNgoài ra ứng dụng còn có phần hướng dẫn tập cơ bản nhằm giúp học viên mới tiếp cận môn học (có nút hỗ trợ tải audio về máy để sử dụng khi không dùng internet, bằng cách mở thư mục của máy sau khi đã tải về hoặc sử dụng trình mở nhạc của máy).\n"
             "\nĐể tìm hiểu đầy đủ về Pháp Luân Công (Pháp Luân Đại Pháp) vui lòng truy cập:\n",
             style: styleTextBody2, textAlign: TextAlign.justify,
           ),
@@ -414,13 +414,13 @@ List<PageViewModel> listPageViewModelHuongDanTapCoBan = [
       child: Column(
         children: [
           Text(
-            "\"Tu\" là từ Hán Việt, \"tu\" có nghĩa là sửa hay sửa đổi, còn \"luyện\" là rèn luyện để đảm bảo và giữ gìn những gì sau khi tu được. Có thể nói rằng \"tu luyện\" là việc sửa lại bản thân và giữ gìn những gì đã tu được.\n"
-            "\nPháp Luân Công là môn tu luyện giúp người học có thể tu luyện ngay trong cuộc sống như tại gia đình, trường học, nơi làm việc ... Trong đó chú trọng việc sửa đổi các tâm tính không tốt như tâm tật đố, tâm lý hiển thị, tâm tranh đấu ...\n"
+            "\"Tu\" là từ Hán Việt, \"tu\" có nghĩa là sửa hay sửa đổi, còn \"luyện\" là rèn luyện, mục đích để đảm bảo, giữ gìn những gì sau khi tu được. Có thể nói rằng \"tu luyện\" là việc sửa lại bản thân và giữ gìn những gì đã sửa được.\n"
+            "\nPháp Luân Công là môn tu luyện của Phật Pháp giúp người học có thể tu luyện ngay trong cuộc sống như tại gia đình, nơi làm việc, trường học ... Trong đó chú trọng việc sửa đổi các tâm tính không tốt như tâm tật đố, tâm lý hiển thị, tâm tranh đấu ...\n"
             "\nViệc tập luyện 5 bài công pháp giúp học viên trở nên khoẻ mạnh hơn nhờ những thay đổi tích cực của cơ thể."
-            "\nĐể tu luyện tâm tính, học viên cần học pháp bằng việc lắng nghe 9 bài giảng của sư phụ hoặc đọc sách, trong đó sách chính là Chuyển Pháp Luân (có cùng nội dung với 9 bài giảng audio)."
-            "\nTại trang chủ falundafa.org còn có các sách và kinh văn như: Sách Đại Viên Mãn Pháp giúp hiểu rõ cơ lý của động tác, sách hỗ trợ khác như Tinh Tấn Yếu Chỉ và giảng pháp tại các nơi của sư phụ (có giải đáp nhiều câu hỏi của học viên) ...\n"
+            "\nĐể tu luyện tâm tính, học viên cần học pháp bằng việc lắng nghe 9 bài giảng của sư phụ hoặc đọc sách, trong đó sách chính là Chuyển Pháp Luân (có chung nội dung với 9 bài giảng)."
+            "\nTại trang chủ www.falundafa.org còn có các sách và kinh văn như: Sách Đại Viên Mãn Pháp giúp hiểu rõ cơ lý của động tác, sách hỗ trợ khác như Tinh Tấn Yếu Chỉ và giảng pháp tại các nơi của sư phụ (có giải đáp nhiều câu hỏi của học viên) ...\n"
             "\nHọc viên cũng có thể truy cập trang minghui.org để theo dõi các thông tin mới và bài viết quan trọng của môn học như: Ba việc nên làm của đệ tử Đại Pháp, bài viết \"Vì sao có nhân loại\"...\n"
-            "\nKhi đọc sách, kinh văn, học viên nên đặt sách, kinh văn ở những nơi như trên bàn, giá đỡ, không nên đặt ở những nơi như dưới đất, sàn nhà. Học viên có thể vừa ngồi song bàn vừa đọc.\n"
+            "\nKhi đọc sách, kinh văn, học viên nên đặt sách, kinh văn ở những nơi như trên bàn, giá đỡ trên cao, tĩnh. Không nên đặt ở những nơi thấp như dưới đất, sàn nhà, hoặc nơi rung lắc ... Học viên có thể vừa ngồi song bàn vừa đọc.\n"
             ,
             style: styleTextBody2, textAlign: TextAlign.justify,
           ),

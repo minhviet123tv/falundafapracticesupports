@@ -267,9 +267,9 @@ class _MinghuiWebviewState extends State<MinghuiWebview> {
                 if(snapshot.hasData){
                   return IconButton(
                     onPressed: (){
-                      _launchBrowserInApp(Uri.parse(snapshot.data.toString()));
+                      _launchBrowserOutApp(Uri.parse(snapshot.data.toString()));
                     },
-                    icon: Icon(Icons.zoom_out_map, size: 20,),
+                    icon: Icon(Icons.open_in_new, size: 20,),
                   );
                 } else {
                   return SizedBox();
