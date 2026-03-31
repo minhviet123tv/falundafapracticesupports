@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:introduction_screen/introduction_screen.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import 'menu/open_url_language_page.dart';
 import 'menu/privacy_policy_page_html.dart';
@@ -158,6 +159,13 @@ class MenuHuongDanPage extends StatelessWidget {
         ],
       ),
     );
+  }
+
+  //D.3 Hàm mở link url trình duyệt bên ngoài app khi click
+  Future<void> _launchBrowserOutApp(Uri url) async {
+    if (!await launchUrl(url, mode: LaunchMode.externalApplication,)) {
+      throw Exception('Could not launch $url');
+    }
   }
 
   //E.1 Hàm mở lại trang intro

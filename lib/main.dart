@@ -80,7 +80,7 @@ class _RunAppFalunDafaExerciseState extends State<RunAppFalunDafaExercise>
     // Lưu vào shared với tối ưu hóa bộ nhớ
     await _sharedPreferences!.setInt(countKeyName, count);
     
-    // Chỉ cập nhật UI nếu widget vẫn mounted để tránh memory leak
+    // Chỉ cập nhật UI nếu widget vẫn mounted (gắn kết) để tránh memory leak
     if (mounted) {
       setState(() { }); // Phải cập nhật lại (UI) theo biến toàn cục (vì khi mới mở chưa có giá trị)
     }
@@ -148,10 +148,10 @@ class _RunAppFalunDafaExerciseState extends State<RunAppFalunDafaExercise>
     );
   }
 
-  // Widget trang home page (hoặc intro nếu là lần đầu) | list các trang PageViewModel ở file intro_list_widget_body.dart
+  // Widget trang home page (hoặc intro nếu là lần <2) | list các trang PageViewModel ở file intro_list_widget_body.dart
   Widget _getHomePage (){
     // return FalunDafaExerciseHomePage();
-    if((countLoginNumber ?? 0)  < 2){
+    if((countLoginNumber ?? 0) < 2){
       return IntroductionScreenWidget(listPageViewModel: listPageViewModelGioiThieuApp, setPageIntro: SetPageIntro.molandau,);
     } else {
       return FalunDafaExerciseHomePage();
@@ -207,7 +207,6 @@ class _FalunDafaExerciseHomePageState extends State<FalunDafaExerciseHomePage>
   List<Widget> get listWidgetBody {
     _listWidgetBody ??= [
       MenuHuongDanPage(),
-      AllBooksWebview(),
       PlayerWidget9Baigiang(), // Không thể cùng lúc dùng 1 trang widget (Có khung Scaffold) 2 lần -> nên tạo 2 trang (Đồng thời tạo sẵn list link)
       PlayerWidget(),
     ];
@@ -240,29 +239,22 @@ class _FalunDafaExerciseHomePageState extends State<FalunDafaExerciseHomePage>
     
     return Scaffold(
 
-      //I. Body: Load indexSelected để lấy widget trong list
+      //I. Body: Load để lấy widget làm body trong list
       body: Center(child: listWidgetBody[indexMenu]),
       backgroundColor: Colors.white, // Màu nền chung cho trang
 
-      //II. Bottom NavigationBar - Tối ưu hóa bộ nhớ
+      //II. Bottom NavigationBar - Danh sách các nút menu bottom
       bottomNavigationBar: BottomNavigationBar(
-        currentIndex: indexMenu, //Chỉ định index được chọn trong menu (Tương ứng với listWidgetBody)
+        currentIndex: indexMenu, // Chỉ định index đang được chọn đồng thời trong menu và listWidgetBody
         selectedItemColor: Colors.blue,
         type: BottomNavigationBarType.fixed, // Tối ưu hóa bộ nhớ
         items: const [
 
-          //4. Menu lựa chọn
+          //1. Menu lựa chọn
           BottomNavigationBarItem(
               icon: Icon(Icons.home, color: Color.fromARGB(255, 71, 71, 71),),
               label: "Home",
               activeIcon: Icon(Icons.home, color: Color(0xFF2196f3)), // rgba(49, 108, 208)
-          ),
-
-          //3. Menu đọc sách
-          BottomNavigationBarItem(
-              icon: Icon(Icons.menu_book, color: Color.fromARGB(255, 71, 71, 71)),
-              label: "Books",
-            activeIcon: Icon(Icons.menu_book, color: Color(0xFF2196f3),),
           ),
 
           //2. Menu audio 09 bài giảng
@@ -272,7 +264,7 @@ class _FalunDafaExerciseHomePageState extends State<FalunDafaExerciseHomePage>
             activeIcon: Icon(Icons.audiotrack, color: Colors.orange,),
           ),
 
-          //1. Menu nhạc luyện công
+          //3. Menu nhạc luyện công
           BottomNavigationBarItem(
             icon: Icon(Icons.self_improvement, color: Color.fromARGB(255, 71, 71, 71)), // Sử dụng icon thay vì Image.asset để tiết kiệm bộ nhớ
             label: "Practice",
