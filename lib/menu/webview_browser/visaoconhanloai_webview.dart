@@ -7,7 +7,7 @@ import 'package:webview_flutter_android/webview_flutter_android.dart'; // Import
 import 'package:webview_flutter_wkwebview/webview_flutter_wkwebview.dart';
 import 'package:url_launcher/url_launcher.dart';
 
-import '../../link_and_api/link_all_page_and_api_enum.dart';
+import '../../controller_app/link_all_page_and_api_enum.dart';
 
 /*
 webview_flutter: ^4.8.0
@@ -220,62 +220,50 @@ class _VisaoconhanloaiWebviewState extends State<VisaoconhanloaiWebview> {
             },
             icon: Icon(Icons.arrow_back, size: 20),
           ),
-          title: Container(
-            margin: EdgeInsets.only(right: 2),
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.all(Radius.circular(border10)), // Bo viền container
-              color: Colors.transparent,
-            ),
-
-            // DropdownMenu
-            child: DropdownMenu<VisaoconhanloaiEnum>(
-              width: 130,
-              initialSelection: visaoconhanloaiEnum, // Mới mở thì đặt theo ngôn ngữ đã khởi tạo trong init hoặc đã lấy từ shared (Nên dùng enum thay vì model)
-              textStyle: TextStyle(fontWeight: FontWeight.w500, fontSize: 11), // Kiểu dáng, màu, cỡ chữ hiển thị của giá trị đã được chọn
-              inputDecorationTheme: InputDecorationTheme(
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(border10), // Bo góc viền
-                ),
-                enabledBorder: OutlineInputBorder( // Viền ngoài của cả DropdownMenu
-                  borderRadius: BorderRadius.circular(border10),
-                  borderSide: BorderSide(color: Colors.transparent), // Màu viền ngoài
-                ),
+          title: PopupMenuButton<VisaoconhanloaiEnum>(
+            tooltip: 'Select language',
+            position: PopupMenuPosition.under,
+            color: Colors.white,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(border10)),
+            onSelected: (VisaoconhanloaiEnum value) {
+              setState(() {
+                visaoconhanloaiEnum = value;
+                _controller.loadRequest(Uri.parse(visaoconhanloaiEnum.url));
+                _saveLanguageLink(visaoconhanloaiEnum.languageCode);
+              });
+            },
+            itemBuilder: (context) {
+              return VisaoconhanloaiEnum.values
+                  .map(
+                    (value) => PopupMenuItem<VisaoconhanloaiEnum>(
+                      value: value,
+                      height: 44,
+                      child: Text(value.languageName),
+                    ),
+                  )
+                  .toList();
+            },
+            child: Container(
+              margin: const EdgeInsets.only(right: 2),
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.all(Radius.circular(border10)),
+                border: Border.all(color: Colors.white70),
               ),
-
-              menuStyle: MenuStyle(
-                backgroundColor: WidgetStatePropertyAll(Colors.white), // Màu nền của item được chọn
-                surfaceTintColor: WidgetStatePropertyAll(Colors.white), // màu ánh nền của item được chọn
-                shape: WidgetStatePropertyAll(
-                  RoundedRectangleBorder(borderRadius: BorderRadius.circular(border10)), // Góc bo viền của viền bên ngoài
-                ),
-              ),
-
-              // Thực hiện khi bấm chọn (Sử dụng giá trị của đối tượng)
-              onSelected: (VisaoconhanloaiEnum? value) {
-                setState(() {
-                  visaoconhanloaiEnum = value!; // Cập nhật ngôn ngữ
-                  _controller.loadRequest(Uri.parse('${visaoconhanloaiEnum.url}')); // Đặt và load lại url
-                  _saveLanguageLink(visaoconhanloaiEnum.languageCode); // Lưu code ngôn ngữ vào trong shared (Không lưu cả enum mà chỉ mình ngôn ngữ rồi tìm lại enum theo listEnum.values.byName('');
-                  // hideLoading = false; // Đặt lại tình trạng load url
-                  // _connectLinkSource(visaoconhanloaiEnum.url); // Cập nhật tình trạng kết nối
-                });
-              },
-
-              // Gán giá trị trong list cho trước vào list lựa chọn của button
-              dropdownMenuEntries: VisaoconhanloaiEnum.values.map((VisaoconhanloaiEnum value){
-                return DropdownMenuEntry<VisaoconhanloaiEnum>(
-                  value: value, // Giá trị cả model
-                  label: value.languageName, // Nhãn hiển thị
-                  style: MenuItemButton.styleFrom(
-                    foregroundColor: Colors.black, // Màu text
-                    backgroundColor: Colors.white, // Màu nền,
-                    textStyle: TextStyle(fontSize: 15, color: Colors.white),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    visaoconhanloaiEnum.languageName,
+                    style: const TextStyle(fontWeight: FontWeight.w500, fontSize: 11),
                   ),
-                );
-              }).toList(),
+                  const SizedBox(width: 4),
+                  const Icon(Icons.arrow_drop_down, size: 18),
+                ],
+              ),
             ),
           ),
-          toolbarHeight: 35, // Chiều cao của AppBar
+          toolbarHeight: 40, // Gọn tối đa nhưng vẫn đủ khoảng đệm thao tác
 
           actions: [
             //IV. Icon open web (out app)

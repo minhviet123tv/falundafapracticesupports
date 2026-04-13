@@ -4,7 +4,7 @@ import 'dart:async';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:url_launcher/url_launcher.dart';
 
-import 'link_and_api/link_internet_list_baigiang_quocte.dart';
+import 'controller_app/link_internet_list_baigiang_quocte.dart';
 import 'menu/play_audio_webview.dart';
 import 'download_from_url.dart';
 
@@ -238,60 +238,47 @@ class _PlayerWidgetState extends State<PlayerWidget9Baigiang> {
         title: Center(child: Text(listInternetSource[indexCurrent].name, style: styleTextTitle,)),
         toolbarHeight: 60, // Chiều cao của AppBar
         actions: [
-          Container(
-            margin: EdgeInsets.only(right: 2),
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.all(Radius.circular(border10)), // Bo viền container
-              color: Colors.transparent,
-            ),
-
-            // DropdownMenu chọn ngôn ngữ
-            child: DropdownMenu<LanguageNameAndCode>(
-              initialSelection: languageNameAndCode, // Mới mở thì đặt theo ngôn ngữ đã khởi tạo trong init hoặc đã lấy từ shared
-              textStyle: TextStyle(color: Colors.cyanAccent, fontWeight: FontWeight.w500), // Kiểu dáng, màu, cỡ chữ hiển thị của giá trị đã được chọn
-              // menuHeight: 300, // Chiều dài tối đa của bảng menu được mở ra
-              // width: 120, // Chiều rộng của nút chọn menu
-              // helperText: "Select language", // Gợi ý dưới nút chọn
-              inputDecorationTheme: InputDecorationTheme(
-                // constraints: BoxConstraints(), // Giới hạn kích thước nếu cần thiết
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(border10),
-                ),
-                enabledBorder: OutlineInputBorder( // Viền ngoài của cả DropdownMenu
-                  borderRadius: BorderRadius.circular(border10),
-                  borderSide: BorderSide(color: Colors.white70), // Màu viền ngoài
-                ),
+          PopupMenuButton<LanguageNameAndCode>(
+            tooltip: 'Select language',
+            position: PopupMenuPosition.under,
+            color: Colors.white,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(border10)),
+            onSelected: (LanguageNameAndCode value) {
+              setState(() {
+                languageNameAndCode = value;
+                _getListInternetSource();
+                _setLanguageEnum(languageNameAndCode);
+              });
+            },
+            itemBuilder: (context) {
+              return LanguageNameAndCode.values
+                  .map(
+                    (value) => PopupMenuItem<LanguageNameAndCode>(
+                      value: value,
+                      height: 44,
+                      child: Text(value.tengoc),
+                    ),
+                  )
+                  .toList();
+            },
+            child: Container(
+              margin: const EdgeInsets.only(right: 2),
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.all(Radius.circular(border10)),
+                border: Border.all(color: Colors.white70),
               ),
-
-              menuStyle: MenuStyle(
-                backgroundColor: WidgetStatePropertyAll(Colors.white), // Màu nền của item được chọn
-                surfaceTintColor: WidgetStatePropertyAll(Colors.white), // màu ánh nền
-                shape: WidgetStatePropertyAll(
-                    RoundedRectangleBorder(borderRadius: BorderRadius.circular(border10)), // Góc bo viền của viền bên ngoài
-                ),
-              ),
-
-              // Thực hiện khi bấm chọn (Sử dụng giá trị của đối tượng)
-              onSelected: (LanguageNameAndCode? value) {
-                setState(() {
-                  languageNameAndCode = value!; // Cập nhật enum ngôn ngữ
-                  _getListInternetSource(); // Cập nhật list link theo ngôn ngữ toàn cục | Không _getLanguageEnum() nữa vì biến toàn cục đã được cập nhật
-                  _setLanguageEnum(languageNameAndCode); // Lưu luôn vào trong shared
-                });
-              },
-
-              // Gán nhãn giá trị trong list ngôn ngữ vào list lựa chọn của button
-              dropdownMenuEntries: LanguageNameAndCode.values.map<DropdownMenuEntry<LanguageNameAndCode>>((LanguageNameAndCode value) {
-                return DropdownMenuEntry<LanguageNameAndCode>(
-                  value: value,
-                  label: value.tengoc,
-                  style: MenuItemButton.styleFrom(
-                    foregroundColor: Colors.black, //text color
-                    backgroundColor: Colors.white, //unselected background color,
-                    textStyle: TextStyle(fontSize: 16, color: Colors.white),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    languageNameAndCode.tengoc,
+                    style: const TextStyle(color: Colors.cyanAccent, fontWeight: FontWeight.w500),
                   ),
-                );
-              }).toList(),
+                  const SizedBox(width: 4),
+                  const Icon(Icons.arrow_drop_down, size: 18, color: Colors.white),
+                ],
+              ),
             ),
           ),
         ],

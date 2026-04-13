@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import 'package:webview_flutter/webview_flutter.dart';
 import 'package:webview_flutter_android/webview_flutter_android.dart'; // Import for Android features. | #docregion platform_imports
@@ -129,6 +130,23 @@ class _WebViewBrowserAudioState extends State<WebViewBrowserAudio> {
         backgroundColor: Colors.green,
         appBar: AppBar(
           title: Text(widget.title, style: textSize18,),
+          actions: [
+            //IV. Icon open web (out app)
+            FutureBuilder<dynamic>(
+              future: _getCurrentURL(),
+              builder: (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
+                if(snapshot.hasData){
+                  return IconButton(
+                    onPressed: (){
+                      _launchBrowserOutApp(Uri.parse(snapshot.data.toString()));
+                    },
+                    icon: Icon(Icons.open_in_new, size: 20,),
+                  );
+                } else {
+                  return SizedBox();
+                }
+              },),
+          ],
         ),
       
         body: Stack(
@@ -141,5 +159,18 @@ class _WebViewBrowserAudioState extends State<WebViewBrowserAudio> {
       
       ),
     );
+  }
+
+  // Hàm mở link url trình duyệt bên ngoài app khi click
+  Future<void> _launchBrowserOutApp(Uri url) async {
+    if (!await launchUrl(url, mode: LaunchMode.externalApplication,)) {
+      throw Exception('Could not launch $url');
+    }
+  }
+
+  //D.3 Lấy url hiện tại của trình duyệt
+  Future<dynamic> _getCurrentURL() async {
+    dynamic currentURL = await _controller.currentUrl();
+    return currentURL;
   }
 }

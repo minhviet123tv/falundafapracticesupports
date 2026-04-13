@@ -7,7 +7,7 @@ import 'package:webview_flutter_android/webview_flutter_android.dart'; // Import
 import 'package:webview_flutter_wkwebview/webview_flutter_wkwebview.dart';
 import 'package:url_launcher/url_launcher.dart';
 
-import '../link_and_api/link_internet_sachchuyenphapluan_quocte.dart';
+import '../controller_app/link_internet_sachchuyenphapluan_quocte.dart';
 
 /*
 webview_flutter: ^4.8.0
@@ -163,63 +163,50 @@ class _AllBooksWebviewState extends State<AllBooksWebview> {
         appBar: AppBar(
 
           //I. Chọn ngôn ngữ
-          title: Container(
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.all(Radius.circular(border10)), // Bo viền container
-              color: Colors.transparent,
-            ),
-            // DropdownMenu
-            child: DropdownMenu<LanguageAllPageFalundafa>(
-              width: 130,
-              initialSelection: languageAllPageFalundafa, // Mới mở thì đặt theo ngôn ngữ đã khởi tạo trong init hoặc đã lấy từ shared
-              textStyle: TextStyle(fontWeight: FontWeight.w500, fontSize: 11), // Kiểu dáng, màu, cỡ chữ hiển thị của giá trị đã được chọn
-              inputDecorationTheme: InputDecorationTheme(
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(border10),
-                ),
-                enabledBorder: OutlineInputBorder( // Viền ngoài của cả DropdownMenu
-                  borderRadius: BorderRadius.circular(border10),
-                  borderSide: BorderSide(color: Colors.transparent), // Màu viền ngoài
-                ),
+          title: PopupMenuButton<LanguageAllPageFalundafa>(
+            tooltip: 'Select language',
+            position: PopupMenuPosition.under,
+            color: Colors.white,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(border10)),
+            onSelected: (LanguageAllPageFalundafa value) {
+              setState(() {
+                languageAllPageFalundafa = value;
+                _controller.loadRequest(Uri.parse(languageAllPageFalundafa.booksPage));
+                _setLanguageEnumBook(languageAllPageFalundafa);
+              });
+            },
+            itemBuilder: (context) {
+              return LanguageAllPageFalundafa.values
+                  .map(
+                    (value) => PopupMenuItem<LanguageAllPageFalundafa>(
+                      value: value,
+                      height: 44,
+                      child: Text(value.languageName),
+                    ),
+                  )
+                  .toList();
+            },
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.all(Radius.circular(border10)),
+                border: Border.all(color: Colors.white70),
               ),
-
-              menuStyle: MenuStyle(
-                backgroundColor: WidgetStatePropertyAll(Colors.white), // Màu nền của item được chọn
-                surfaceTintColor: WidgetStatePropertyAll(Colors.white), // màu ánh nền
-                shape: WidgetStatePropertyAll(
-                  RoundedRectangleBorder(borderRadius: BorderRadius.circular(border10)), // Góc bo viền của viền bên ngoài
-                ),
-              ),
-
-              // Thực hiện khi bấm chọn (Sử dụng giá trị của đối tượng)
-              onSelected: (LanguageAllPageFalundafa? value) {
-                setState(() {
-                  languageAllPageFalundafa = value!; // Cập nhật enum ngôn ngữ
-                  _controller.loadRequest(Uri.parse('${languageAllPageFalundafa.booksPage}')); // Đặt và load lại url
-                  // if(languageNameOfChuyenPhapLuan == LanguageNameOfChuyenPhapLuan.more){
-                  //   _launchInBrowser(Uri.parse(languageNameOfChuyenPhapLuan.urlChuyenPhapLuan)); // Mở trình duyệt và return code (Trường hợp xem thêm ngôn ngữ phải mở xem ở browser)
-                  //   return;
-                  // }
-                  _setLanguageEnumBook(languageAllPageFalundafa); // Lưu ngôn ngữ vào trong shared
-                });
-              },
-
-              // Gán giá trị trong list cho trước vào list lựa chọn của button
-              dropdownMenuEntries: LanguageAllPageFalundafa.values.map((LanguageAllPageFalundafa value) {
-                return DropdownMenuEntry<LanguageAllPageFalundafa>(
-                  value: value,
-                  label: value.languageName,
-                  style: MenuItemButton.styleFrom(
-                    foregroundColor: Colors.black, //text color
-                    backgroundColor: Colors.white, //unselected background color,
-                    textStyle: TextStyle(fontSize: 15, color: Colors.white),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    languageAllPageFalundafa.languageName,
+                    style: const TextStyle(fontWeight: FontWeight.w500, fontSize: 11),
                   ),
-                );
-              }).toList(),
+                  const SizedBox(width: 4),
+                  const Icon(Icons.arrow_drop_down, size: 18),
+                ],
+              ),
             ),
           ),
 
-          toolbarHeight: 35, // Chiều cao của AppBar
+          toolbarHeight: 40, // Gọn tối đa nhưng vẫn đủ khoảng đệm thao tác
 
           //II. Các icon điều khiển
           actions: [

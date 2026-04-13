@@ -6,7 +6,7 @@ import 'package:webview_flutter_android/webview_flutter_android.dart'; // Import
 import 'package:webview_flutter_wkwebview/webview_flutter_wkwebview.dart';
 import 'package:url_launcher/url_launcher.dart';
 
-import '../../link_and_api/link_all_page_and_api_enum.dart';
+import '../../controller_app/link_all_page_and_api_enum.dart';
 
 /*
 webview_flutter: ^4.8.0
@@ -169,61 +169,51 @@ class _MinghuiWebviewState extends State<MinghuiWebview> {
             },
             icon: Icon(Icons.arrow_back, size: 20),
           ),
-          title: Container(
-            margin: EdgeInsets.only(right: 2),
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.all(Radius.circular(border10)), // Bo viền container
-              color: Colors.transparent,
-            ),
-
-            // DropdownMenu
-            child: DropdownMenu<MinghuiEnum>(
-              width: 140,
-              initialSelection: minghuiEnum, // Mới mở thì đặt theo ngôn ngữ đã khởi tạo trong init hoặc đã lấy từ shared (dùng enum thay vì model)
-              textStyle: TextStyle(fontWeight: FontWeight.w500, fontSize: 11), // Kiểu dáng, màu, cỡ chữ hiển thị của giá trị đã được chọn
-              inputDecorationTheme: InputDecorationTheme(
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(border10),
-                ),
-                enabledBorder: OutlineInputBorder( // Viền ngoài của cả DropdownMenu
-                  borderRadius: BorderRadius.circular(border10),
-                  borderSide: BorderSide(color: Colors.transparent), // Màu viền ngoài
-                ),
+          title: PopupMenuButton<MinghuiEnum>(
+            tooltip: 'Select language',
+            position: PopupMenuPosition.under,
+            color: Colors.white,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(border10)),
+            onSelected: (MinghuiEnum value) {
+              setState(() {
+                minghuiEnum = value;
+                _controller.loadRequest(Uri.parse(minghuiEnum.url));
+                _saveLanguageLink(minghuiEnum.languageCode);
+              });
+            },
+            itemBuilder: (context) {
+              return MinghuiEnum.values
+                  .map(
+                    (value) => PopupMenuItem<MinghuiEnum>(
+                      value: value,
+                      height: 44,
+                      child: Text(value.languageName),
+                    ),
+                  )
+                  .toList();
+            },
+            child: Container(
+              margin: const EdgeInsets.only(right: 2),
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.all(Radius.circular(border10)),
+                border: Border.all(color: Colors.white70),
               ),
-
-              menuStyle: MenuStyle(
-                backgroundColor: WidgetStatePropertyAll(Colors.white), // Màu nền của item được chọn
-                surfaceTintColor: WidgetStatePropertyAll(Colors.white), // màu ánh nền
-                shape: WidgetStatePropertyAll(
-                  RoundedRectangleBorder(borderRadius: BorderRadius.circular(border10)), // Góc bo viền của viền bên ngoài
-                ),
-              ),
-
-              // Thực hiện khi bấm chọn (Sử dụng giá trị của đối tượng)
-              onSelected: (MinghuiEnum? value) {
-                setState(() {
-                  minghuiEnum = value!; // Cập nhật ngôn ngữ
-                  _controller.loadRequest(Uri.parse('${minghuiEnum.url}')); // Đặt và load lại url
-                  _saveLanguageLink(minghuiEnum.languageCode); // Lưu code ngôn ngữ vào trong shared (Không lưu cả enum mà chỉ mình ngôn ngữ rồi tìm lại enum theo listEnum.values.byName('');
-                });
-              },
-
-              // Gán giá trị trong list cho trước vào list lựa chọn của button
-              dropdownMenuEntries: MinghuiEnum.values.map((MinghuiEnum value){
-                return DropdownMenuEntry<MinghuiEnum>(
-                  value: value, // Giá trị cả model
-                  label: value.languageName, // Nhãn hiển thị
-                  style: MenuItemButton.styleFrom(
-                    foregroundColor: Colors.black, // Màu text
-                    backgroundColor: Colors.white, // Màu nền,
-                    textStyle: TextStyle(fontSize: 15, color: Colors.white),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    minghuiEnum.languageName,
+                    style: const TextStyle(fontWeight: FontWeight.w500, fontSize: 11),
                   ),
-                );
-              }).toList(),
+                  const SizedBox(width: 4),
+                  const Icon(Icons.arrow_drop_down, size: 18),
+                ],
+              ),
             ),
           ),
 
-          toolbarHeight: 35, // Chiều cao của AppBar
+          toolbarHeight: 40, // Gọn tối đa nhưng vẫn đủ khoảng đệm thao tác
 
           actions: [
 

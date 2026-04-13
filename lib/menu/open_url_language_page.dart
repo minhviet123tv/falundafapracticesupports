@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:url_launcher/url_launcher.dart';
 
-import '../link_and_api/link_all_page_and_api_enum.dart';
+import '../controller_app/link_all_page_and_api_enum.dart';
 
 /*
 Mở các liên kết theo danh sách và lưu ngôn ngữ yêu thích
@@ -31,7 +31,7 @@ class OpenUrlPage extends StatefulWidget {
 class _OpenUrlPageState extends State<OpenUrlPage> {
   //A. Dữ liệu
   late TrangDichCuaLienKet trangDichCuaLienKet;
-  List<ModelOpenUrl> listOpenUrl = [];
+  List<ModelOpenUrl> listOpenUrl = []; // Đưa chung về dạng List<Model> vì có 3 Enum khác nhau
   late ModelOpenUrl modelOpenUrlFavorite;
 
   //B. Khởi tạo dữ liệu

@@ -99,9 +99,7 @@ class OnBoardingPageState extends State<IntroductionScreenWidget> {
   //F. Hàm thực hiện sau khi kết thúc intro -> Trả về trang home
   void _onIntroEnd(context) {
     if(widget.setPageIntro == SetPageIntro.molandau){
-      Navigator.of(context).pushReplacement(
-        MaterialPageRoute<void>(builder: (_) => const RunAppFalunDafaExercise()),
-      );
+      Navigator.of(context).pushReplacement(MaterialPageRoute(builder: (_) => RunAppFalunDafaExercise()),); // Mở trang home
     } else if (widget.setPageIntro == SetPageIntro.gioithieuapp) {
       Navigator.pop(context); // Quay lại trang home (Hiệu ứng phù hợp)
     } else if (widget.setPageIntro == SetPageIntro.tapcoban){
