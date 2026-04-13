@@ -5,9 +5,9 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 import 'package:webview_flutter_android/webview_flutter_android.dart'; // Import for Android features. | #docregion platform_imports
 import 'package:webview_flutter_wkwebview/webview_flutter_wkwebview.dart';
-import 'package:url_launcher/url_launcher.dart';
 
 import '../../controller_app/link_all_page_and_api_enum.dart';
+import '../../common/browser_helper.dart';
 
 /*
 webview_flutter: ^4.8.0
@@ -267,13 +267,13 @@ class _VisaoconhanloaiWebviewState extends State<VisaoconhanloaiWebview> {
 
           actions: [
             //IV. Icon open web (out app)
-            FutureBuilder<dynamic>(
-              future: _getCurrentURL(),
-              builder: (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
+            FutureBuilder<String?>(
+              future: BrowserHelper.getCurrentUrl(_controller),
+              builder: (BuildContext context, AsyncSnapshot<String?> snapshot) {
                 if(snapshot.hasData){
                   return IconButton(
                     onPressed: (){
-                      _launchBrowserOutApp(Uri.parse(snapshot.data.toString()));
+                      BrowserHelper.launchExternal(Uri.parse(snapshot.data!));
                     },
                     icon: Icon(Icons.open_in_new, size: 20,),
                   );
@@ -283,14 +283,14 @@ class _VisaoconhanloaiWebviewState extends State<VisaoconhanloaiWebview> {
               },),
 
             //Icon open web
-            FutureBuilder<dynamic>(
-              future: _getCurrentURL(),
-              builder: (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
+            FutureBuilder<String?>(
+              future: BrowserHelper.getCurrentUrl(_controller),
+              builder: (BuildContext context, AsyncSnapshot<String?> snapshot) {
                 if(snapshot.hasData){
                   return IconButton(
                     onPressed: (){
                       setState((){});
-                      _launchBrowserInApp(Uri.parse(snapshot.data.toString()));
+                      BrowserHelper.launchInApp(Uri.parse(snapshot.data!));
                     },
                     icon: Icon(Icons.zoom_out_map, size: 20,),
                   );
@@ -311,26 +311,5 @@ class _VisaoconhanloaiWebviewState extends State<VisaoconhanloaiWebview> {
       ),
     );
   }
-
-  //D.1 Hàm mở link url khi click (In app)
-  Future<void> _launchBrowserInApp(Uri url) async {
-    if (!await launchUrl(url, mode: LaunchMode.inAppWebView,)) {
-      throw Exception('Could not launch $url');
-    }
-  }
-
-  //D.2 Hàm mở link url trình duyệt bên ngoài app khi click
-  Future<void> _launchBrowserOutApp(Uri url) async {
-    if (!await launchUrl(url, mode: LaunchMode.externalApplication,)) {
-      throw Exception('Could not launch $url');
-    }
-  }
-
-  //D.3 Lấy url hiện tại của trình duyệt
-  Future<dynamic> _getCurrentURL() async {
-    dynamic currentURL = await _controller.currentUrl();
-    return currentURL;
-  }
-
 }
 

@@ -10,8 +10,8 @@ import 'player_widget_9baigiang.dart';
 
 import 'menu/all_books_webview.dart';
 import 'menu_huongdan_page.dart';
-import 'memory_config.dart';
-import 'memory_monitor.dart';
+import 'common/memory_config.dart';
+import 'common/memory_monitor.dart';
 
 /*
 audioplayers: ^6.0.0
