@@ -206,7 +206,7 @@ class _FalunDafaExerciseHomePageState extends State<FalunDafaExerciseHomePage>
   // Lazy loading cho list widget body để tiết kiệm bộ nhớ
   List<Widget> get listWidgetBody {
     _listWidgetBody ??= [
-      MenuHuongDanPage(),
+      MenuHome(),
       PlayerWidget9Baigiang(), // Không thể cùng lúc dùng 1 trang widget (Có khung Scaffold) 2 lần -> nên tạo 2 trang (Đồng thời tạo sẵn list link)
       PlayerWidget(),
     ];

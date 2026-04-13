@@ -1,374 +1,317 @@
-import 'package:flutter/material.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-
-import 'package:webview_flutter/webview_flutter.dart';
-import 'package:webview_flutter_android/webview_flutter_android.dart'; // Import for Android features. | #docregion platform_imports
-import 'package:webview_flutter_wkwebview/webview_flutter_wkwebview.dart';
-import 'package:url_launcher/url_launcher.dart';
-
-/*
-Chưa sử dụng
-
-webview_flutter: ^4.8.0
-https://pub.dev/packages/webview_flutter/example
- */
-
-// Trang widget mở web view
-class FalundafaWebview extends StatefulWidget {
-  static const String routeName = "VisaoconhanloaiWebview_routeName";
-  @override
-  State<FalundafaWebview> createState() => _FalundafaWebviewState();
-}
-
-class _FalundafaWebviewState extends State<FalundafaWebview> {
-
-  //A. Dữ liệu toàn cục
-  late final WebViewController _controller; // Bộ điều khiển cho webview
-  late FalundafaEnum falundafaEnum;
-  var textSize16 = TextStyle(fontSize: 16);
-  var textSize18 = TextStyle(fontSize: 18, fontWeight: FontWeight.w600);
-  var styleTextTitle = TextStyle(fontSize: 18, color: Colors.white, fontWeight: FontWeight.w500);
-  double border10 = 10.0;
-  int progressLoadWeb = 0; // Báo tiến độ load web
-
-  //B. Khởi tạo khi mới mở
-  @override
-  void initState() {
-    super.initState();
-
-    // Khởi tạo ban đầu
-    falundafaEnum = FalundafaEnum.vietnamese;
-
-    // #docregion platform_features
-    late final PlatformWebViewControllerCreationParams params;
-
-    if (WebViewPlatform.instance is WebKitWebViewPlatform) {
-      params = WebKitWebViewControllerCreationParams(
-        allowsInlineMediaPlayback: true,
-        mediaTypesRequiringUserAction: const <PlaybackMediaTypes>{},
-      );
-    } else {
-      params = const PlatformWebViewControllerCreationParams();
-    }
-
-    //I. Tạo một controller của webview
-    final WebViewController controller = WebViewController.fromPlatformCreationParams(params);
-    // #enddocregion platform_features
-
-    // Cài đặt các thuộc tính, thông số cần có để mở được web cho controller
-    controller
-      ..setJavaScriptMode(JavaScriptMode.unrestricted)
-      ..setBackgroundColor(const Color(0x00000000))
-      ..setNavigationDelegate(
-        NavigationDelegate(
-          onProgress: (int progress) {
-            setState(() {
-              progressLoadWeb = progress;
-            });
-            debugPrint('WebView is loading (progress : $progress%)');
-          },
-          onPageStarted: (String url) {
-            debugPrint('Page started loading: $url');
-          },
-          onPageFinished: (String url) {
-            debugPrint('Page finished loading: $url');
-          },
-          onWebResourceError: (WebResourceError error) {
-            debugPrint('''
-          Page resource error:
-            code: ${error.errorCode}
-            description: ${error.description}
-            errorType: ${error.errorType}
-            isForMainFrame: ${error.isForMainFrame}
-                    ''');
-          },
-          onNavigationRequest: (NavigationRequest request) {
-            if (request.url.startsWith('https://www.youtube.com/')) {
-              debugPrint('blocking navigation to ${request.url}');
-              return NavigationDecision.prevent;
-            }
-            debugPrint('allowing navigation to ${request.url}');
-            return NavigationDecision.navigate;
-          },
-          onHttpError: (HttpResponseError error) {
-            debugPrint('Error occurred on page: ${error.response?.statusCode}');
-          },
-          onUrlChange: (UrlChange change) {
-            debugPrint('url change to ${change.url}');
-          },
-
-          // Hàm Future openDialog | Có thể là dùng đối với trang web cần login
-          // onHttpAuthRequest: (HttpAuthRequest request) {
-          //   openDialog(request);
-          // },
-        ),
-      )
-
-      ..addJavaScriptChannel(
-        'Toaster',
-        onMessageReceived: (JavaScriptMessage message) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(message.message)),
-          );
-        },
-      )
-
-      // Load URL trang web đầu tiên khi mới mở trang
-      ..loadRequest(Uri.parse('${falundafaEnum.url}'));
-
-    // Cài đặt cho thiết bị | #docregion platform_features
-    if (controller.platform is AndroidWebViewController) {
-      AndroidWebViewController.enableDebugging(true);
-      (controller.platform as AndroidWebViewController)
-          .setMediaPlaybackRequiresUserGesture(false);
-    }
-
-    //II. Khai báo chính thức cho controller toàn cục
-    _controller = controller;
-
-    _getLanguageLink(); // Lấy ngôn ngữ lưu shared | Cập nhật load url theo ngôn ngữ đã lưu
-  }
-
-  //B.1 Lấy code ngôn ngữ lưu shared (modelOpenUrlFavorite)
-  _getLanguageLink() async {
-    final shared = await SharedPreferences.getInstance(); // shared
-    String languageCode = await shared.getString("languageCodeFalundafa") ?? "vietnamese"; // Lấy code, đặt mặc định
-    falundafaEnum = FalundafaEnum.values.byName(languageCode); // Lấy enum từ code
-    _controller.loadRequest(Uri.parse('${falundafaEnum.url}')); // Tải lại trang theo ngôn ngữ
-    setState(() {}); // Cập nhật ngôn ngữ
-  }
-
-  //B.2 Hàm lưu ngôn ngữ trong Shared
-  _saveLanguageLink (String languageCode) async {
-    final shared = await SharedPreferences.getInstance();
-    await shared.setString("languageCodeFalundafa", languageCode);
-  }
-
-  // kiểm tra thuộc tính boolean mounted của lớp trạng thái setState((){})
-  @override
-  void setState(fn) {
-    if(mounted) {
-      super.setState(fn);
-    }
-  }
-
-  //D. Trang
-  @override
-  Widget build(BuildContext context) {
-
-    return SafeArea(
-      child: Scaffold(
-        appBar: AppBar(
-          leading: IconButton(
-            onPressed: () {
-              Navigator.pop(context);
-            },
-            icon: Icon(Icons.arrow_back, size: 20,),
-          ),
-          title: Container(
-            // decoration: BoxDecoration(
-            //   borderRadius: BorderRadius.all(Radius.circular(border10)), // Bo viền container
-            //   color: Colors.red,
-            // ),
-
-            // DropdownMenu
-            child: DropdownMenu<FalundafaEnum>(
-              width: 140,
-              initialSelection: falundafaEnum, // Mới mở thì đặt theo ngôn ngữ đã khởi tạo trong init hoặc đã lấy từ shared (Nên dùng enum thay vì model)
-              textStyle: TextStyle(fontWeight: FontWeight.w500, fontSize: 11), // Kiểu dáng, màu, cỡ chữ hiển thị của giá trị đã được chọn
-              inputDecorationTheme: InputDecorationTheme(
-                // constraints: BoxConstraints(
-                //   maxHeight: 50,
-                // ),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(border10),
-                ),
-                enabledBorder: OutlineInputBorder( // Viền ngoài của cả DropdownMenu
-                  borderRadius: BorderRadius.circular(border10),
-                  borderSide: BorderSide(color: Colors.transparent), // Màu viền ngoài
-                ),
-              ),
-
-              menuStyle: MenuStyle(
-                backgroundColor: WidgetStatePropertyAll(Colors.white), // Màu nền của item được chọn
-                surfaceTintColor: WidgetStatePropertyAll(Colors.white), // màu ánh nền
-                shape: WidgetStatePropertyAll(
-                  RoundedRectangleBorder(borderRadius: BorderRadius.circular(border10)), // Góc bo viền của viền bên ngoài
-                ),
-              ),
-
-              // Thực hiện khi bấm chọn (Sử dụng giá trị của đối tượng)
-              onSelected: (FalundafaEnum? value) {
-                setState(() {
-                  falundafaEnum = value!; // Cập nhật ngôn ngữ
-                  _controller.loadRequest(Uri.parse('${falundafaEnum.url}')); // Đặt và load lại url
-                  _saveLanguageLink(falundafaEnum.languageCode); // Lưu code ngôn ngữ vào trong shared (Không lưu cả enum mà chỉ mình ngôn ngữ rồi tìm lại enum theo listEnum.values.byName('');
-                });
-              },
-
-              // List lựa chọn của DropdownMenuEntry: Gán giá trị trong list cho trước vào
-              dropdownMenuEntries: FalundafaEnum.values.map((FalundafaEnum value){
-                return DropdownMenuEntry<FalundafaEnum>(
-                  value: value, // Giá trị cả model
-                  label: value.languageName, // Nhãn hiển thị
-                  style: MenuItemButton.styleFrom(
-                    foregroundColor: Colors.black, // Màu text
-                    backgroundColor: Colors.white, // Màu nền,
-                    textStyle: TextStyle(fontSize: 15, color: Colors.white),
-                  ),
-                );
-              }).toList(),
-            ),
-          ),
-
-          toolbarHeight: 35, // Chiều cao của AppBar
-
-          actions: [
-
-            //I. Nút back lại phần trước của web
-            IconButton(
-              onPressed: () async {
-                if(await _controller.canGoBack()){
-                  _controller.goBack();
-                }
-              },
-              icon: Icon(Icons.arrow_back_ios, size: 20,),
-            ),
-
-            //II. Nút back lại phần trước của web
-            IconButton(
-              onPressed: () async {
-                if(await _controller.canGoForward()){
-                  _controller.goForward();
-                }
-              },
-              icon: Icon(Icons.arrow_forward_ios, size: 20),
-            ),
-
-            //III. Icon open web (out app)
-            // FutureBuilder<dynamic>(
-            //   future: _getCurrentURL(),
-            //   builder: (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
-            //     if(snapshot.hasData){
-            //       return
-            //         IconButton(
-            //         onPressed: (){
-            //           _launchBrowserOutApp(Uri.parse(snapshot.data.toString()));
-            //         },
-            //         icon: Icon(Icons.open_in_new, size: 20,),
-            //       )
-            //       ;
-            //     } else {
-            //       return SizedBox();
-            //     }
-            //   },),
-
-            //IV. Icon open extend (in app)
-            FutureBuilder<dynamic>(
-              future: _getCurrentURL(),
-              builder: (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
-                if(snapshot.hasData){
-                  return IconButton(
-                    onPressed: (){
-                      _launchBrowserInApp(Uri.parse(snapshot.data.toString()));
-                    },
-                    icon: Icon(Icons.zoom_out_map, size: 20),
-                  );
-                } else {
-                  return SizedBox();
-                }
-              },),
-          ],
-          backgroundColor: Colors.white,
-        ),
-        backgroundColor: Colors.white,
-
-        body: (progressLoadWeb <= 20)  /* Hiện icon loading, WebViewWidget theo tình trạng kết nối của url (Luân phiên) */
-            ? Center(child: CircularProgressIndicator(),)
-            :  WebViewWidget(controller: _controller),
-        // floatingActionButton: ElevatedButton(onPressed: () {  }, child: Text("Language"),),
-      ),
-    );
-  }
-
-  //D.1 Hàm mở link url khi click (In app)
-  Future<void> _launchBrowserInApp(Uri url) async {
-    if (!await launchUrl(url, mode: LaunchMode.inAppWebView,)) {
-      throw Exception('Could not launch $url');
-    }
-  }
-
-  //D.2 Hàm mở link url trình duyệt bên ngoài app khi click
-  Future<void> _launchBrowserOutApp(Uri url) async {
-    if (!await launchUrl(url, mode: LaunchMode.externalApplication,)) {
-      throw Exception('Could not launch $url');
-    }
-  }
-
-  //D.3 Lấy url hiện tại của trình duyệt
-  Future<dynamic> _getCurrentURL() async {
-    dynamic currentURL = await _controller.currentUrl();
-    return currentURL;
-  }
-
-}
-
-//II. Các danh sách liên kết
-enum FalundafaEnum {
-  english("https://en.falundafa.org/?v=bks04", "English", "english"),
-  chinese("https://gb.falundafa.org/?v=bks04", "中文简体", "chinese"),
-  afrikaans("https://af.falundafa.org/?v=bks04", "Afrikaans", "afrikaans"),
-  arabic("https://ar.falundafa.org/?v=bks04", "Arabic / العربية", "arabic"),
-  bangla("https://ba.falundafa.org/?v=bks04", "Bangla", "bangla"),
-  bosanski("https://bs.falundafa.org/?v=bks04", "Bosanski", "bosanski"),
-  belarus("https://by.falundafa.org/?v=bks04", "Belarus", "belarus"),
-  bungari("https://bg.falundafa.org/?v=bks04", "Български", "bungari"),
-  burmese("https://www.falundafa.org/eng/language/burmese.html?v=bks04", "Burmese", "burmese"),
-  cesky("https://cs.falundafa.org/?v=bks04", "Česky", 'cesky'),
-  dansk("https://da.falundafa.org/?v=bks04", "Dansk", 'dansk'),
-  deutsch("https://de.falundafa.org/?v=bks04", "Deutsch", "deutsch"),
-  espanol("https://es.falundafa.org/?v=bks04", "Español", "espanol"),
-  eesti("https://en.falundafa.org/language/estonian.html?v=bks04", "Eesti", 'eesti'),
-  greek("https://el.falundafa.org/?v=bks04", "Ελληνικά", 'greek'),
-  farsi("https://fa.falundafa.org/?v=bks04", "Farsi / فارسی", 'farsi'),
-  francais("https://fr.falundafa.org/?v=bks04", "Français", 'francais'),
-  hebrew("https://he.falundafa.org/?v=bks04", "עברית", 'hebrew'),
-  hindi("https://hi.falundafa.org/?v=bks04", "Hindi / हिन्दी", 'hindi'),
-  hrvatski("https://hr.falundafa.org/?v=bks04", "Hrvatski", 'hrvatski'),
-  indonesia("https://id.falundafa.org/?v=bks04", "Bahasa Indonesia", 'indonesia'),
-  italiano("https://it.falundafa.org/?v=bks04", "Italiano", 'italiano'),
-  kannada("https://kn.falundafa.org/?v=bks04", "Kannada", 'kannada'),
-  latviski("https://lv.falundafa.org/?v=bks04", "Latviski", 'latviski'),
-  lietuviu( "https://falundafa.org/eng/language/lithuanian.html?v=bks04", "Lietuvių", 'lietuviu'),
-  laotian("https://en.falundafa.org/language/laotian.html?v=bks04", "Laotian / ລາວ", 'laotian'),
-  magyar("https://hu.falundafa.org/?v=bks04", "Magyar", 'magyar'),
-  macedonia("https://mk.falundafa.org/?v=bks04", "Македонски", 'macedonia'),
-  mongolia("https://mn.falundafa.org/?v=bks04", "Монгол / ᠮᠣᠩᠭᠣᠯ", 'mongolia'),
-  nederlands("https://nl.falundafa.org/?v=bks04", "Nederlands", 'nederlands'),
-  japan("https://ja.falundafa.org/?v=bks04", "Japan / 日本語", 'japan'),
-  khmer("https://kh.falundafa.org/falun-dafa-books.html?v=bks04", "Khmer / ខ្មែរ", 'khmer'),
-  norsk("https://no.falundafa.org/?v=bks04", "Norsk / Bokmål", 'norsk'),
-  polski("https://pl.falundafa.org/?v=bks04", "Polski", 'polski'),
-  portugues("https://pt.falundafa.org/?v=bks04", "Português", 'portugues'),
-  romana("https://ro.falundafa.org/?v=bks04", "Română", 'romana'),
-  russian("https://rus.falundafa.org/?v=bks04", "Русский", 'russian'),
-  sinhala("https://lk.falundafa.org/?v=bks04", "Sinhala / සිංහල", 'sinhala'),
-  slovencina("https://sk.falundafa.org/?v=bks04", "Slovenčina", 'slovencina'),
-  slovenscina("https://sl.falundafa.org/?v=bks04", "Slovenščina", 'slovenscina'),
-  srpski("https://sr.falundafa.org/?v=bks04", "Srpski / Српски", 'srpski'),
-  suomi("https://fi.falundafa.org/?v=bks04", "Suomi", 'suomi'),
-  svenska("https://sv.falundafa.org/?v=bks04", "Svenska", 'svenska'),
-  shqip("https://sq.falundafa.org/?v=bks04", "Shqip / Albanian", 'shqip'),
-  korean("https://ko.falundafa.org/?v=bks04", "Korean / 한국어", 'korean'),
-  thai("https://th.falundafa.org/?v=bks04", "Thai / ไทย", 'thai'),
-  tibetan("https://www.falundafa.org/eng/language/tibetan.html?v=bks04", "Tibetan / བོད་ཡིག", 'tibetan'),
-  vietnamese("https://daiphap.org/access?url=https%3A%2F%2Fvi.falundafa.org", "Tiếng Việt", 'vietnamese'), // https://vi.falundafa.org/?v=bks04
-  turkce("https://tr.falundafa.org/?v=bks04", "Türkçe", 'turkce'),
-  ukrainian("https://uk.falundafa.org/?v=bks04", "Ukrainian / Українська", 'ukrainian')
-  ;
-
-  final String url;
-  final String languageName;
-  final String languageCode;
-  const FalundafaEnum (this.url, this.languageName, this.languageCode);
-}
+// import 'package:flutter/material.dart';
+// import 'package:shared_preferences/shared_preferences.dart';
+//
+// import 'package:webview_flutter/webview_flutter.dart';
+// import 'package:webview_flutter_android/webview_flutter_android.dart'; // Import for Android features. | #docregion platform_imports
+// import 'package:webview_flutter_wkwebview/webview_flutter_wkwebview.dart';
+// import 'package:url_launcher/url_launcher.dart';
+//
+// import '../../link_and_api/link_all_page_and_api_enum.dart';
+//
+// /*
+// Chưa sử dụng
+//
+// webview_flutter: ^4.8.0
+// https://pub.dev/packages/webview_flutter/example
+//  */
+//
+// // Trang widget mở web view
+// class FalundafaWebview extends StatefulWidget {
+//   static const String routeName = "VisaoconhanloaiWebview_routeName";
+//   @override
+//   State<FalundafaWebview> createState() => _FalundafaWebviewState();
+// }
+//
+// class _FalundafaWebviewState extends State<FalundafaWebview> {
+//
+//   //A. Dữ liệu toàn cục
+//   late final WebViewController _controller; // Bộ điều khiển cho webview
+//   late FalundafaEnum falundafaEnum;
+//   var textSize16 = TextStyle(fontSize: 16);
+//   var textSize18 = TextStyle(fontSize: 18, fontWeight: FontWeight.w600);
+//   var styleTextTitle = TextStyle(fontSize: 18, color: Colors.white, fontWeight: FontWeight.w500);
+//   double border10 = 10.0;
+//   int progressLoadWeb = 0; // Báo tiến độ load web
+//
+//   //B. Khởi tạo khi mới mở
+//   @override
+//   void initState() {
+//     super.initState();
+//
+//     // Khởi tạo ban đầu
+//     falundafaEnum = FalundafaEnum.vietnamese;
+//
+//     // #docregion platform_features
+//     late final PlatformWebViewControllerCreationParams params;
+//
+//     if (WebViewPlatform.instance is WebKitWebViewPlatform) {
+//       params = WebKitWebViewControllerCreationParams(
+//         allowsInlineMediaPlayback: true,
+//         mediaTypesRequiringUserAction: const <PlaybackMediaTypes>{},
+//       );
+//     } else {
+//       params = const PlatformWebViewControllerCreationParams();
+//     }
+//
+//     //I. Tạo một controller của webview
+//     final WebViewController controller = WebViewController.fromPlatformCreationParams(params);
+//     // #enddocregion platform_features
+//
+//     // Cài đặt các thuộc tính, thông số cần có để mở được web cho controller
+//     controller
+//       ..setJavaScriptMode(JavaScriptMode.unrestricted)
+//       ..setBackgroundColor(const Color(0x00000000))
+//       ..setNavigationDelegate(
+//         NavigationDelegate(
+//           onProgress: (int progress) {
+//             setState(() {
+//               progressLoadWeb = progress;
+//             });
+//             debugPrint('WebView is loading (progress : $progress%)');
+//           },
+//           onPageStarted: (String url) {
+//             debugPrint('Page started loading: $url');
+//           },
+//           onPageFinished: (String url) {
+//             debugPrint('Page finished loading: $url');
+//           },
+//           onWebResourceError: (WebResourceError error) {
+//             debugPrint('''
+//           Page resource error:
+//             code: ${error.errorCode}
+//             description: ${error.description}
+//             errorType: ${error.errorType}
+//             isForMainFrame: ${error.isForMainFrame}
+//                     ''');
+//           },
+//           onNavigationRequest: (NavigationRequest request) {
+//             if (request.url.startsWith('https://www.youtube.com/')) {
+//               debugPrint('blocking navigation to ${request.url}');
+//               return NavigationDecision.prevent;
+//             }
+//             debugPrint('allowing navigation to ${request.url}');
+//             return NavigationDecision.navigate;
+//           },
+//           onHttpError: (HttpResponseError error) {
+//             debugPrint('Error occurred on page: ${error.response?.statusCode}');
+//           },
+//           onUrlChange: (UrlChange change) {
+//             debugPrint('url change to ${change.url}');
+//           },
+//
+//           // Hàm Future openDialog | Có thể là dùng đối với trang web cần login
+//           // onHttpAuthRequest: (HttpAuthRequest request) {
+//           //   openDialog(request);
+//           // },
+//         ),
+//       )
+//
+//       ..addJavaScriptChannel(
+//         'Toaster',
+//         onMessageReceived: (JavaScriptMessage message) {
+//           ScaffoldMessenger.of(context).showSnackBar(
+//             SnackBar(content: Text(message.message)),
+//           );
+//         },
+//       )
+//
+//       // Load URL trang web đầu tiên khi mới mở trang
+//       ..loadRequest(Uri.parse('${falundafaEnum.url}'));
+//
+//     // Cài đặt cho thiết bị | #docregion platform_features
+//     if (controller.platform is AndroidWebViewController) {
+//       AndroidWebViewController.enableDebugging(true);
+//       (controller.platform as AndroidWebViewController)
+//           .setMediaPlaybackRequiresUserGesture(false);
+//     }
+//
+//     //II. Khai báo chính thức cho controller toàn cục
+//     _controller = controller;
+//
+//     _getLanguageLink(); // Lấy ngôn ngữ lưu shared | Cập nhật load url theo ngôn ngữ đã lưu
+//   }
+//
+//   //B.1 Lấy code ngôn ngữ lưu shared (modelOpenUrlFavorite)
+//   _getLanguageLink() async {
+//     final shared = await SharedPreferences.getInstance(); // shared
+//     String languageCode = await shared.getString("languageCodeFalundafa") ?? "vietnamese"; // Lấy code, đặt mặc định
+//     falundafaEnum = FalundafaEnum.values.byName(languageCode); // Lấy enum từ code
+//     _controller.loadRequest(Uri.parse('${falundafaEnum.url}')); // Tải lại trang theo ngôn ngữ
+//     setState(() {}); // Cập nhật ngôn ngữ
+//   }
+//
+//   //B.2 Hàm lưu ngôn ngữ trong Shared
+//   _saveLanguageLink (String languageCode) async {
+//     final shared = await SharedPreferences.getInstance();
+//     await shared.setString("languageCodeFalundafa", languageCode);
+//   }
+//
+//   // kiểm tra thuộc tính boolean mounted của lớp trạng thái setState((){})
+//   @override
+//   void setState(fn) {
+//     if(mounted) {
+//       super.setState(fn);
+//     }
+//   }
+//
+//   //D. Trang
+//   @override
+//   Widget build(BuildContext context) {
+//
+//     return SafeArea(
+//       child: Scaffold(
+//         appBar: AppBar(
+//           leading: IconButton(
+//             onPressed: () {
+//               Navigator.pop(context);
+//             },
+//             icon: Icon(Icons.arrow_back, size: 20,),
+//           ),
+//           title: Container(
+//             // decoration: BoxDecoration(
+//             //   borderRadius: BorderRadius.all(Radius.circular(border10)), // Bo viền container
+//             //   color: Colors.red,
+//             // ),
+//
+//             // DropdownMenu
+//             child: DropdownMenu<FalundafaEnum>(
+//               width: 140,
+//               initialSelection: falundafaEnum, // Mới mở thì đặt theo ngôn ngữ đã khởi tạo trong init hoặc đã lấy từ shared (Nên dùng enum thay vì model)
+//               textStyle: TextStyle(fontWeight: FontWeight.w500, fontSize: 11), // Kiểu dáng, màu, cỡ chữ hiển thị của giá trị đã được chọn
+//               inputDecorationTheme: InputDecorationTheme(
+//                 // constraints: BoxConstraints(
+//                 //   maxHeight: 50,
+//                 // ),
+//                 border: OutlineInputBorder(
+//                   borderRadius: BorderRadius.circular(border10),
+//                 ),
+//                 enabledBorder: OutlineInputBorder( // Viền ngoài của cả DropdownMenu
+//                   borderRadius: BorderRadius.circular(border10),
+//                   borderSide: BorderSide(color: Colors.transparent), // Màu viền ngoài
+//                 ),
+//               ),
+//
+//               menuStyle: MenuStyle(
+//                 backgroundColor: WidgetStatePropertyAll(Colors.white), // Màu nền của item được chọn
+//                 surfaceTintColor: WidgetStatePropertyAll(Colors.white), // màu ánh nền
+//                 shape: WidgetStatePropertyAll(
+//                   RoundedRectangleBorder(borderRadius: BorderRadius.circular(border10)), // Góc bo viền của viền bên ngoài
+//                 ),
+//               ),
+//
+//               // Thực hiện khi bấm chọn (Sử dụng giá trị của đối tượng)
+//               onSelected: (FalundafaEnum? value) {
+//                 setState(() {
+//                   falundafaEnum = value!; // Cập nhật ngôn ngữ
+//                   _controller.loadRequest(Uri.parse('${falundafaEnum.url}')); // Đặt và load lại url
+//                   _saveLanguageLink(falundafaEnum.languageCode); // Lưu code ngôn ngữ vào trong shared (Không lưu cả enum mà chỉ mình ngôn ngữ rồi tìm lại enum theo listEnum.values.byName('');
+//                 });
+//               },
+//
+//               // List lựa chọn của DropdownMenuEntry: Gán giá trị trong list cho trước vào
+//               dropdownMenuEntries: FalundafaEnum.values.map((FalundafaEnum value){
+//                 return DropdownMenuEntry<FalundafaEnum>(
+//                   value: value, // Giá trị cả model
+//                   label: value.languageName, // Nhãn hiển thị
+//                   style: MenuItemButton.styleFrom(
+//                     foregroundColor: Colors.black, // Màu text
+//                     backgroundColor: Colors.white, // Màu nền,
+//                     textStyle: TextStyle(fontSize: 15, color: Colors.white),
+//                   ),
+//                 );
+//               }).toList(),
+//             ),
+//           ),
+//
+//           toolbarHeight: 35, // Chiều cao của AppBar
+//
+//           actions: [
+//
+//             //I. Nút back lại phần trước của web
+//             IconButton(
+//               onPressed: () async {
+//                 if(await _controller.canGoBack()){
+//                   _controller.goBack();
+//                 }
+//               },
+//               icon: Icon(Icons.arrow_back_ios, size: 20,),
+//             ),
+//
+//             //II. Nút back lại phần trước của web
+//             IconButton(
+//               onPressed: () async {
+//                 if(await _controller.canGoForward()){
+//                   _controller.goForward();
+//                 }
+//               },
+//               icon: Icon(Icons.arrow_forward_ios, size: 20),
+//             ),
+//
+//             //III. Icon open web (out app)
+//             // FutureBuilder<dynamic>(
+//             //   future: _getCurrentURL(),
+//             //   builder: (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
+//             //     if(snapshot.hasData){
+//             //       return
+//             //         IconButton(
+//             //         onPressed: (){
+//             //           _launchBrowserOutApp(Uri.parse(snapshot.data.toString()));
+//             //         },
+//             //         icon: Icon(Icons.open_in_new, size: 20,),
+//             //       )
+//             //       ;
+//             //     } else {
+//             //       return SizedBox();
+//             //     }
+//             //   },),
+//
+//             //IV. Icon open extend (in app)
+//             FutureBuilder<dynamic>(
+//               future: _getCurrentURL(),
+//               builder: (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
+//                 if(snapshot.hasData){
+//                   return IconButton(
+//                     onPressed: (){
+//                       _launchBrowserInApp(Uri.parse(snapshot.data.toString()));
+//                     },
+//                     icon: Icon(Icons.zoom_out_map, size: 20),
+//                   );
+//                 } else {
+//                   return SizedBox();
+//                 }
+//               },),
+//           ],
+//           backgroundColor: Colors.white,
+//         ),
+//         backgroundColor: Colors.white,
+//
+//         body: (progressLoadWeb <= 20)  /* Hiện icon loading, WebViewWidget theo tình trạng kết nối của url (Luân phiên) */
+//             ? Center(child: CircularProgressIndicator(),)
+//             :  WebViewWidget(controller: _controller),
+//         // floatingActionButton: ElevatedButton(onPressed: () {  }, child: Text("Language"),),
+//       ),
+//     );
+//   }
+//
+//   //D.1 Hàm mở link url khi click (In app)
+//   Future<void> _launchBrowserInApp(Uri url) async {
+//     if (!await launchUrl(url, mode: LaunchMode.inAppWebView,)) {
+//       throw Exception('Could not launch $url');
+//     }
+//   }
+//
+//   //D.2 Hàm mở link url trình duyệt bên ngoài app khi click
+//   Future<void> _launchBrowserOutApp(Uri url) async {
+//     if (!await launchUrl(url, mode: LaunchMode.externalApplication,)) {
+//       throw Exception('Could not launch $url');
+//     }
+//   }
+//
+//   //D.3 Lấy url hiện tại của trình duyệt
+//   Future<dynamic> _getCurrentURL() async {
+//     dynamic currentURL = await _controller.currentUrl();
+//     return currentURL;
+//   }
+//
+// }
+//

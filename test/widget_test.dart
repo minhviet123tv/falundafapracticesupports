@@ -7,7 +7,7 @@
 
 import 'dart:io';
 
-import 'package:falun_dafa_practice_supports/link_internet_list_baigiang_quocte.dart';
+import 'package:falun_dafa_practice_supports/link_and_api/link_internet_list_baigiang_quocte.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart' as http;

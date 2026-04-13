@@ -6,6 +6,8 @@ import 'package:webview_flutter_android/webview_flutter_android.dart'; // Import
 import 'package:webview_flutter_wkwebview/webview_flutter_wkwebview.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import '../../link_and_api/link_all_page_and_api_enum.dart';
+
 /*
 webview_flutter: ^4.8.0
 https://pub.dev/packages/webview_flutter/example
@@ -36,7 +38,7 @@ class _MinghuiWebviewState extends State<MinghuiWebview> {
   void initState() {
     super.initState();
 
-    // Khởi tạo ban đầu theo ngôn ngữ đầu tiên của list
+    // Khởi tạo ban đầu theo ngôn ngữ đầu tiên của list (Tránh lag khi chưa hiện được)
     // visaoconhanloaiEnum = VisaoconhanloaiEnum.values[0];
     minghuiEnum = MinghuiEnum.vietnamese;
 
@@ -127,6 +129,7 @@ class _MinghuiWebviewState extends State<MinghuiWebview> {
     //II. Khai báo chính thức cho controller toàn cục
     _controller = controller;
 
+    //III. Lấy ngôn ngữ lưu shared | Cập nhật load url theo ngôn ngữ đã lưu
     _getLanguageLink(); // Lấy ngôn ngữ lưu shared | Cập nhật load url theo ngôn ngữ đã lưu
   }
 
@@ -313,39 +316,4 @@ class _MinghuiWebviewState extends State<MinghuiWebview> {
     return currentURL;
   }
 
-}
-
-//II. Các danh sách liên kết
-enum MinghuiEnum {
-  english("https://en.minghui.org/", "English", "english"),
-  chinese1("https://big5.minghui.org/", "正體中文", "chinese1"), // phồn thể
-  chinese2("https://www.minghui.org/", "简体中文", 'chinese2'), // giản thể
-  arabic("https://ar.minghui.org/", "العربية", "arabic"),
-  bosanski("https://bs.minghui.org/", "Bosanski", "bosanski"),
-  cesky("https://cs.minghui.org/", "Česky", 'cesky'),
-  deutsch("https://de.minghui.org/", "Deutsch", "deutsch"),
-  espanol("https://es.minghui.org/", "Español", 'espanol'),
-  farsi("https://fa.minghui.org/", "فارسی", 'farsi'),
-  francais("https://fr.minghui.org/", "Francais", 'francais'),
-  hebrew("https://he.minghui.org/", "עברית", 'hebrew'),
-  hrvatski("https://hr.minghui.org/", "Hrvatski", 'hrvatski'),
-  indonesia("https://id.minghui.org/", "Indonesian", 'indonesia'),
-  italiano("https://it.minghui.org/", "Italiano", 'italiano'),
-  japan("https://jp.minghui.org/", "日本語", 'japan'),
-  korean("https://www.minghui.or.kr/", "한국어", 'korean'),
-  polski("https://pl.minghui.org/", "Polski", 'polski'),
-  portugues("https://pt.minghui.org/", "Português", 'portugues'),
-  russian("https://ru.minghui.org/", "Русский", 'russian'),
-  slovencina("https://sk.minghui.org/", "Slovenčina", 'slovencina'),
-  srpski("https://sr.minghui.org/", "Српски", 'srpski'),
-  thai("https://th.minghui.org/", "ไทย", 'thai'),
-  vietnamese("https://daiphap.org/access?url=https%3A%2F%2Fvn.minghui.org%2Fnews", "Tiếng Việt", 'vietnamese'), // https://vn.minghui.org/news
-  turkce("https://tr.minghui.org/", "Türkçe", 'turkce'),
-  ukrainian("https://uk.minghui.org/", "Українська", 'ukrainian')
-  ;
-
-  final String url;
-  final String languageName;
-  final String languageCode;
-  const MinghuiEnum (this.url, this.languageName, this.languageCode);
 }

@@ -7,7 +7,7 @@ import 'package:webview_flutter_android/webview_flutter_android.dart'; // Import
 import 'package:webview_flutter_wkwebview/webview_flutter_wkwebview.dart';
 import 'package:url_launcher/url_launcher.dart';
 
-import '../link_internet_sachchuyenphapluan_quocte.dart'; // Import for iOS features.
+import '../link_and_api/link_internet_sachchuyenphapluan_quocte.dart';
 
 /*
 webview_flutter: ^4.8.0
