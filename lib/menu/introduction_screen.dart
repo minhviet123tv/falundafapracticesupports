@@ -35,6 +35,8 @@ class OnBoardingPageState extends State<IntroductionScreenWidget> {
   @override
   Widget build(BuildContext context) {
     final bottomInset = MediaQuery.of(context).viewPadding.bottom;
+    // Keep controls slightly above system buttons without shifting layout too far.
+    final bottomLift = bottomInset > 0 ? 6.0 : 0.0;
 
     //* Màn hình Introduction Screen
     return SafeArea(
@@ -62,10 +64,10 @@ class OnBoardingPageState extends State<IntroductionScreenWidget> {
         next: const Icon(Icons.arrow_forward, color: Colors.white,),
         done: const Text('Done', style: TextStyle(fontWeight: FontWeight.w800, color: Colors.white)),
         curve: Curves.fastLinearToSlowEaseIn,
-        controlsMargin: EdgeInsets.fromLTRB(16, 16, 16, 16 + bottomInset), // Tránh bị che bởi thanh điều hướng Android
+        controlsMargin: EdgeInsets.fromLTRB(16, 16, 16, 16 + bottomLift), // Tránh bị che bởi thanh điều hướng Android
         controlsPadding: kIsWeb
             ? const EdgeInsets.all(12.0)
-            : EdgeInsets.fromLTRB(8.0, 4.0, 8.0, 4.0 + bottomInset),
+            : EdgeInsets.fromLTRB(8.0, 4.0, 8.0, 4.0 + bottomLift),
 
         dotsDecorator: const DotsDecorator( // Nút cuộn trang
           size: Size(10.0, 10.0),
