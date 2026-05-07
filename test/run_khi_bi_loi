@@ -1,3 +1,7 @@
 
 1. Hay sử dụng (Run nhưng không hiện app)
 flutter run -v
+
+2. Khi không run được các lệnh bình thường
+& "$env:LOCALAPPDATA\Android\Sdk\platform-tools\adb.exe" kill-server
+& "$env:LOCALAPPDATA\Android\Sdk\platform-tools\adb.exe" start-server

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import 'package:wakelock_plus/wakelock_plus.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 import 'package:webview_flutter_android/webview_flutter_android.dart'; // Import for Android features. | #docregion platform_imports
 import 'package:webview_flutter_wkwebview/webview_flutter_wkwebview.dart'; // Import for iOS features.
@@ -29,6 +30,7 @@ class _WebViewBrowserAudioState extends State<WebViewBrowserAudio> {
 
   //A. Dữ liệu toàn cục
   late final WebViewController _controller; // Bộ điều khiển cho webview
+  late final TextEditingController _urlController;
   var textSize16 = TextStyle(fontSize: 16);
   var textSize18 = TextStyle(fontSize: 18, fontWeight: FontWeight.w600);
 
@@ -36,6 +38,9 @@ class _WebViewBrowserAudioState extends State<WebViewBrowserAudio> {
   @override
   void initState() {
     super.initState();
+    // Keep screen awake while this audio webview is open.
+    WakelockPlus.enable();
+    _urlController = TextEditingController(text: widget.linkUrl);
 
     // #docregion platform_features
     late final PlatformWebViewControllerCreationParams params;
@@ -89,7 +94,11 @@ class _WebViewBrowserAudioState extends State<WebViewBrowserAudio> {
             debugPrint('Error occurred on page: ${error.response?.statusCode}');
           },
           onUrlChange: (UrlChange change) {
-            debugPrint('url change to ${change.url}');
+            final currentUrl = change.url;
+            if (currentUrl != null && currentUrl.isNotEmpty) {
+              _urlController.text = currentUrl;
+            }
+            debugPrint('url change to $currentUrl');
           },
 
           // Hàm Future openDialog | Có thể là dùng đối với trang web cần login
@@ -122,6 +131,26 @@ class _WebViewBrowserAudioState extends State<WebViewBrowserAudio> {
     _controller = controller;
   }
 
+  @override
+  void dispose() {
+    _urlController.dispose();
+    WakelockPlus.disable();
+    super.dispose();
+  }
+
+  Future<void> _loadFromAddressBar() async {
+    final input = _urlController.text.trim();
+    if (input.isEmpty) return;
+    final uri = Uri.tryParse(input);
+    if (uri == null || !(uri.hasScheme && (uri.scheme == 'http' || uri.scheme == 'https'))) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Link không hợp lệ. Vui lòng dùng http/https.')),
+      );
+      return;
+    }
+    await _controller.loadRequest(uri);
+  }
+
   //D. Trang
   @override
   Widget build(BuildContext context) {
@@ -130,6 +159,33 @@ class _WebViewBrowserAudioState extends State<WebViewBrowserAudio> {
         backgroundColor: Colors.green,
         appBar: AppBar(
           title: Text(widget.title, style: textSize18,),
+          bottom: PreferredSize(
+            preferredSize: const Size.fromHeight(56),
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(12, 0, 12, 8),
+              child: TextField(
+                controller: _urlController,
+                keyboardType: TextInputType.url,
+                textInputAction: TextInputAction.go,
+                onSubmitted: (_) => _loadFromAddressBar(),
+                decoration: InputDecoration(
+                  hintText: 'Nhập link audio...',
+                  isDense: true,
+                  filled: true,
+                  fillColor: Colors.white,
+                  contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  suffixIcon: IconButton(
+                    icon: const Icon(Icons.arrow_forward),
+                    tooltip: 'Mở link',
+                    onPressed: _loadFromAddressBar,
+                  ),
+                ),
+              ),
+            ),
+          ),
           actions: [
             //IV. Icon open web (out app)
             FutureBuilder<String?>(

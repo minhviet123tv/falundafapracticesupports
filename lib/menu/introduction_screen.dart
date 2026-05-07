@@ -34,47 +34,53 @@ class OnBoardingPageState extends State<IntroductionScreenWidget> {
   //D. Widget build (Xây dựng widget)
   @override
   Widget build(BuildContext context) {
+    final bottomInset = MediaQuery.of(context).viewPadding.bottom;
 
     //* Màn hình Introduction Screen
-    return IntroductionScreen(
-      key: introKey, // key thứ tự page
-      globalBackgroundColor: Colors.blue, // Màu nền dưới cùng của toàn bộ intro
-      allowImplicitScrolling: false, // Cho phép cuộn ngầm trang
-      // autoScrollDuration: 3000, // Thời lượng cuộn tự động (không đặt thì không cuộn)
-      infiniteAutoScroll: false, // Cuộn tự động vô hạn
+    return SafeArea(
+      bottom: true,
+      child: IntroductionScreen(
+        key: introKey, // key thứ tự page
+        globalBackgroundColor: Colors.blue, // Màu nền dưới cùng của toàn bộ intro
+        allowImplicitScrolling: false, // Cho phép cuộn ngầm trang
+        // autoScrollDuration: 3000, // Thời lượng cuộn tự động (không đặt thì không cuộn)
+        infiniteAutoScroll: false, // Cuộn tự động vô hạn
 
-      //I. Danh sách các trang của intro (truyền vào khi khởi tạo)
-      pages: listPageViewModel,
+        //I. Danh sách các trang của intro (truyền vào khi khởi tạo)
+        pages: listPageViewModel,
 
-      //II. Các setup khác
-      onDone: () => _onIntroEnd(context), // hàm thực hiện sau khi bấm done (xem xong)
-      onSkip: () => _onIntroEnd(context), // hàm thực hiện sau khi skip
-      showSkipButton: true, // Chọn show nút skip hoặc back (1 trong 2)
-      showBackButton: false,
-      skipOrBackFlex: 0,
-      nextFlex: 0,
-      //rtl: false, // hướng hiển thị right-to-left
-      back: const Icon(Icons.arrow_back, color: Colors.white,),
-      skip: const Text('Skip', style: TextStyle(fontWeight: FontWeight.w800, color: Colors.white)),
-      next: const Icon(Icons.arrow_forward, color: Colors.white,),
-      done: const Text('Done', style: TextStyle(fontWeight: FontWeight.w800, color: Colors.white)),
-      curve: Curves.fastLinearToSlowEaseIn,
-      controlsMargin: const EdgeInsets.all(16), // Khoảng cách của menu control
-      controlsPadding: kIsWeb ? const EdgeInsets.all(12.0) : const EdgeInsets.fromLTRB(8.0, 4.0, 8.0, 4.0),
+        //II. Các setup khác
+        onDone: () => _onIntroEnd(context), // hàm thực hiện sau khi bấm done (xem xong)
+        onSkip: () => _onIntroEnd(context), // hàm thực hiện sau khi skip
+        showSkipButton: true, // Chọn show nút skip hoặc back (1 trong 2)
+        showBackButton: false,
+        skipOrBackFlex: 0,
+        nextFlex: 0,
+        //rtl: false, // hướng hiển thị right-to-left
+        back: const Icon(Icons.arrow_back, color: Colors.white,),
+        skip: const Text('Skip', style: TextStyle(fontWeight: FontWeight.w800, color: Colors.white)),
+        next: const Icon(Icons.arrow_forward, color: Colors.white,),
+        done: const Text('Done', style: TextStyle(fontWeight: FontWeight.w800, color: Colors.white)),
+        curve: Curves.fastLinearToSlowEaseIn,
+        controlsMargin: EdgeInsets.fromLTRB(16, 16, 16, 16 + bottomInset), // Tránh bị che bởi thanh điều hướng Android
+        controlsPadding: kIsWeb
+            ? const EdgeInsets.all(12.0)
+            : EdgeInsets.fromLTRB(8.0, 4.0, 8.0, 4.0 + bottomInset),
 
-      dotsDecorator: const DotsDecorator( // Nút cuộn trang
-        size: Size(10.0, 10.0),
-        color: Colors.white,
-        activeColor: Colors.blue,
-        activeSize: Size(22.0, 10.0), // Kích thước khi được chọn
-        activeShape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.all(Radius.circular(25.0)), // bo viền nút khi được chọn
+        dotsDecorator: const DotsDecorator( // Nút cuộn trang
+          size: Size(10.0, 10.0),
+          color: Colors.white,
+          activeColor: Colors.blue,
+          activeSize: Size(22.0, 10.0), // Kích thước khi được chọn
+          activeShape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.all(Radius.circular(25.0)), // bo viền nút khi được chọn
+          ),
         ),
-      ),
-      dotsContainerDecorator: const ShapeDecoration( // Nền của thanh control
-        color: Colors.black87,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.all(Radius.circular(8.0)),
+        dotsContainerDecorator: const ShapeDecoration( // Nền của thanh control
+          color: Colors.black87,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.all(Radius.circular(8.0)),
+          ),
         ),
       ),
     );
