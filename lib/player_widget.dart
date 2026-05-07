@@ -186,70 +186,69 @@ class _PlayerWidgetState extends State<PlayerWidget> {
         mainAxisSize: MainAxisSize.min,
         children: [
             Row(
-              mainAxisAlignment: MainAxisAlignment.start,
+              mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Expanded(
-                  child: SingleChildScrollView(
-                    scrollDirection: Axis.horizontal,
-                    child: Row(
-                      children: [
-                        _menuButton(
-                          icon: _selectionMode ? Icons.checklist_rtl : Icons.checklist,
-                          label: _selectionMode ? "Done" : "Select",
-                          onTap: () {
-                            setState(() {
-                              _selectionMode = !_selectionMode;
-                            });
-                          },
-                        ),
-                        const SizedBox(width: 8),
-                        _menuButton(
-                          icon: _isSelectedQueueActive
-                              ? (_playerState == PlayerState.playing ? Icons.pause_rounded : Icons.play_arrow_rounded)
-                              : Icons.play_arrow_rounded,
-                          label: _isSelectedQueueActive
-                              ? (_playerState == PlayerState.playing ? "Pause Selected" : "Resume Selected")
-                              : "Play Selected",
-                          enabled: _selectedIndices.isNotEmpty,
-                          highlighted: _selectedIndices.isNotEmpty,
-                          onTap: () async {
-                            if (_isSelectedQueueActive) {
-                              if (_playerState == PlayerState.playing) {
-                                await _audioPlayer.pause();
-                              } else if (_playerState == PlayerState.paused) {
-                                await _audioPlayer.resume();
-                              } else {
-                                await _startSelectedQueue();
-                              }
-                              return;
+                SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      _menuButton(
+                        icon: _selectionMode ? Icons.check_box : Icons.check_box_outlined,
+                        label: _selectionMode ? "Done" : "Select",
+                        onTap: () {
+                          setState(() {
+                            _selectionMode = !_selectionMode;
+                          });
+                        },
+                      ),
+                      const SizedBox(width: 8),
+                      _menuButton(
+                        icon: _isSelectedQueueActive
+                            ? (_playerState == PlayerState.playing ? Icons.pause_rounded : Icons.play_arrow_rounded)
+                            : Icons.play_arrow_rounded,
+                        label: _isSelectedQueueActive
+                            ? (_playerState == PlayerState.playing ? "Pause Selected" : "Resume Selected")
+                            : "Play Selected",
+                        enabled: _selectedIndices.isNotEmpty,
+                        highlighted: _selectedIndices.isNotEmpty,
+                        onTap: () async {
+                          if (_isSelectedQueueActive) {
+                            if (_playerState == PlayerState.playing) {
+                              await _audioPlayer.pause();
+                            } else if (_playerState == PlayerState.paused) {
+                              await _audioPlayer.resume();
+                            } else {
+                              await _startSelectedQueue();
                             }
-                            setState(() {
-                              _selectionMode = false; // Bấm play coi như đã chọn xong
-                            });
-                            await _startSelectedQueue();
-                          },
-                        ),
-                        const SizedBox(width: 8),
-                        _menuButton(
-                          icon: Icons.clear_all,
-                          label: "Clear",
-                          enabled: _selectedIndices.isNotEmpty,
-                          onTap: () {
-                            setState(() {
-                              _selectedIndices.clear();
-                            });
-                            unawaited(_saveSelectedIndices());
-                          },
-                        ),
-                      ],
-                    ),
+                            return;
+                          }
+                          setState(() {
+                            _selectionMode = false; // Bấm play coi như đã chọn xong
+                          });
+                          await _startSelectedQueue();
+                        },
+                      ),
+                      const SizedBox(width: 8),
+                      _menuButton(
+                        icon: Icons.clear_all,
+                        label: "Clear",
+                        enabled: _selectedIndices.isNotEmpty,
+                        onTap: () {
+                          setState(() {
+                            _selectedIndices.clear();
+                          });
+                          unawaited(_saveSelectedIndices());
+                        },
+                      ),
+                    ],
                   ),
                 ),
               ],
             ),
             const SizedBox(height: 12),
             Row(
-              mainAxisAlignment: MainAxisAlignment.start,
+              mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Expanded(
                   child: _buildSelectedTracksWidget(),
@@ -266,6 +265,7 @@ class _PlayerWidgetState extends State<PlayerWidget> {
       if (_selectionMode && !_hasDownloadedAny) {
         return Text(
           "Please download tracks to use this feature.",
+          textAlign: TextAlign.center,
           style: TextStyle(
             fontSize: 13,
             color: Colors.blueGrey.shade700,
@@ -276,11 +276,12 @@ class _PlayerWidgetState extends State<PlayerWidget> {
       }
 
       return Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.center,
         mainAxisSize: MainAxisSize.min,
         children: [
           Text(
             "Selected: none",
+            textAlign: TextAlign.center,
             style: TextStyle(
               fontSize: 13,
               color: Colors.blueGrey.shade700,
@@ -334,6 +335,7 @@ class _PlayerWidgetState extends State<PlayerWidget> {
 
     return Text.rich(
       TextSpan(children: spans),
+      textAlign: TextAlign.center,
       maxLines: 2,
       overflow: TextOverflow.ellipsis,
     );
