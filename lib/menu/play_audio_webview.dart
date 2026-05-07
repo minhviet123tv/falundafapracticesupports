@@ -123,10 +123,7 @@ class _WebViewBrowserAudioState extends State<WebViewBrowserAudio> {
             unawaited(_setWakelock(false));
           }
         },
-      )
-
-      // Trang web đầu tiên khi mới mở trang
-      ..loadRequest(Uri.parse('${widget.linkUrl}')); // https://www.ganjingworld.com/embed/1fdmph5i6al3ExcRdoWQUzS541l51c
+      );
 
     // Cài đặt cho thiết bị | #docregion platform_features
     if (controller.platform is AndroidWebViewController) {
@@ -137,6 +134,7 @@ class _WebViewBrowserAudioState extends State<WebViewBrowserAudio> {
 
     //II. Khai báo chính thức cho controller toàn cục
     _controller = controller;
+    _loadInitialContent();
   }
 
   @override
@@ -186,6 +184,47 @@ class _WebViewBrowserAudioState extends State<WebViewBrowserAudio> {
         observer.observe(document.documentElement, { childList: true, subtree: true });
       })();
     ''');
+  }
+
+  Future<void> _loadInitialContent() async {
+    final link = widget.linkUrl.trim();
+    final uri = Uri.tryParse(link);
+    final isLocalFile = uri != null && uri.scheme == 'file';
+
+    if (isLocalFile) {
+      final html = '''
+      <!doctype html>
+      <html>
+        <head>
+          <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+          <style>
+            body {
+              margin: 0;
+              padding: 16px;
+              background: #111;
+              color: #fff;
+              font-family: Arial, sans-serif;
+            }
+            audio {
+              width: 100%;
+              margin-top: 12px;
+            }
+          </style>
+        </head>
+        <body>
+          <div>Offline audio</div>
+          <audio controls autoplay>
+            <source src="$link" type="audio/mpeg">
+            Trình phát không hỗ trợ file audio này.
+          </audio>
+        </body>
+      </html>
+      ''';
+      await _controller.loadHtmlString(html);
+      return;
+    }
+
+    await _controller.loadRequest(Uri.parse(link));
   }
 
   Future<void> _pauseAllMedia() async {

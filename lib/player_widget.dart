@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
+import 'dart:io';
 
 import 'dart:async';
+import 'package:audioplayers/audioplayers.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:falun_dafa_practice_supports/common/downloaded_audio_store.dart';
 
 import 'menu/play_audio_webview.dart';
 import 'download_from_url.dart';
@@ -25,6 +28,15 @@ class _PlayerWidgetState extends State<PlayerWidget> {
   TextStyle textStyle18 = TextStyle(fontSize: 18, color: Colors.black);
   TextStyle textStyle16 = TextStyle(fontSize: 16, color: Colors.black);
   TextStyle styleTextTitle = TextStyle(color: Colors.white, fontWeight: FontWeight.w500, fontSize: 20);
+  Map<String, String> _downloadedPathMap = <String, String>{};
+  final AudioPlayer _audioPlayer = AudioPlayer();
+  Duration _position = Duration.zero;
+  Duration _duration = Duration.zero;
+  PlayerState _playerState = PlayerState.stopped;
+  int? _offlinePlayingIndex;
+  StreamSubscription<Duration>? _positionSub;
+  StreamSubscription<Duration>? _durationSub;
+  StreamSubscription<PlayerState>? _stateSub;
 
   // list chứa source trong assets | Vì dùng AssetsSource nên không cần ghi assets/ ở đầu
   List<AudioSourceModelInternet> listInternetSource = [
@@ -41,6 +53,19 @@ class _PlayerWidgetState extends State<PlayerWidget> {
   void initState() {
     super.initState();
     _getIndexCurrent(); // Lấy indexCurrent (Thứ tự bài nhạc đã play gần nhất) lưu shared
+    _loadDownloadedPathMap();
+    _positionSub = _audioPlayer.onPositionChanged.listen((value) {
+      if (!mounted) return;
+      setState(() => _position = value);
+    });
+    _durationSub = _audioPlayer.onDurationChanged.listen((value) {
+      if (!mounted) return;
+      setState(() => _duration = value);
+    });
+    _stateSub = _audioPlayer.onPlayerStateChanged.listen((value) {
+      if (!mounted) return;
+      setState(() => _playerState = value);
+    });
   }
 
   //B.1 Lấy indexCurrent lưu shared
@@ -60,6 +85,23 @@ class _PlayerWidgetState extends State<PlayerWidget> {
   _setIndexCurrentShared(int index) async {
     final shared = await SharedPreferences.getInstance();
     shared.setInt("indexCurrent_nhacluyencong", index);
+  }
+
+  Future<void> _loadDownloadedPathMap() async {
+    final map = await DownloadedAudioStore.getAll();
+    if (!mounted) return;
+    setState(() {
+      _downloadedPathMap = map;
+    });
+  }
+
+  @override
+  void dispose() {
+    _positionSub?.cancel();
+    _durationSub?.cancel();
+    _stateSub?.cancel();
+    _audioPlayer.dispose();
+    super.dispose();
   }
 
   //D. Trang
@@ -86,35 +128,43 @@ class _PlayerWidgetState extends State<PlayerWidget> {
           onTap: (){
             indexCurrent = index; // Cập nhật index cho Provider
             _setIndexCurrentShared(index); // Lưu index vào shared
-            _playInWebview(index); // Mở trang play
+            _playAudio(index);
             setState(() {}); //set state để cập nhật và tránh việc bị lag
           },
           child: Container(
             padding: const EdgeInsets.symmetric(horizontal: 16),
             alignment: Alignment.center,
-            // height: 50,
-            // Phải cập nhật ở Provider để lấy đúng indexCurrent khi có thay đổi
             color: index == indexCurrent ? Colors.deepPurple[200] : Colors.grey[200],
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
               children: [
-
-                //I. Tên item
-                Text("${listInternetSource[index].name}", style: textStyle16, overflow: TextOverflow.ellipsis,),
-
-                //II. Nhóm icon download và open in browser
                 Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
+                    //I. Tên item
+                    Expanded(
+                      child: Text("${listInternetSource[index].name}", style: textStyle16, overflow: TextOverflow.ellipsis,),
+                    ),
+
+                    //II. Nhóm icon download và open in browser
+                    Row(
+                      children: [
 
                     //1. Icon play (Chức năng giống như click vào item, nhưng để hiện nút cho dễ hiểu)
                     IconButton(
                       onPressed: (){
                         indexCurrent = index; // Cập nhật index cho Provider
                         _setIndexCurrentShared(index); // Lưu index vào shared
-                        _playInWebview(index); // Mở trang play
+                        _onPlayPausePressed(index);
                         setState(() {}); //set state để cập nhật và tránh việc bị lag
                       },
-                      icon: Icon(Icons.play_circle_fill, color: Colors.orangeAccent,),
+                      icon: Icon(
+                        _offlinePlayingIndex == index && _playerState == PlayerState.playing
+                            ? Icons.pause_circle_filled
+                            : Icons.play_circle_fill,
+                        color: Colors.orangeAccent,
+                        size: 32,
+                      ),
                     ),
 
                     //2. Widget download về máy (Đã tạo sẵn) -> Chọn kích thước phù hợp để hiển thị. Tạo lưu khi click
@@ -127,7 +177,21 @@ class _PlayerWidgetState extends State<PlayerWidget> {
                           _setIndexCurrentShared(index); // Lưu index vào shared
                           setState(() {}); // Cập nhật cho giao diện
                         },
-                        child: DownloadFromUrl(url: listInternetSource[index].linkUrl,),
+                        child: DownloadFromUrl(
+                          key: ValueKey(
+                            '${listInternetSource[index].linkUrl}_${_downloadedPathMap[listInternetSource[index].linkUrl] ?? ''}',
+                          ),
+                          url: listInternetSource[index].linkUrl,
+                          onDownloadCompleted: (path) {
+                            _downloadedPathMap[listInternetSource[index].linkUrl] = path;
+                            if (mounted) setState(() {});
+                          },
+                          onDownloadStateChanged: (isDone) {
+                            if (!isDone) {
+                              _downloadedPathMap.remove(listInternetSource[index].linkUrl);
+                            }
+                          },
+                        ),
                       ),
                     ),
 
@@ -141,9 +205,11 @@ class _PlayerWidgetState extends State<PlayerWidget> {
                       },
                       icon: Icon(Icons.open_in_new),
                     ),
+                      ],
+                    ),
                   ],
                 ),
-
+                if (_offlinePlayingIndex == index) _buildOfflineProgress(),
               ],
             ),
           ),
@@ -152,11 +218,94 @@ class _PlayerWidgetState extends State<PlayerWidget> {
     );
   }
 
-  //E.1 Trang play audio bằng Webview
-  _playInWebview(int index){
+  Widget _buildOfflineProgress() {
+    final maxMs = _duration.inMilliseconds <= 0 ? 1 : _duration.inMilliseconds;
+    final currentMs = _position.inMilliseconds.clamp(0, maxMs);
+
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8),
+      child: Column(
+        children: [
+          Slider(
+            min: 0,
+            max: maxMs.toDouble(),
+            value: currentMs.toDouble(),
+            onChanged: (value) => _audioPlayer.seek(Duration(milliseconds: value.toInt())),
+          ),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(_formatDuration(_position), style: const TextStyle(fontSize: 12)),
+              Text(_formatDuration(_duration), style: const TextStyle(fontSize: 12)),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  String _formatDuration(Duration value) {
+    final minutes = value.inMinutes.remainder(60).toString().padLeft(2, '0');
+    final seconds = value.inSeconds.remainder(60).toString().padLeft(2, '0');
+    final hours = value.inHours;
+    if (hours > 0) {
+      return '${hours.toString().padLeft(2, '0')}:$minutes:$seconds';
+    }
+    return '$minutes:$seconds';
+  }
+
+  Future<void> _playAudio(int index) async {
+    final onlineUrl = listInternetSource[index].linkUrl;
+    final localPathFromMap = _downloadedPathMap[onlineUrl];
+
+    if (localPathFromMap != null) {
+      final file = File(localPathFromMap);
+      if (await file.exists()) {
+        await _audioPlayer.stop();
+        await _audioPlayer.play(DeviceFileSource(localPathFromMap));
+        if (!mounted) return;
+        setState(() {
+          _offlinePlayingIndex = index;
+          _position = Duration.zero;
+        });
+        return;
+      } else {
+        await DownloadedAudioStore.remove(onlineUrl);
+        _downloadedPathMap.remove(onlineUrl);
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text("File offline không còn tồn tại, chuyển sang phát online.")),
+          );
+          setState(() {});
+        }
+      }
+    }
+
+    await _audioPlayer.stop();
+    if (mounted) {
+      setState(() {
+        _offlinePlayingIndex = null;
+        _position = Duration.zero;
+        _duration = Duration.zero;
+      });
+    }
+    if (!mounted) return;
     Navigator.push(context, MaterialPageRoute(builder: (builder){
-      return WebViewBrowserAudio(linkUrl: '${listInternetSource[index].linkUrl}', title: '${listInternetSource[index].name}',);
+      return WebViewBrowserAudio(linkUrl: onlineUrl, title: '${listInternetSource[index].name}',);
     }));
+  }
+
+  Future<void> _onPlayPausePressed(int index) async {
+    final isCurrentOffline = _offlinePlayingIndex == index;
+    if (isCurrentOffline && _playerState == PlayerState.playing) {
+      await _audioPlayer.pause();
+      return;
+    }
+    if (isCurrentOffline && _playerState == PlayerState.paused) {
+      await _audioPlayer.resume();
+      return;
+    }
+    await _playAudio(index);
   }
 
   //E.2 Mở url ở trình duyệt website

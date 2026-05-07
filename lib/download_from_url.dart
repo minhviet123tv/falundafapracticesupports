@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_file_downloader/flutter_file_downloader.dart';
+import 'package:falun_dafa_practice_supports/common/downloaded_audio_store.dart';
 
 /*
 Tạo Widget hiện nút tải -> loading chờ tải -> hiện % download -> Báo download xong
@@ -15,7 +16,14 @@ Chú ý: Cần cấp quyền truy cập file (Có thể phải khai báo cả tr
 
 class DownloadFromUrl extends StatefulWidget {
   final String url;
-  DownloadFromUrl({required this.url, super.key,});
+  final ValueChanged<String>? onDownloadCompleted;
+  final ValueChanged<bool>? onDownloadStateChanged;
+  DownloadFromUrl({
+    required this.url,
+    this.onDownloadCompleted,
+    this.onDownloadStateChanged,
+    super.key,
+  });
   @override
   State<DownloadFromUrl> createState() => _DownloadFromUrlState();
 }
@@ -27,6 +35,13 @@ class _DownloadFromUrlState extends State<DownloadFromUrl> {
   String? _fileName = "";
   bool downloadDone = false;
   late bool showLoading = false;
+  String? _localPath;
+
+  @override
+  void initState() {
+    super.initState();
+    _syncDownloadStatus();
+  }
 
   //D. Widget
   @override
@@ -80,14 +95,37 @@ class _DownloadFromUrlState extends State<DownloadFromUrl> {
       },
 
       // Sự kiện sau khi hoàn thành (tải xong)
-      onDownloadCompleted: (path) {
+      onDownloadCompleted: (path) async {
+        _localPath = path;
+        await DownloadedAudioStore.save(widget.url.trim(), path);
+        if (!mounted) return;
         setState(() {
           _progress = 0.0; // Trả lại tiến trình (progress) về điểm bắt đầu
           downloadDone = true; // Xác nhận tình trạng download
         });
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Files/downloads/$_fileName"))); // Hiện tên fileName, còn Files/downloads chỉ mang tính mô tả, nhưng đúng trên khá nhiều thiết bị kiểu chỗ quản lí file/downloads
-        // print('path source:  $path '); // path: Đường dẫn chứa file tải về
-      }
+        widget.onDownloadStateChanged?.call(true);
+        widget.onDownloadCompleted?.call(path);
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(path)));
+      },
+      onDownloadError: (message) {
+        if (!mounted) return;
+        setState(() {
+          showLoading = false;
+          _progress = 0.0;
+          downloadDone = false;
+        });
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Tải xuống thất bại: $message")));
+      },
     );
+  }
+
+  Future<void> _syncDownloadStatus() async {
+    final localPath = await DownloadedAudioStore.resolveExistingLocalPath(widget.url.trim());
+    if (!mounted) return;
+    setState(() {
+      _localPath = localPath;
+      downloadDone = localPath != null;
+    });
+    widget.onDownloadStateChanged?.call(downloadDone);
   }
 }
