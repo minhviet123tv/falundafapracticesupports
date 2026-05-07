@@ -53,7 +53,7 @@ List<PageViewModel> listPageViewModelGioiThieuApp = [
             "Hiện nay có rất nhiều người đã biết đến sự tốt đẹp của Pháp Luân Công (Pháp Luân Đại Pháp) và bắt đầu tu luyện.\n"
             "\nĐể nghe 9 bài giảng hoặc đọc sách, trong đó sách chính là \"Chuyển Pháp Luân\" (có nội dung như 9 bài giảng), học viên có thể truy cập tại chủ www.falundafa.org hoặc in thành sách, tải file âm thanh về để sử dụng.\n"
             "\nỨng dụng này được tạo ra bởi học viên Pháp Luân Công nhằm hỗ trợ các học viên khác truy cập dữ liệu học tập trực tuyến trên trang chủ www.falundafa.org\n"
-            "\nNgoài ra ứng dụng còn có phần hướng dẫn tập cơ bản nhằm giúp học viên mới tiếp cận môn học, có nút hỗ trợ tải audio về máy để sử dụng khi không dùng internet (mở thư mục đã lưu về hoặc sử dụng trình mở nhạc của máy).\n"
+            "\nNgoài ra ứng dụng còn có phần hướng dẫn tập cơ bản nhằm giúp học viên mới tiếp cận môn học, có nút hỗ trợ tải audio về máy để sử dụng khi không dùng internet.\n"
             "\nĐể tìm hiểu đầy đủ về Pháp Luân Công (Pháp Luân Đại Pháp) vui lòng truy cập:\n",
             style: styleTextBody2, textAlign: TextAlign.justify,
           ),

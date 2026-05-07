@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'dart:io';
 import 'package:flutter_file_downloader/flutter_file_downloader.dart';
 import 'package:falun_dafa_practice_supports/common/downloaded_audio_store.dart';
 
@@ -70,7 +71,11 @@ class _DownloadFromUrlState extends State<DownloadFromUrl> {
           if(_progress != 0) Text("$_progress %"),
 
           //3. Hiện thông báo sau khi download xong
-          if(downloadDone == true) Icon(Icons.check, color: Colors.green,),
+          if(downloadDone == true)
+            IconButton(
+              onPressed: _confirmResetDownload,
+              icon: const Icon(Icons.check, color: Colors.green),
+            ),
         ],
       ),
     );
@@ -127,5 +132,90 @@ class _DownloadFromUrlState extends State<DownloadFromUrl> {
       downloadDone = localPath != null;
     });
     widget.onDownloadStateChanged?.call(downloadDone);
+  }
+
+  Future<void> _confirmResetDownload() async {
+    final shouldReset = await showDialog<bool>(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          insetPadding: const EdgeInsets.symmetric(horizontal: 28, vertical: 24),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          titlePadding: const EdgeInsets.fromLTRB(24, 22, 24, 12),
+          contentPadding: const EdgeInsets.fromLTRB(24, 0, 24, 18),
+          actionsPadding: const EdgeInsets.fromLTRB(18, 4, 18, 16),
+          actionsAlignment: MainAxisAlignment.center,
+          title: Row(
+            children: const [
+              Icon(Icons.restart_alt, color: Colors.deepPurple),
+              SizedBox(width: 8),
+              Text(
+                "Reset track",
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
+              ),
+            ],
+          ),
+          content: const Text(
+            "Do you want to reset this track?",
+            style: TextStyle(fontSize: 15, height: 1.3),
+          ),
+          actions: [
+            OutlinedButton(
+              style: OutlinedButton.styleFrom(
+                minimumSize: const Size(110, 42),
+                padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
+                textStyle: const TextStyle(fontSize: 15, fontWeight: FontWeight.w500),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10),
+                ),
+              ),
+              onPressed: () => Navigator.of(context).pop(false),
+              child: const Text("Cancel"),
+            ),
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.deepPurple,
+                foregroundColor: Colors.white,
+                minimumSize: const Size(110, 42),
+                padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
+                textStyle: const TextStyle(fontSize: 15, fontWeight: FontWeight.w500),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10),
+                ),
+              ),
+              onPressed: () => Navigator.of(context).pop(true),
+              child: const Text("Reset"),
+            ),
+          ],
+        );
+      },
+    );
+
+    if (shouldReset != true) return;
+    await _resetDownloadedFile();
+  }
+
+  Future<void> _resetDownloadedFile() async {
+    final targetPath = _localPath ?? await DownloadedAudioStore.resolveExistingLocalPath(widget.url.trim());
+    if (targetPath != null && targetPath.isNotEmpty) {
+      final file = File(targetPath);
+      if (await file.exists()) {
+        await file.delete();
+      }
+    }
+
+    await DownloadedAudioStore.remove(widget.url.trim());
+
+    if (!mounted) return;
+    setState(() {
+      _localPath = null;
+      _progress = 0.0;
+      downloadDone = false;
+      showLoading = false;
+      _fileName = "";
+    });
+    widget.onDownloadStateChanged?.call(false);
   }
 }
