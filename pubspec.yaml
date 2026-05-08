@@ -31,6 +31,7 @@ dependencies:
   flutter:
     sdk: flutter
   audioplayers: ^6.0.0 # audioplayers
+  audio_session: ^0.2.2 # cấu hình media session/background audio
   flutter_slidable: ^3.1.0 # swiple item
   provider: ^6.1.2 # add provider
   shared_preferences: ^2.2.3 #shared_preferences

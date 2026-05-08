@@ -4,6 +4,7 @@ import 'dart:io';
 
 import 'dart:async';
 import 'package:audioplayers/audioplayers.dart';
+import 'package:audio_session/audio_session.dart' as audio_session;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:falun_dafa_practice_supports/common/downloaded_audio_store.dart';
@@ -39,6 +40,7 @@ class _PlayerWidgetState extends State<PlayerWidget> {
   StreamSubscription<Duration>? _positionSub;
   StreamSubscription<Duration>? _durationSub;
   StreamSubscription<PlayerState>? _stateSub;
+  StreamSubscription<void>? _completeSub;
   bool _selectionMode = false;
   List<int> _selectedIndices = <int>[];
   List<int> _queue = <int>[];
@@ -58,6 +60,7 @@ class _PlayerWidgetState extends State<PlayerWidget> {
   @override
   void initState() {
     super.initState();
+    unawaited(_configureAudioSession());
     _getIndexCurrent(); // Lấy indexCurrent (Thứ tự bài nhạc đã play gần nhất) lưu shared
     _loadDownloadedPathMap();
     _loadSelectedIndices();
@@ -72,10 +75,37 @@ class _PlayerWidgetState extends State<PlayerWidget> {
     _stateSub = _audioPlayer.onPlayerStateChanged.listen((value) {
       if (!mounted) return;
       setState(() => _playerState = value);
-      if (value == PlayerState.completed) {
-        unawaited(_playNextInQueue());
-      }
     });
+    _completeSub = _audioPlayer.onPlayerComplete.listen((_) {
+      unawaited(_playNextInQueue());
+    });
+  }
+
+  Future<void> _configureAudioSession() async {
+    try {
+      final session = await audio_session.AudioSession.instance;
+      await session.configure(audio_session.AudioSessionConfiguration.music());
+      await _audioPlayer.setAudioContext(
+        AudioContext(
+          android: AudioContextAndroid(
+            isSpeakerphoneOn: false,
+            stayAwake: true,
+            contentType: AndroidContentType.music,
+            usageType: AndroidUsageType.media,
+            audioFocus: AndroidAudioFocus.gain,
+          ),
+          iOS: AudioContextIOS(
+            category: AVAudioSessionCategory.playback,
+            options: <AVAudioSessionOptions>{
+              AVAudioSessionOptions.mixWithOthers,
+            },
+          ),
+        ),
+      );
+      await _audioPlayer.setReleaseMode(ReleaseMode.stop);
+    } catch (e) {
+      debugPrint("Audio session config error: $e");
+    }
   }
 
   //B.1 Lấy indexCurrent lưu shared
@@ -154,6 +184,7 @@ class _PlayerWidgetState extends State<PlayerWidget> {
     _positionSub?.cancel();
     _durationSub?.cancel();
     _stateSub?.cancel();
+    _completeSub?.cancel();
     _audioPlayer.dispose();
     super.dispose();
   }
