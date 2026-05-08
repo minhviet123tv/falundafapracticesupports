@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'dart:convert';
 import 'dart:io';
 
 import 'dart:async';
@@ -24,11 +23,9 @@ class PlayerWidget extends StatefulWidget {
 }
 
 class _PlayerWidgetState extends State<PlayerWidget> {
-  static const String _selectedPracticeIndicesKey = "selected_practice_indices_v1";
 
   //A. Dữ liệu
-  late int indexCurrent = 0; // Vị trí đang được lựa chọn để play | Vị trí được chọn mặc định -> đầu list
-  TextStyle textStyle18 = TextStyle(fontSize: 18, color: Colors.black);
+  late int indexCurrent = 0;
   TextStyle textStyle16 = TextStyle(fontSize: 16, color: Colors.black);
   TextStyle styleTextTitle = TextStyle(color: Colors.white, fontWeight: FontWeight.w500, fontSize: 20);
   Map<String, String> _downloadedPathMap = <String, String>{};
@@ -40,13 +37,8 @@ class _PlayerWidgetState extends State<PlayerWidget> {
   StreamSubscription<Duration>? _positionSub;
   StreamSubscription<Duration>? _durationSub;
   StreamSubscription<PlayerState>? _stateSub;
-  StreamSubscription<void>? _completeSub;
-  bool _selectionMode = false;
-  List<int> _selectedIndices = <int>[];
-  List<int> _queue = <int>[];
-  int _queuePointer = -1;
+  StreamSubscription<audio_session.AudioInterruptionEvent>? _interruptionSub;
 
-  // list chứa source trong assets | Vì dùng AssetsSource nên không cần ghi assets/ ở đầu
   List<AudioSourceModelInternet> listInternetSource = [
     AudioSourceModelInternet("Exercise 1", "https://media.falundafa.org/media1/media/dafa/exercise/320k/exercise_01.mp3"),
     AudioSourceModelInternet("Exercise 2", "https://media.falundafa.org/media1/media/dafa/exercise/320k/exercise_02.mp3"),
@@ -56,14 +48,12 @@ class _PlayerWidgetState extends State<PlayerWidget> {
     AudioSourceModelInternet("发正念", "https://media.falundafa.org/media1/media/dafa/music/48k/fzn15.mp3"),
   ];
 
-  //B. Khởi tạo
   @override
   void initState() {
     super.initState();
     unawaited(_configureAudioSession());
-    _getIndexCurrent(); // Lấy indexCurrent (Thứ tự bài nhạc đã play gần nhất) lưu shared
+    _getIndexCurrent();
     _loadDownloadedPathMap();
-    _loadSelectedIndices();
     _positionSub = _audioPlayer.onPositionChanged.listen((value) {
       if (!mounted) return;
       setState(() => _position = value);
@@ -75,9 +65,6 @@ class _PlayerWidgetState extends State<PlayerWidget> {
     _stateSub = _audioPlayer.onPlayerStateChanged.listen((value) {
       if (!mounted) return;
       setState(() => _playerState = value);
-    });
-    _completeSub = _audioPlayer.onPlayerComplete.listen((_) {
-      unawaited(_playNextInQueue());
     });
   }
 
@@ -103,12 +90,143 @@ class _PlayerWidgetState extends State<PlayerWidget> {
         ),
       );
       await _audioPlayer.setReleaseMode(ReleaseMode.stop);
+
+      await _interruptionSub?.cancel();
+      _interruptionSub = session.interruptionEventStream.listen((event) {
+        if (event.begin) return;
+        unawaited(_onAudioInterruptionEnded());
+      });
     } catch (e) {
       debugPrint("Audio session config error: $e");
     }
   }
 
-  //B.1 Lấy indexCurrent lưu shared
+  Future<void> _onAudioInterruptionEnded() async {
+    await _ensurePlaybackSessionActive();
+    if (!mounted) return;
+    if (_offlinePlayingIndex == null) return;
+    try {
+      await _audioPlayer.resume();
+    } catch (e) {
+      debugPrint("Practice audio resume after interruption: $e");
+    }
+
+    await Future<void>.delayed(const Duration(milliseconds: 400));
+    if (!mounted || _offlinePlayingIndex == null) return;
+    await _recoverStalledIfNeededBasedOnOfflineContext();
+  }
+
+  Future<void> _recoverStalledIfNeeded({
+    required bool Function() stillValid,
+    required String devicePath,
+  }) async {
+    Future<void> hardReplay() async {
+      if (!stillValid()) return;
+      await _ensurePlaybackSessionActive();
+      await _audioPlayer.stop();
+      await Future<void>.delayed(const Duration(milliseconds: 80));
+      await _ensurePlaybackSessionActive();
+      await _audioPlayer.play(DeviceFileSource(devicePath));
+    }
+
+    await Future<void>.delayed(const Duration(milliseconds: 1100));
+    if (!stillValid() || !mounted) return;
+
+    bool stalledAtStart() =>
+        _audioPlayer.state == PlayerState.playing &&
+        _duration > const Duration(seconds: 1) &&
+        _position < const Duration(milliseconds: 450);
+
+    await Future<void>.delayed(const Duration(milliseconds: 1500));
+    if (!stillValid() || !mounted) return;
+
+    final bool zombiePlaying = _audioPlayer.state == PlayerState.playing &&
+        _duration <= Duration.zero &&
+        _position <= Duration.zero;
+
+    if (!stalledAtStart() && !zombiePlaying) return;
+
+    debugPrint(
+      "Practice audio: stalled/zombie (${_audioPlayer.state}, pos=${_position.inMilliseconds}, dur=${_duration.inMilliseconds}) → soft recover",
+    );
+    await _ensurePlaybackSessionActive();
+    try {
+      await _audioPlayer.seek(Duration.zero);
+      await _audioPlayer.resume();
+    } catch (e) {
+      debugPrint("Practice audio soft recover failed: $e");
+    }
+
+    await Future<void>.delayed(const Duration(milliseconds: 900));
+    if (!stillValid() || !mounted) return;
+
+    final bool stillStalledAfterSoft = stalledAtStart() ||
+        (_audioPlayer.state == PlayerState.playing && zombiePlaying);
+    if (stillStalledAfterSoft) {
+      debugPrint("Practice audio: still stalled → hard replay");
+      await hardReplay();
+
+      await Future<void>.delayed(const Duration(milliseconds: 500));
+      if (!stillValid() || !mounted) return;
+      final bool z2 = _audioPlayer.state == PlayerState.playing &&
+          _duration <= Duration.zero &&
+          _position <= Duration.zero;
+      if (stalledAtStart() ||
+          (_audioPlayer.state == PlayerState.playing && z2)) {
+        await hardReplay();
+      }
+    }
+  }
+
+  Future<void> _recoverStalledIfNeededBasedOnOfflineContext() async {
+    final index = _offlinePlayingIndex;
+    if (index == null || index < 0 || index >= listInternetSource.length) {
+      return;
+    }
+    final url = listInternetSource[index].linkUrl;
+    final path = _downloadedPathMap[url];
+    if (path == null || !await File(path).exists()) return;
+    await _recoverStalledIfNeeded(
+      stillValid: () => mounted && _offlinePlayingIndex == index,
+      devicePath: path,
+    );
+  }
+
+  Future<void> _ensurePlaybackSessionActive() async {
+    try {
+      final session = await audio_session.AudioSession.instance;
+      await session.setActive(true);
+    } catch (e) {
+      debugPrint("Audio session setActive failed: $e");
+    }
+  }
+
+  Future<void> _startSingleOfflinePlaybackWithFocusRetry(String path, int index) async {
+    Future<void> playOnce() async {
+      await _ensurePlaybackSessionActive();
+      await _audioPlayer.play(DeviceFileSource(path));
+    }
+
+    await _ensurePlaybackSessionActive();
+    await _audioPlayer.stop();
+    await Future<void>.delayed(const Duration(milliseconds: 60));
+    await playOnce();
+
+    await Future<void>.delayed(const Duration(milliseconds: 450));
+    if (!mounted || _offlinePlayingIndex != index) return;
+    if (_audioPlayer.state != PlayerState.playing) {
+      debugPrint("Practice audio: retry single offline play (${_audioPlayer.state})");
+      await playOnce();
+    }
+
+    unawaited(
+      _recoverStalledIfNeeded(
+        stillValid: () => mounted && _offlinePlayingIndex == index,
+        devicePath: path,
+      ),
+    );
+  }
+
   _getIndexCurrent() async {
     final shared = await SharedPreferences.getInstance();
     int index = shared.getInt("indexCurrent_nhacluyencong") ?? 0;
@@ -118,10 +236,9 @@ class _PlayerWidgetState extends State<PlayerWidget> {
       index = 0;
     }
     indexCurrent = index;
-    setState(() { }); // Cập nhật cho indexCurrent
+    setState(() { });
   }
 
-  //B.2 Lưu indexCurrent vào shared
   _setIndexCurrentShared(int index) async {
     final shared = await SharedPreferences.getInstance();
     shared.setInt("indexCurrent_nhacluyencong", index);
@@ -135,61 +252,18 @@ class _PlayerWidgetState extends State<PlayerWidget> {
     });
   }
 
-  Future<void> _loadSelectedIndices() async {
-    final shared = await SharedPreferences.getInstance();
-    final raw = shared.getString(_selectedPracticeIndicesKey);
-    if (raw == null || raw.isEmpty) return;
-    try {
-      final decoded = jsonDecode(raw);
-      if (decoded is List) {
-        final loaded = decoded
-            .whereType<int>()
-            .where((e) => e >= 0 && e < listInternetSource.length)
-            .toList();
-        if (!mounted) return;
-        setState(() {
-          _selectedIndices = loaded;
-        });
-      }
-    } catch (_) {
-      // Ignore invalid legacy data.
-    }
-  }
-
-  Future<void> _saveSelectedIndices() async {
-    final shared = await SharedPreferences.getInstance();
-    await shared.setString(_selectedPracticeIndicesKey, jsonEncode(_selectedIndices));
-  }
-
-  bool _isDownloaded(int index) {
-    return _downloadedPathMap.containsKey(listInternetSource[index].linkUrl);
-  }
-
-  bool get _hasDownloadedAny {
-    for (var i = 0; i < listInternetSource.length; i++) {
-      if (_isDownloaded(i)) return true;
-    }
-    return false;
-  }
-
-  bool get _isSelectedQueueActive {
-    if (_queue.isEmpty || _queuePointer < 0 || _queuePointer >= _queue.length) {
-      return false;
-    }
-    return _selectedIndices.contains(_queue[_queuePointer]);
-  }
-
   @override
   void dispose() {
+    final interruptionCancel = _interruptionSub?.cancel();
+    _interruptionSub = null;
+    if (interruptionCancel != null) unawaited(interruptionCancel);
     _positionSub?.cancel();
     _durationSub?.cancel();
     _stateSub?.cancel();
-    _completeSub?.cancel();
     _audioPlayer.dispose();
     super.dispose();
   }
 
-  //D. Trang
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -197,238 +271,21 @@ class _PlayerWidgetState extends State<PlayerWidget> {
         title: Center(child: Text(listInternetSource[indexCurrent].name, style: styleTextTitle,)),
         backgroundColor: Colors.blue,
       ),
-
-      body: Column(
-        children: [
-          _buildSelectionControls(),
-          const SizedBox(height: 12),
-          Expanded(child: listViewItem()),
-        ],
-      ),
+      body: listViewItem(),
     );
   }
 
-  Widget _buildSelectionControls() {
-    return Container(
-      width: double.infinity,
-      color: Colors.blueGrey.shade50,
-      padding: const EdgeInsets.fromLTRB(12, 12, 12, 12),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                SingleChildScrollView(
-                  scrollDirection: Axis.horizontal,
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      _menuButton(
-                        icon: _selectionMode ? Icons.check_box : Icons.check_box_outlined,
-                        label: _selectionMode ? "Done" : "Select",
-                        onTap: () {
-                          setState(() {
-                            _selectionMode = !_selectionMode;
-                          });
-                        },
-                      ),
-                      const SizedBox(width: 8),
-                      _menuButton(
-                        icon: _isSelectedQueueActive
-                            ? (_playerState == PlayerState.playing ? Icons.pause_rounded : Icons.play_arrow_rounded)
-                            : Icons.play_arrow_rounded,
-                        label: _isSelectedQueueActive
-                            ? (_playerState == PlayerState.playing ? "Pause Selected" : "Resume Selected")
-                            : "Play Selected",
-                        enabled: _selectedIndices.isNotEmpty,
-                        highlighted: _selectedIndices.isNotEmpty,
-                        onTap: () async {
-                          if (_isSelectedQueueActive) {
-                            if (_playerState == PlayerState.playing) {
-                              await _audioPlayer.pause();
-                            } else if (_playerState == PlayerState.paused) {
-                              await _audioPlayer.resume();
-                            } else {
-                              await _startSelectedQueue();
-                            }
-                            return;
-                          }
-                          setState(() {
-                            _selectionMode = false; // Bấm play coi như đã chọn xong
-                          });
-                          await _startSelectedQueue();
-                        },
-                      ),
-                      const SizedBox(width: 8),
-                      _menuButton(
-                        icon: Icons.clear_all,
-                        label: "Clear",
-                        enabled: _selectedIndices.isNotEmpty,
-                        onTap: () {
-                          setState(() {
-                            _selectedIndices.clear();
-                          });
-                          unawaited(_saveSelectedIndices());
-                        },
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 12),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Expanded(
-                  child: _buildSelectedTracksWidget(),
-                ),
-              ],
-            ),
-          ],
-        ),
-      );
-  }
-
-  Widget _buildSelectedTracksWidget() {
-    if (_selectedIndices.isEmpty) {
-      if (_selectionMode && !_hasDownloadedAny) {
-        return Text(
-          "Please download tracks to use this feature.",
-          textAlign: TextAlign.center,
-          style: TextStyle(
-            fontSize: 13,
-            color: Colors.blueGrey.shade700,
-            fontWeight: FontWeight.w500,
-            height: 1.35,
-          ),
-        );
-      }
-
-      return Column(
-        crossAxisAlignment: CrossAxisAlignment.center,
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Text(
-            "Selected: none",
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              fontSize: 13,
-              color: Colors.blueGrey.shade700,
-              fontWeight: FontWeight.w500,
-              height: 1.35,
-            ),
-          ),
-        ],
-      );
-    }
-
-    final spans = <InlineSpan>[
-      TextSpan(
-        text: "Selected: ",
-        style: TextStyle(
-          fontSize: 13,
-          color: Colors.blueGrey.shade700,
-          fontWeight: FontWeight.w600,
-          height: 1.35,
-        ),
-      ),
-    ];
-
-    for (var i = 0; i < _selectedIndices.length; i++) {
-      final index = _selectedIndices[i];
-      final isCurrent = index == _offlinePlayingIndex;
-      spans.add(
-        TextSpan(
-          text: listInternetSource[index].name,
-          style: TextStyle(
-            fontSize: 13,
-            fontWeight: isCurrent ? FontWeight.w700 : FontWeight.w500,
-            color: isCurrent ? Colors.deepOrange : Colors.blueGrey.shade700,
-            height: 1.35,
-          ),
-        ),
-      );
-      if (i < _selectedIndices.length - 1) {
-        spans.add(
-          TextSpan(
-            text: ", ",
-            style: TextStyle(
-              fontSize: 13,
-              color: Colors.blueGrey.shade500,
-              height: 1.35,
-            ),
-          ),
-        );
-      }
-    }
-
-    return Text.rich(
-      TextSpan(children: spans),
-      textAlign: TextAlign.center,
-      maxLines: 2,
-      overflow: TextOverflow.ellipsis,
-    );
-  }
-
-  Widget _menuButton({
-    required IconData icon,
-    required String label,
-    required VoidCallback onTap,
-    bool enabled = true,
-    bool highlighted = false,
-  }) {
-    final isHighlighted = enabled && highlighted;
-    final backgroundColor = isHighlighted
-        ? Colors.orangeAccent.withValues(alpha: 0.18)
-        : (enabled ? Colors.white : Colors.grey.shade200);
-    final foregroundColor = isHighlighted
-        ? Colors.deepOrange
-        : (enabled ? Colors.blueGrey.shade800 : Colors.grey);
-
-    return InkWell(
-      borderRadius: BorderRadius.circular(10),
-      onTap: enabled ? onTap : null,
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-        decoration: BoxDecoration(
-          color: backgroundColor,
-          borderRadius: BorderRadius.circular(10),
-          border: Border.all(color: isHighlighted ? Colors.orangeAccent : Colors.blueGrey.shade100),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(icon, size: 18, color: foregroundColor),
-            const SizedBox(width: 5),
-            Text(
-              label,
-              style: TextStyle(
-                fontSize: 13.5,
-                fontWeight: FontWeight.w500,
-                color: foregroundColor,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  //D.1 ListView danh sách bài hát, audio
   Widget listViewItem() {
     return ListView.builder(
-      itemCount: listInternetSource.length, // list lấy từ Provider
+      itemCount: listInternetSource.length,
       itemBuilder: (BuildContext context, int index) {
 
-        // Container Item
         return GestureDetector(
           onTap: (){
-            indexCurrent = index; // Cập nhật index cho Provider
-            _setIndexCurrentShared(index); // Lưu index vào shared
+            indexCurrent = index;
+            _setIndexCurrentShared(index);
             _onPlayPausePressed(index);
-            setState(() {}); //set state để cập nhật và tránh việc bị lag
+            setState(() {});
           },
           child: Container(
             padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -440,40 +297,17 @@ class _PlayerWidgetState extends State<PlayerWidget> {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    if (_selectionMode)
-                      Checkbox(
-                        value: _selectedIndices.contains(index),
-                        onChanged: _isDownloaded(index)
-                            ? (value) {
-                                setState(() {
-                                  if (value == true) {
-                                    if (!_selectedIndices.contains(index)) {
-                                      _selectedIndices.add(index);
-                                    }
-                                  } else {
-                                    _selectedIndices.remove(index);
-                                  }
-                                });
-                                unawaited(_saveSelectedIndices());
-                              }
-                            : null,
-                      ),
-                    //I. Tên item
                     Expanded(
                       child: Text("${listInternetSource[index].name}", style: textStyle16, overflow: TextOverflow.ellipsis,),
                     ),
-
-                    //II. Nhóm icon download và open in browser
                     Row(
                       children: [
-
-                    //1. Icon play (Chức năng giống như click vào item, nhưng để hiện nút cho dễ hiểu)
                     IconButton(
                       onPressed: (){
-                        indexCurrent = index; // Cập nhật index cho Provider
-                        _setIndexCurrentShared(index); // Lưu index vào shared
+                        indexCurrent = index;
+                        _setIndexCurrentShared(index);
                         _onPlayPausePressed(index);
-                        setState(() {}); //set state để cập nhật và tránh việc bị lag
+                        setState(() {});
                       },
                       icon: Icon(
                         _offlinePlayingIndex == index && _playerState == PlayerState.playing
@@ -483,16 +317,14 @@ class _PlayerWidgetState extends State<PlayerWidget> {
                         size: 32,
                       ),
                     ),
-
-                    //2. Widget download về máy (Đã tạo sẵn) -> Chọn kích thước phù hợp để hiển thị. Tạo lưu khi click
                     Container(
                       alignment: Alignment.center,
                       width: 60, height: 50,
                       child: InkWell(
                         onTap: (){
-                          indexCurrent = index; // Cập nhật index cho Provider
-                          _setIndexCurrentShared(index); // Lưu index vào shared
-                          setState(() {}); // Cập nhật cho giao diện
+                          indexCurrent = index;
+                          _setIndexCurrentShared(index);
+                          setState(() {});
                         },
                         child: DownloadFromUrl(
                           key: ValueKey(
@@ -506,8 +338,6 @@ class _PlayerWidgetState extends State<PlayerWidget> {
                           onDownloadStateChanged: (isDone) {
                             if (!isDone) {
                               _downloadedPathMap.remove(listInternetSource[index].linkUrl);
-                              _selectedIndices.remove(index);
-                              unawaited(_saveSelectedIndices());
                             }
                             if (mounted) {
                               setState(() {});
@@ -516,14 +346,12 @@ class _PlayerWidgetState extends State<PlayerWidget> {
                         ),
                       ),
                     ),
-
-                    //3. Icon mở bên ngoài app bằng trình duyệt
                     IconButton(
                       onPressed: (){
                         _openInBrowser(Uri.parse(listInternetSource[index].linkUrl));
-                        indexCurrent = index; // Cập nhật index cho Provider
-                        _setIndexCurrentShared(index); // Lưu index vào shared
-                        setState(() {}); // Cập nhật cho giao diện
+                        indexCurrent = index;
+                        _setIndexCurrentShared(index);
+                        setState(() {});
                       },
                       icon: Icon(Icons.open_in_new),
                     ),
@@ -577,21 +405,19 @@ class _PlayerWidgetState extends State<PlayerWidget> {
   }
 
   Future<void> _playAudio(int index) async {
-    _queue = <int>[];
-    _queuePointer = -1;
     final onlineUrl = listInternetSource[index].linkUrl;
     final localPathFromMap = _downloadedPathMap[onlineUrl];
 
     if (localPathFromMap != null) {
       final file = File(localPathFromMap);
       if (await file.exists()) {
-        await _audioPlayer.stop();
-        await _audioPlayer.play(DeviceFileSource(localPathFromMap));
         if (!mounted) return;
         setState(() {
           _offlinePlayingIndex = index;
           _position = Duration.zero;
+          _duration = Duration.zero;
         });
+        await _startSingleOfflinePlaybackWithFocusRetry(localPathFromMap, index);
         return;
       } else {
         await DownloadedAudioStore.remove(onlineUrl);
@@ -629,117 +455,9 @@ class _PlayerWidgetState extends State<PlayerWidget> {
       await _audioPlayer.resume();
       return;
     }
-    if (_selectedIndices.isNotEmpty) {
-      if (_selectedIndices.contains(index)) {
-        await _playFromSelectedIndex(index);
-      } else {
-        _queue = <int>[];
-        _queuePointer = -1;
-        await _playAudio(index);
-      }
-      return;
-    }
     await _playAudio(index);
   }
 
-  Future<void> _startSelectedQueue() async {
-    final valid = <int>[];
-    for (final index in _selectedIndices) {
-      final url = listInternetSource[index].linkUrl;
-      final path = _downloadedPathMap[url];
-      if (path == null) continue;
-      if (await File(path).exists()) {
-        valid.add(index);
-      } else {
-        await DownloadedAudioStore.remove(url);
-        _downloadedPathMap.remove(url);
-      }
-    }
-
-    if (valid.isEmpty) {
-      _selectedIndices.clear();
-      await _saveSelectedIndices();
-      if (!mounted) return;
-      setState(() {});
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("No downloaded tracks in your selection.")),
-      );
-      return;
-    }
-
-    _queue = valid;
-    _queuePointer = 0;
-    await _playOfflineFromQueueIndex(_queue[_queuePointer]);
-  }
-
-  Future<void> _playOfflineFromQueueIndex(int index) async {
-    final url = listInternetSource[index].linkUrl;
-    final path = _downloadedPathMap[url];
-    if (path == null || !await File(path).exists()) {
-      _downloadedPathMap.remove(url);
-      _selectedIndices.remove(index);
-      await DownloadedAudioStore.remove(url);
-      await _saveSelectedIndices();
-      await _playNextInQueue();
-      return;
-    }
-
-    await _audioPlayer.stop();
-    await _audioPlayer.play(DeviceFileSource(path));
-    if (!mounted) return;
-    setState(() {
-      _offlinePlayingIndex = index;
-      _position = Duration.zero;
-      indexCurrent = index;
-    });
-    unawaited(_setIndexCurrentShared(index));
-  }
-
-  Future<void> _playNextInQueue() async {
-    if (_queue.isEmpty) return;
-    _queuePointer += 1;
-    if (_queuePointer >= _queue.length) {
-      _queue = <int>[];
-      _queuePointer = -1;
-      if (!mounted) return;
-      setState(() {
-        _offlinePlayingIndex = null;
-        _position = Duration.zero;
-        _duration = Duration.zero;
-      });
-      return;
-    }
-    await _playOfflineFromQueueIndex(_queue[_queuePointer]);
-  }
-
-  Future<void> _playFromSelectedIndex(int index) async {
-    final valid = <int>[];
-    for (final selectedIndex in _selectedIndices) {
-      final url = listInternetSource[selectedIndex].linkUrl;
-      final path = _downloadedPathMap[url];
-      if (path == null) continue;
-      if (await File(path).exists()) {
-        valid.add(selectedIndex);
-      } else {
-        await DownloadedAudioStore.remove(url);
-        _downloadedPathMap.remove(url);
-      }
-    }
-
-    if (valid.isEmpty) {
-      await _startSelectedQueue();
-      return;
-    }
-
-    _queue = valid;
-    _queuePointer = valid.indexOf(index);
-    if (_queuePointer < 0) {
-      _queuePointer = 0;
-    }
-    await _playOfflineFromQueueIndex(_queue[_queuePointer]);
-  }
-
-  //E.2 Mở url ở trình duyệt website
   Future<void> _openInBrowser(Uri url) async {
     if (!await launchUrl(url, mode: LaunchMode.externalApplication,)) {
       throw Exception('Could not launch $url');
@@ -748,7 +466,6 @@ class _PlayerWidgetState extends State<PlayerWidget> {
 
 }
 
-// Tạo model truyền thông tin internet source
 class AudioSourceModelInternet{
   String name;
   String linkUrl;

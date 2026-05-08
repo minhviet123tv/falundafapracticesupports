@@ -79,7 +79,7 @@ class MenuHome extends StatelessWidget {
                 ),
               );
             },
-            child: itemMenu("assets/images/menu_item_3.jpg", "Why there is mankind?"),
+            child: itemMenu("assets/images/menu_item_3.jpg", "How Humankind Came To Be?"),
           ),
 
           //3. Item menu 3: Mở trang web "Falundafa.org"

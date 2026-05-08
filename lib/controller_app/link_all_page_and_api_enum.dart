@@ -119,7 +119,7 @@ enum MinghuiEnum {
 
 //II. Danh sách liên kết ngôn ngữ bài viết "Vì sao có nhân loại" (Không trùng số lượng ngôn ngữ với trang minghui.org)
 enum VisaoconhanloaiEnum {
-  english("https://en.minghui.org/html/articles/2023/1/21/206697.html", "English", "english"),
+  english("https://en.falundafa.org/eng/articles/20230120A.html", "English", "english"),
   chinese1("https://big5.minghui.org/mh/articles/2023/1/20/%E7%82%BA%E7%94%9A%E9%BA%BC%E6%9C%83%E6%9C%89%E4%BA%BA%E9%A1%9E-455562.html", "正體中文", "chinese1"), // giản thể
   chinese2("https://www.minghui.org/mh/articles/2023/1/20/%E4%B8%BA%E4%BB%80%E4%B9%88%E4%BC%9A%E6%9C%89%E4%BA%BA%E7%B1%BB-455562.html", "中文简体", "chinese2"), // phồn thể
   bosanski("https://bs.minghui.org/articles/6858", "Bosanski", "bosanski"),
