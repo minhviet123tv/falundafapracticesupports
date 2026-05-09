@@ -12,6 +12,7 @@ import 'menu/all_books_webview.dart';
 import 'menu_huongdan_page.dart';
 import 'common/memory_config.dart';
 import 'common/memory_monitor.dart';
+import 'common/background_downloader_init.dart';
 
 /*
 audioplayers: ^6.0.0
@@ -25,7 +26,8 @@ void main() async {
   
   // Khởi tạo cấu hình bộ nhớ
   await MemoryConfig.initialize();
-  
+  await initBackgroundDownloader();
+
   runApp(RunAppFalunDafaExercise());
 }
 

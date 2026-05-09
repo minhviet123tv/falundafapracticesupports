@@ -1,19 +1,14 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'dart:io';
-import 'package:flutter_file_downloader/flutter_file_downloader.dart';
+
+import 'package:background_downloader/background_downloader.dart';
+
 import 'package:falun_dafa_practice_supports/common/downloaded_audio_store.dart';
+import 'package:falun_dafa_practice_supports/common/offline_audio_directory.dart';
 
-/*
-Tạo Widget hiện nút tải -> loading chờ tải -> hiện % download -> Báo download xong
-Chỉ việc điền url vào là dùng được
-
-Cài: flutter_file_downloader: ^1.1.0+1 #download any file
-Chú ý: Cần cấp quyền truy cập file (Có thể phải khai báo cả trên google play)
- */
-
-// void main(){
-//   runApp(MaterialApp(home: SafeArea(child: SingleDownloadFromUrl(url: "https://media.falundafa.org/media1/media/dafa/exercise/320k/exercise_01.mp3",),),));
-// }
+/// Nút tải → loading → % → báo hoàn thành.
+/// Trên Android/iOS dùng [background_downloader] (tiếp tục khi vào background, có retry/pause tuỳ server).
 
 class DownloadFromUrl extends StatefulWidget {
   final String url;
@@ -30,10 +25,7 @@ class DownloadFromUrl extends StatefulWidget {
 }
 
 class _DownloadFromUrlState extends State<DownloadFromUrl> {
-
-  //A. Dữ liệu
   double? _progress = 0.0;
-  String? _fileName = "";
   bool downloadDone = false;
   late bool showLoading = false;
   String? _localPath;
@@ -44,34 +36,34 @@ class _DownloadFromUrlState extends State<DownloadFromUrl> {
     _syncDownloadStatus();
   }
 
-  //D. Widget
   @override
   Widget build(BuildContext context) {
     return Center(
       child: Stack(
         alignment: Alignment.center,
         children: [
+          if (_progress == 0 && downloadDone == false && showLoading == false)
+            IconButton(
+              onPressed: () async {
+                downloadDone = false;
+                showLoading = true;
+                setState(() {});
+                await _download(widget.url.trim());
+              },
+              icon: const Icon(Icons.download, color: Colors.deepPurple),
+            ),
 
-          // Ẩn hiện các widget theo tình trạng loading của _progress
-          //1. Nút bấm download dữ liệu từ url
-          if(_progress == 0 && downloadDone == false && showLoading == false)
-          IconButton(
-            onPressed: (){
-              downloadDone = false; // Cập nhật tình trạng là chưa download
-              _download(widget.url.trim()); // Thực hiện download dữ liệu của url
-              showLoading = true; // Hiện icon loading
-              setState(() {});
-            },
-            icon: Icon(Icons.download, color: Colors.deepPurple,),
-          ),
+          if (showLoading == true)
+            const SizedBox(
+              width: 20,
+              height: 20,
+              child: Center(child: CircularProgressIndicator()),
+            ),
 
-          if(showLoading == true) Container(width: 20, height: 20, child: Center(child: CircularProgressIndicator(),),),
+          if (_progress != null && _progress != 0)
+            Text("${_progress!.clamp(0.0, 100.0).round()} %"),
 
-          //2. Hiện cập nhật % download
-          if(_progress != 0) Text("$_progress %"),
-
-          //3. Hiện thông báo sau khi download xong
-          if(downloadDone == true)
+          if (downloadDone == true)
             IconButton(
               onPressed: _confirmResetDownload,
               icon: const Icon(Icons.check, color: Colors.green),
@@ -81,51 +73,110 @@ class _DownloadFromUrlState extends State<DownloadFromUrl> {
     );
   }
 
-  //D.1 Thực hiện download dữ liệu của url
-  _download(String url){
+  Future<void> _download(String urlText) async {
+    if (kIsWeb || (!Platform.isAndroid && !Platform.isIOS)) {
+      if (!mounted) return;
+      setState(() {
+        showLoading = false;
+        _progress = 0.0;
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Tải xuống chỉ hỗ trợ Android / iOS'),
+        ),
+      );
+      return;
+    }
 
-    FileDownloader.downloadFile(
-      url: url, // Đường link url
+    final url = urlText.trim();
+    final uri = Uri.tryParse(url);
+    if (url.isEmpty || uri == null || !uri.hasScheme) {
+      if (!mounted) return;
+      setState(() {
+        showLoading = false;
+        _progress = 0.0;
+        downloadDone = false;
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Tải xuống thất bại: URL không hợp lệ')),
+      );
+      return;
+    }
 
-      // Sự kiện khi thay đổi progress (load được từng %)
-      onProgress: (name, progress) {
-        setState(() {
-          _progress = progress;
-          _fileName = name;
-          Future.delayed(Duration(milliseconds: 200), (){
-            showLoading = false; // Ẩn icon loading progress sau thời gian đã chọn | Chờ để tránh đổi tín hiệu quá nhanh | Có thể sẽ cập nhật giao diện theo showLoading vào lần progress sau (Dù sao cũng sẽ có khoảng 2 lần progress trở lên, rất hiếm khi có 1, mà có 1 cũng không ảnh hưởng vì sẽ downloadDone)
+    final fname = _fileNameGuessFromUri(uri);
+    final task = DownloadTask(
+      url: url,
+      filename: fname,
+      directory: OfflineAudioDirectory.relativePath,
+      baseDirectory: BaseDirectory.applicationDocuments,
+      updates: Updates.statusAndProgress,
+      retries: 2,
+      allowPause: true,
+      displayName: fname,
+      group: 'audio_offline',
+    );
+
+    try {
+      final result = await FileDownloader().download(
+        task,
+        onProgress: (p) {
+          if (!mounted || p < 0) return;
+          setState(() {
+            _progress = (p * 100).clamp(0.0, 100.0);
+            showLoading = false;
           });
-        });
-        // print('name of download file: $name'); // Tên file
-      },
+        },
+      );
 
-      // Sự kiện sau khi hoàn thành (tải xong)
-      onDownloadCompleted: (path) async {
+      if (!mounted) return;
+
+      if (result.status == TaskStatus.complete) {
+        final path = await result.task.filePath();
         _localPath = path;
-        await DownloadedAudioStore.save(widget.url.trim(), path);
-        if (!mounted) return;
+        await DownloadedAudioStore.save(url, path);
         setState(() {
-          _progress = 0.0; // Trả lại tiến trình (progress) về điểm bắt đầu
-          downloadDone = true; // Xác nhận tình trạng download
+          showLoading = false;
+          _progress = 0.0;
+          downloadDone = true;
         });
         widget.onDownloadStateChanged?.call(true);
         widget.onDownloadCompleted?.call(path);
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(path)));
-      },
-      onDownloadError: (message) {
-        if (!mounted) return;
+        _showSavedSnack(path);
+      } else {
         setState(() {
           showLoading = false;
           _progress = 0.0;
           downloadDone = false;
         });
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Tải xuống thất bại: $message")));
-      },
+        final err = result.exception?.description ??
+            '${result.responseBody ?? ''} ${result.status}';
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Tải xuống thất bại: $err'.trim())),
+        );
+      }
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        showLoading = false;
+        _progress = 0.0;
+        downloadDone = false;
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Tải xuống thất bại: $e')),
+      );
+    }
+  }
+
+  void _showSavedSnack(String fullPath) {
+    final tail = fullPath.replaceAll(RegExp(r'.*/'), '');
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('Đã lưu: $tail')),
     );
   }
 
   Future<void> _syncDownloadStatus() async {
-    final localPath = await DownloadedAudioStore.resolveExistingLocalPath(widget.url.trim());
+    final localPath =
+        await DownloadedAudioStore.resolveExistingLocalPath(widget.url.trim());
     if (!mounted) return;
     setState(() {
       _localPath = localPath;
@@ -152,41 +203,45 @@ class _DownloadFromUrlState extends State<DownloadFromUrl> {
               Icon(Icons.restart_alt, color: Colors.deepPurple),
               SizedBox(width: 8),
               Text(
-                "Reset track",
+                'Reset track',
                 style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
               ),
             ],
           ),
           content: const Text(
-            "Do you want to reset this track?",
+            'Do you want to reset this track?',
             style: TextStyle(fontSize: 15, height: 1.3),
           ),
           actions: [
             OutlinedButton(
               style: OutlinedButton.styleFrom(
                 minimumSize: const Size(110, 42),
-                padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
-                textStyle: const TextStyle(fontSize: 15, fontWeight: FontWeight.w500),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
+                textStyle:
+                    const TextStyle(fontSize: 15, fontWeight: FontWeight.w500),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(10),
                 ),
               ),
               onPressed: () => Navigator.of(context).pop(false),
-              child: const Text("Cancel"),
+              child: const Text('Cancel'),
             ),
             ElevatedButton(
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.deepPurple,
                 foregroundColor: Colors.white,
                 minimumSize: const Size(110, 42),
-                padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
-                textStyle: const TextStyle(fontSize: 15, fontWeight: FontWeight.w500),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
+                textStyle:
+                    const TextStyle(fontSize: 15, fontWeight: FontWeight.w500),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(10),
                 ),
               ),
               onPressed: () => Navigator.of(context).pop(true),
-              child: const Text("Reset"),
+              child: const Text('Reset'),
             ),
           ],
         );
@@ -198,7 +253,8 @@ class _DownloadFromUrlState extends State<DownloadFromUrl> {
   }
 
   Future<void> _resetDownloadedFile() async {
-    final targetPath = _localPath ?? await DownloadedAudioStore.resolveExistingLocalPath(widget.url.trim());
+    final targetPath =
+        _localPath ?? await DownloadedAudioStore.resolveExistingLocalPath(widget.url.trim());
     if (targetPath != null && targetPath.isNotEmpty) {
       final file = File(targetPath);
       if (await file.exists()) {
@@ -214,8 +270,16 @@ class _DownloadFromUrlState extends State<DownloadFromUrl> {
       _progress = 0.0;
       downloadDone = false;
       showLoading = false;
-      _fileName = "";
     });
     widget.onDownloadStateChanged?.call(false);
   }
+}
+
+String _fileNameGuessFromUri(Uri uri) {
+  var name = uri.pathSegments.isNotEmpty ? uri.pathSegments.last : '';
+  name = Uri.decodeComponent(name);
+  if (name.isEmpty || !name.contains('.')) {
+    name = name.isEmpty ? 'audio.mp3' : '$name.mp3';
+  }
+  return name.replaceAll(RegExp(r'[^\w.\-]+'), '_');
 }
