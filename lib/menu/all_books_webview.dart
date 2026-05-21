@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:webview_flutter/webview_flutter.dart';
@@ -433,6 +434,21 @@ class _AllBooksWebviewState extends State<AllBooksWebview> with WidgetsBindingOb
     return _readingState.historyIndex < _readingState.history.length - 1;
   }
 
+  /// Android nút Back hệ thống: lùi WebView / lịch sử app trước khi thoát tab.
+  Future<void> _onSystemBack() async {
+    if (await _canGoBack()) {
+      await _goBack();
+      return;
+    }
+    if (!mounted) return;
+    final navigator = Navigator.of(context);
+    if (navigator.canPop()) {
+      navigator.pop();
+    } else {
+      SystemNavigator.pop();
+    }
+  }
+
   @override
   void setState(fn) {
     if (mounted) {
@@ -451,7 +467,14 @@ class _AllBooksWebviewState extends State<AllBooksWebview> with WidgetsBindingOb
 
   @override
   Widget build(BuildContext context) {
-    return SafeArea(
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (bool didPop, dynamic result) {
+        if (!didPop) {
+          unawaited(_onSystemBack());
+        }
+      },
+      child: SafeArea(
       child: Scaffold(
         appBar: AppBar(
           title: Row(
@@ -559,6 +582,7 @@ class _AllBooksWebviewState extends State<AllBooksWebview> with WidgetsBindingOb
             ? const Center(child: CircularProgressIndicator())
             : WebViewWidget(controller: _controller),
       ),
+    ),
     );
   }
 }

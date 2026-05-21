@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 import 'package:webview_flutter_android/webview_flutter_android.dart';
 import 'package:webview_flutter_wkwebview/webview_flutter_wkwebview.dart';
@@ -16,7 +17,7 @@ class ZflBookFullScreenWebview extends StatefulWidget {
   final String languageCode;
   final String initialUrl;
   final BookScrollPosition? initialScroll;
-  /// Mở từ tab Book: ẩn AppBar cho đến khi người dùng cuộn.
+  /// Mở từ tab Book: bù cuộn −44px (cuộn lên) vì AppBar nổi đè phần đầu WebView.
   final bool openedFromBookTab;
 
   const ZflBookFullScreenWebview({
@@ -50,18 +51,19 @@ class _ZflBookFullScreenWebviewState extends State<ZflBookFullScreenWebview>
   bool _appBarVisible = true;
   double? _lastScrollY;
   double _directionalScrollAccum = 0;
-  /// Bù scroll khi mở (chỉ khi không dùng chế độ ẩn AppBar lúc vào).
+  /// Bù scroll một lần khi mở từ tab Book (AppBar nổi đè — cuộn lên bằng chiều cao toolbar).
+  bool _pendingBookTabScrollCompensation = false;
+  /// Bù scroll khi mở không từ tab Book (toolbar overlay, cuộn lên).
   bool _compensateAppBarOnNextRestore = false;
-  /// Ẩn AppBar sau khi mở từ tab cho đến lần cuộn tay đầu tiên.
-  bool _hideAppBarUntilUserScrolls = false;
-  static const double _unlockAppBarScrollPx = 8;
 
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
-    _hideAppBarUntilUserScrolls = widget.openedFromBookTab;
-    _appBarVisible = !widget.openedFromBookTab;
+    _appBarVisible = true;
+    if (widget.openedFromBookTab) {
+      _pendingBookTabScrollCompensation = true;
+    }
     final initial = widget.initialScroll;
     if (!widget.openedFromBookTab &&
         initial != null &&
@@ -70,11 +72,6 @@ class _ZflBookFullScreenWebviewState extends State<ZflBookFullScreenWebview>
     }
     _initController();
     unawaited(_openInitialPage());
-  }
-
-  /// Giảm scrollY khi vào fullscreen: AppBar đè lên WebView (khác tab).
-  double _scrollCompensationWhenOpeningFromTab(BuildContext context) {
-    return MediaQuery.paddingOf(context).top + _toolbarHeight;
   }
 
   void _initController() {
@@ -184,22 +181,6 @@ class _ZflBookFullScreenWebviewState extends State<ZflBookFullScreenWebview>
   void _updateAppBarFromScroll(double scrollY, double maxScroll) {
     if (_isRestoringScroll || !mounted) return;
 
-    if (_hideAppBarUntilUserScrolls) {
-      if (_lastScrollY != null) {
-        final delta = scrollY - _lastScrollY!;
-        if (delta.abs() >= _unlockAppBarScrollPx) {
-          _hideAppBarUntilUserScrolls = false;
-          _directionalScrollAccum = 0;
-        } else {
-          _lastScrollY = scrollY;
-          return;
-        }
-      } else {
-        _lastScrollY = scrollY;
-        return;
-      }
-    }
-
     final minScrollable = _toolbarHeight + _minScrollableExtra;
     if (maxScroll < minScrollable) {
       _lastScrollY = scrollY;
@@ -266,9 +247,7 @@ class _ZflBookFullScreenWebviewState extends State<ZflBookFullScreenWebview>
     _lastScrollY = null;
     _directionalScrollAccum = 0;
     if (mounted) {
-      setState(() {
-        _appBarVisible = !_hideAppBarUntilUserScrolls;
-      });
+      setState(() {});
     }
   }
 
@@ -317,14 +296,28 @@ class _ZflBookFullScreenWebviewState extends State<ZflBookFullScreenWebview>
   }
 
   Future<void> _restoreScrollForUrl(String url) async {
-    final saved = _readingState.scrollForUrl(url);
+    var saved = _readingState.scrollForUrl(url);
+    if (saved == null && url == widget.initialUrl) {
+      saved = widget.initialScroll;
+    }
     if (saved == null) return;
-    if (saved.scrollY <= 0 && saved.scrollRatio <= 0) return;
+
+    final applyBookTabCompensation =
+        _pendingBookTabScrollCompensation && widget.openedFromBookTab;
 
     var scrollOffsetPx = 0.0;
-    if (_compensateAppBarOnNextRestore && mounted) {
+    if (applyBookTabCompensation && mounted) {
+      _pendingBookTabScrollCompensation = false;
+      scrollOffsetPx = -_toolbarHeight;
+    } else if (_compensateAppBarOnNextRestore && mounted) {
       _compensateAppBarOnNextRestore = false;
-      scrollOffsetPx = -_scrollCompensationWhenOpeningFromTab(context);
+      scrollOffsetPx = -_toolbarHeight;
+    }
+
+    if (saved.scrollY <= 0 &&
+        saved.scrollRatio <= 0 &&
+        scrollOffsetPx == 0) {
+      return;
     }
 
     BookWebViewScrollHelper.cancelPendingRestores();
@@ -345,8 +338,39 @@ class _ZflBookFullScreenWebviewState extends State<ZflBookFullScreenWebview>
         isMounted: () => mounted,
         scrollOffsetPx: scrollOffsetPx,
       );
+      if (applyBookTabCompensation && scrollOffsetPx != 0) {
+        await _retryBookTabScrollCompensation(saved, scrollOffsetPx);
+      }
     } finally {
       _isRestoringScroll = false;
+    }
+  }
+
+  /// WebView layout xong sau vài frame — áp lại bù cuộn lên để không bị AppBar che đầu trang.
+  Future<void> _retryBookTabScrollCompensation(
+    BookScrollPosition saved,
+    double scrollOffsetPx,
+  ) async {
+    for (final delayMs in <int>[400, 900]) {
+      await Future<void>.delayed(Duration(milliseconds: delayMs));
+      if (!mounted) return;
+      BookWebViewScrollHelper.cancelPendingRestores();
+      final current = await BookWebViewScrollHelper.readPosition(_controller);
+      final targetY = saved.scrollY + scrollOffsetPx;
+      if (current != null && (current.scrollY - targetY).abs() <= 20) {
+        continue;
+      }
+      _isRestoringScroll = true;
+      try {
+        await BookWebViewScrollHelper.restorePosition(
+          _controller,
+          saved,
+          isMounted: () => mounted,
+          scrollOffsetPx: scrollOffsetPx,
+        );
+      } finally {
+        _isRestoringScroll = false;
+      }
     }
   }
 
@@ -461,17 +485,12 @@ class _ZflBookFullScreenWebviewState extends State<ZflBookFullScreenWebview>
   }
 
   Widget _buildCollapsibleToolbar(BuildContext context) {
-    final topInset = MediaQuery.paddingOf(context).top;
-    final barHeight = topInset + _toolbarHeight;
-
     return Material(
       color: Colors.white,
       elevation: _appBarVisible ? 1 : 0,
       child: SizedBox(
-        height: barHeight,
-        child: Padding(
-          padding: EdgeInsets.only(top: topInset),
-          child: Row(
+        height: _toolbarHeight,
+        child: Row(
             children: [
               IconButton(
                 icon: const Icon(Icons.arrow_back),
@@ -538,14 +557,25 @@ class _ZflBookFullScreenWebviewState extends State<ZflBookFullScreenWebview>
                 },
               ),
             ],
-          ),
         ),
       ),
     );
   }
 
+  /// Giống vùng phía trên tab main (SafeArea + status bar trong suốt → nền đen hệ thống).
+  static const Color _statusBarBackground = Colors.black;
+
+  static const SystemUiOverlayStyle _fullscreenOverlayStyle = SystemUiOverlayStyle(
+    statusBarColor: Colors.black,
+    statusBarIconBrightness: Brightness.light,
+    systemNavigationBarColor: Colors.white,
+    systemNavigationBarIconBrightness: Brightness.dark,
+  );
+
   @override
   Widget build(BuildContext context) {
+    final topInset = MediaQuery.paddingOf(context).top;
+
     return PopScope(
       canPop: false,
       onPopInvokedWithResult: (bool didPop, dynamic result) {
@@ -553,32 +583,50 @@ class _ZflBookFullScreenWebviewState extends State<ZflBookFullScreenWebview>
           unawaited(_closeAndReturn());
         }
       },
-      child: Scaffold(
-        backgroundColor: Colors.white,
-        // WebView luôn full màn hình; AppBar nổi phía trên — không đẩy layout khi ẩn/hiện.
-        body: Stack(
-          fit: StackFit.expand,
-          children: [
-            progressLoadWeb <= 20
-                ? const Center(child: CircularProgressIndicator())
-                : WebViewWidget(controller: _controller),
-            Positioned(
-              top: 0,
-              left: 0,
-              right: 0,
-              child: ClipRect(
-                child: IgnorePointer(
-                  ignoring: !_appBarVisible,
-                  child: AnimatedSlide(
-                    offset: _appBarVisible ? Offset.zero : const Offset(0, -1),
-                    duration: const Duration(milliseconds: 220),
-                    curve: Curves.easeInOut,
-                    child: _buildCollapsibleToolbar(context),
+      child: AnnotatedRegion<SystemUiOverlayStyle>(
+        value: _fullscreenOverlayStyle,
+        child: Scaffold(
+          backgroundColor: Colors.white,
+          // Status bar cố định (đen); nội dung WebView bắt đầu từ dưới status bar.
+          body: Stack(
+            fit: StackFit.expand,
+            children: [
+              Positioned(
+                top: topInset,
+                left: 0,
+                right: 0,
+                bottom: 0,
+                child: progressLoadWeb <= 20
+                    ? const Center(child: CircularProgressIndicator())
+                    : WebViewWidget(controller: _controller),
+              ),
+              Positioned(
+                top: 0,
+                left: 0,
+                right: 0,
+                child: ColoredBox(
+                  color: _statusBarBackground,
+                  child: SizedBox(height: topInset),
+                ),
+              ),
+              Positioned(
+                top: topInset,
+                left: 0,
+                right: 0,
+                child: ClipRect(
+                  child: IgnorePointer(
+                    ignoring: !_appBarVisible,
+                    child: AnimatedSlide(
+                      offset: _appBarVisible ? Offset.zero : const Offset(0, -1),
+                      duration: const Duration(milliseconds: 220),
+                      curve: Curves.easeInOut,
+                      child: _buildCollapsibleToolbar(context),
+                    ),
                   ),
                 ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
