@@ -33,7 +33,8 @@ if (BookWebViewScrollHelper.shouldSkipRestore(saved, current, scrollOffsetPx: of
 
 - Ẩn khi cuộn xuống, hiện khi cuộn lên / gần đầu trang (`scrollY <= ~20`).
 - Chỉ toggle khi **đủ chiều cao cuộn**: `maxScroll >= toolbarHeight + ~40`.
-- Đã ẩn + vẫn cuộn xuống (hoặc đã hiện + vẫn cuộn lên): **không** `setState` lại — chỉ đổi khi đổi chiều.
+- Dùng **cộng dồn** `delta` cùng chiều (`~36px`), không chỉ delta một frame — cuộn chậm vẫn ẩn/hiện.
+- Đổi chiều cuộn → reset accum; đã ẩn/hiện rồi thì không `setState` lại cùng chiều.
 
 ## Tab → fullscreen (AppBar đè WebView)
 

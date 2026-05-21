@@ -32,7 +32,8 @@ class _ZflBookFullScreenWebviewState extends State<ZflBookFullScreenWebview>
     with WidgetsBindingObserver {
   static const int _maxHistoryEntries = 80;
   static const double _toolbarHeight = 44;
-  static const double _scrollHideThreshold = 14;
+  /// Tổng px cuộn cùng chiều (cộng dồn) để ẩn/hiện — hoạt động cả cuộn chậm.
+  static const double _scrollDirectionThreshold = 36;
   /// Chỉ ẩn AppBar khi trang cuộn được ít nhất bằng chiều cao toolbar + khoảng đệm.
   static const double _minScrollableExtra = 40;
 
@@ -45,6 +46,7 @@ class _ZflBookFullScreenWebviewState extends State<ZflBookFullScreenWebview>
   bool _isRestoringScroll = false;
   bool _appBarVisible = true;
   double? _lastScrollY;
+  double _directionalScrollAccum = 0;
   /// Bù một lần khi mở từ tab: cuộn lên để nội dung tab nằm dưới AppBar nổi.
   bool _compensateAppBarOnNextRestore = false;
 
@@ -174,6 +176,7 @@ class _ZflBookFullScreenWebviewState extends State<ZflBookFullScreenWebview>
     final minScrollable = _toolbarHeight + _minScrollableExtra;
     if (maxScroll < minScrollable) {
       _lastScrollY = scrollY;
+      _directionalScrollAccum = 0;
       if (!_appBarVisible) {
         setState(() => _appBarVisible = true);
       }
@@ -182,6 +185,7 @@ class _ZflBookFullScreenWebviewState extends State<ZflBookFullScreenWebview>
 
     if (scrollY <= 20) {
       _lastScrollY = scrollY;
+      _directionalScrollAccum = 0;
       if (!_appBarVisible) {
         setState(() => _appBarVisible = true);
       }
@@ -190,14 +194,25 @@ class _ZflBookFullScreenWebviewState extends State<ZflBookFullScreenWebview>
 
     if (_lastScrollY != null) {
       final delta = scrollY - _lastScrollY!;
-      var nextVisible = _appBarVisible;
-      if (delta > _scrollHideThreshold) {
-        nextVisible = false;
-      } else if (delta < -_scrollHideThreshold) {
-        nextVisible = true;
-      }
-      if (nextVisible != _appBarVisible) {
-        setState(() => _appBarVisible = nextVisible);
+      if (delta != 0) {
+        if (delta > 0 && _directionalScrollAccum < 0) {
+          _directionalScrollAccum = 0;
+        } else if (delta < 0 && _directionalScrollAccum > 0) {
+          _directionalScrollAccum = 0;
+        }
+        _directionalScrollAccum += delta;
+
+        var nextVisible = _appBarVisible;
+        if (_directionalScrollAccum >= _scrollDirectionThreshold) {
+          nextVisible = false;
+          _directionalScrollAccum = 0;
+        } else if (_directionalScrollAccum <= -_scrollDirectionThreshold) {
+          nextVisible = true;
+          _directionalScrollAccum = 0;
+        }
+        if (nextVisible != _appBarVisible) {
+          setState(() => _appBarVisible = nextVisible);
+        }
       }
     }
     _lastScrollY = scrollY;
@@ -222,6 +237,7 @@ class _ZflBookFullScreenWebviewState extends State<ZflBookFullScreenWebview>
     await _restoreScrollForUrl(resolvedUrl);
     await _persistReadingState();
     _lastScrollY = null;
+    _directionalScrollAccum = 0;
     if (mounted) {
       setState(() => _appBarVisible = true);
     }
@@ -432,17 +448,27 @@ class _ZflBookFullScreenWebviewState extends State<ZflBookFullScreenWebview>
                 icon: const Icon(Icons.arrow_back),
                 onPressed: () => unawaited(_closeAndReturn()),
               ),
-              const Expanded(
-                child: Text(
-                  'Book',
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
-                  overflow: TextOverflow.ellipsis,
+              Expanded(
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Text(
+                      'Book',
+                      style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+                    ),
+                    IconButton(
+                      onPressed: () => unawaited(_goToBooksHomePage()),
+                      icon: const Icon(Icons.menu_book, size: 20),
+                      tooltip: 'Trang mục lục sách',
+                      padding: const EdgeInsets.only(left: 2, right: 4),
+                      visualDensity: VisualDensity.compact,
+                      constraints: const BoxConstraints(
+                        minWidth: 32,
+                        minHeight: 32,
+                      ),
+                    ),
+                  ],
                 ),
-              ),
-              IconButton(
-                onPressed: () => unawaited(_goToBooksHomePage()),
-                icon: const Icon(Icons.menu_book, size: 20),
-                tooltip: 'Trang mục lục sách',
               ),
               FutureBuilder<bool>(
                 future: _canGoBack(),
