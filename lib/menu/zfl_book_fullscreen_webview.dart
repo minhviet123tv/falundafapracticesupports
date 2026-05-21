@@ -16,12 +16,15 @@ class ZflBookFullScreenWebview extends StatefulWidget {
   final String languageCode;
   final String initialUrl;
   final BookScrollPosition? initialScroll;
+  /// Mở từ tab Book: ẩn AppBar cho đến khi người dùng cuộn.
+  final bool openedFromBookTab;
 
   const ZflBookFullScreenWebview({
     super.key,
     required this.languageCode,
     required this.initialUrl,
     this.initialScroll,
+    this.openedFromBookTab = false,
   });
 
   @override
@@ -47,16 +50,24 @@ class _ZflBookFullScreenWebviewState extends State<ZflBookFullScreenWebview>
   bool _appBarVisible = true;
   double? _lastScrollY;
   double _directionalScrollAccum = 0;
-  /// Bù một lần khi mở từ tab: cuộn lên để nội dung tab nằm dưới AppBar nổi.
+  /// Bù scroll khi mở (chỉ khi không dùng chế độ ẩn AppBar lúc vào).
   bool _compensateAppBarOnNextRestore = false;
+  /// Ẩn AppBar sau khi mở từ tab cho đến lần cuộn tay đầu tiên.
+  bool _hideAppBarUntilUserScrolls = false;
+  static const double _unlockAppBarScrollPx = 8;
 
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
+    _hideAppBarUntilUserScrolls = widget.openedFromBookTab;
+    _appBarVisible = !widget.openedFromBookTab;
     final initial = widget.initialScroll;
-    _compensateAppBarOnNextRestore = initial != null &&
-        (initial.scrollY > 0 || initial.scrollRatio > 0);
+    if (!widget.openedFromBookTab &&
+        initial != null &&
+        (initial.scrollY > 0 || initial.scrollRatio > 0)) {
+      _compensateAppBarOnNextRestore = true;
+    }
     _initController();
     unawaited(_openInitialPage());
   }
@@ -173,6 +184,22 @@ class _ZflBookFullScreenWebviewState extends State<ZflBookFullScreenWebview>
   void _updateAppBarFromScroll(double scrollY, double maxScroll) {
     if (_isRestoringScroll || !mounted) return;
 
+    if (_hideAppBarUntilUserScrolls) {
+      if (_lastScrollY != null) {
+        final delta = scrollY - _lastScrollY!;
+        if (delta.abs() >= _unlockAppBarScrollPx) {
+          _hideAppBarUntilUserScrolls = false;
+          _directionalScrollAccum = 0;
+        } else {
+          _lastScrollY = scrollY;
+          return;
+        }
+      } else {
+        _lastScrollY = scrollY;
+        return;
+      }
+    }
+
     final minScrollable = _toolbarHeight + _minScrollableExtra;
     if (maxScroll < minScrollable) {
       _lastScrollY = scrollY;
@@ -239,7 +266,9 @@ class _ZflBookFullScreenWebviewState extends State<ZflBookFullScreenWebview>
     _lastScrollY = null;
     _directionalScrollAccum = 0;
     if (mounted) {
-      setState(() => _appBarVisible = true);
+      setState(() {
+        _appBarVisible = !_hideAppBarUntilUserScrolls;
+      });
     }
   }
 

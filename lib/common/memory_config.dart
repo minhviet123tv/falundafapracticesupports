@@ -44,7 +44,9 @@ class MemoryConfig {
   
   /// Cấu hình UI để tối ưu hóa bộ nhớ
   static Future<void> _configureUIMemory() async {
-    // Thiết lập system UI overlay style để tiết kiệm bộ nhớ
+    // Android 15+ (SDK 35): hiển thị tràn viền + tương thích ngược
+    await SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
+
     SystemChrome.setSystemUIOverlayStyle(
       const SystemUiOverlayStyle(
         statusBarColor: Colors.transparent,

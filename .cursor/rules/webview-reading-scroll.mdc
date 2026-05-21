@@ -38,9 +38,8 @@ if (BookWebViewScrollHelper.shouldSkipRestore(saved, current, scrollOffsetPx: of
 
 ## Tab → fullscreen (AppBar đè WebView)
 
-- Tab: WebView **dưới** AppBar. Fullscreen: AppBar **nổi** → cùng `scrollY` bị che phần đầu.
-- Bù **một lần** khi mở từ tab: `scrollOffsetPx = -(statusBarTop + toolbarHeight)` (âm = cuộn lên trong trang).
-- Không bù khi chuyển trang trong fullscreen hoặc khi quay về tab.
+- Mở từ tab (`openedFromBookTab: true`): **ẩn AppBar** đến khi cuộn tay (~8px) — tiêu đề không bị che lúc vào.
+- Không bù scroll khi dùng chế độ ẩn AppBar lúc vào; bù `-(statusBar + toolbar)` chỉ khi mở fullscreen không qua tab.
 
 ## Đồng bộ tab ↔ fullscreen
 

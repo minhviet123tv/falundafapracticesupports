@@ -295,6 +295,7 @@ class _AllBooksWebviewState extends State<AllBooksWebview> with WidgetsBindingOb
           languageCode: languageAllPageFalundafa.languageCode,
           initialUrl: url,
           initialScroll: scrollNow,
+          openedFromBookTab: true,
         ),
       ),
     );
