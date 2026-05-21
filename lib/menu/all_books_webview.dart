@@ -121,6 +121,7 @@ class _AllBooksWebviewState extends State<AllBooksWebview> with WidgetsBindingOb
 
   void _onScrollReported(String message) {
     if (_isRestoringScroll || !mounted) return;
+    BookWebViewScrollHelper.cancelPendingRestores();
     try {
       final decoded = jsonDecode(message);
       if (decoded is! Map) return;
@@ -259,6 +260,12 @@ class _AllBooksWebviewState extends State<AllBooksWebview> with WidgetsBindingOb
     final saved = _readingState.scrollForUrl(url);
     if (saved == null) return;
     if (saved.scrollY <= 0 && saved.scrollRatio <= 0) return;
+
+    BookWebViewScrollHelper.cancelPendingRestores();
+    final current = await BookWebViewScrollHelper.readPosition(_controller);
+    if (BookWebViewScrollHelper.shouldSkipRestore(saved, current)) {
+      return;
+    }
 
     _isRestoringScroll = true;
     try {

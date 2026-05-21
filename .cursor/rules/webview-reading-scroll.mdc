@@ -1,0 +1,57 @@
+---
+description: WebView đọc sách — lưu/khôi phục cuộn, AppBar ẩn/hiện, tránh nhảy vị trí
+globs: lib/**/*webview*.dart,lib/common/book_webview*.dart
+alwaysApply: false
+---
+
+# WebView reading scroll (tab + fullscreen)
+
+Áp dụng khi tab thường + màn fullscreen dùng chung store/JS helper.
+
+## Lưu vị trí đọc
+
+- Lưu **scrollY (px)** + **scrollRatio (0..1)** + **URL đầy đủ** theo từng URL.
+- JS reporter: báo **ngay khi cuộn** (`requestAnimationFrame`) + một lần **debounce ~350ms** sau khi dừng (lưu chính xác).
+- Flutter: debounce persist ~600ms; không ghi khi `_isRestoringScroll`.
+
+## Khôi phục — tránh nhảy vị trí
+
+- **Không** retry `scrollTo` ở 400/900/1600ms — user cuộn tiếp sẽ bị kéo về vị trí cũ.
+- Dùng **generation token**: `cancelPendingRestores()` khi user cuộn; mỗi `restorePosition` tăng generation.
+- Tối đa: apply ngay → delay ~350ms → retry **một lần** nếu vị trí chưa khớp.
+- **Skip restore** nếu `readPosition()` đã gần vị trí lưu (`~28px` hoặc ratio `~0.015`).
+
+```dart
+// Khi nhận scroll từ user (không đang restore):
+BookWebViewScrollHelper.cancelPendingRestores();
+
+// Trước restore:
+if (BookWebViewScrollHelper.shouldSkipRestore(saved, current, scrollOffsetPx: offset)) return;
+```
+
+## AppBar ẩn/hiện (fullscreen overlay)
+
+- Ẩn khi cuộn xuống, hiện khi cuộn lên / gần đầu trang (`scrollY <= ~20`).
+- Chỉ toggle khi **đủ chiều cao cuộn**: `maxScroll >= toolbarHeight + ~40`.
+- Đã ẩn + vẫn cuộn xuống (hoặc đã hiện + vẫn cuộn lên): **không** `setState` lại — chỉ đổi khi đổi chiều.
+
+## Tab → fullscreen (AppBar đè WebView)
+
+- Tab: WebView **dưới** AppBar. Fullscreen: AppBar **nổi** → cùng `scrollY` bị che phần đầu.
+- Bù **một lần** khi mở từ tab: `scrollOffsetPx = -(statusBarTop + toolbarHeight)` (âm = cuộn lên trong trang).
+- Không bù khi chuyển trang trong fullscreen hoặc khi quay về tab.
+
+## Đồng bộ tab ↔ fullscreen
+
+- Store chung theo `languageCode`; trước mở rộng: `capture` + `persist`.
+- Khi đóng: `capture` + `persist`; tab `load` store → restore **chỉ nếu** lệch vị trí hiện tại.
+- Tab WebView không destroy khi mở rộng — tránh restore thừa nếu đã đúng chỗ.
+
+## File mẫu (dự án này)
+
+- `lib/common/book_webview_scroll_helper.dart` — JS + restore/cancel
+- `lib/common/book_webview_state_store.dart` — persist
+- `lib/menu/all_books_webview.dart` — tab
+- `lib/menu/zfl_book_fullscreen_webview.dart` — fullscreen + AppBar
+
+Copy rule + helper/store pattern sang dự án khác; đổi tên channel/store key cho phù hợp.

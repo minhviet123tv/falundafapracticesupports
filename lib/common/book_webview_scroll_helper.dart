@@ -6,6 +6,38 @@ import 'book_webview_state_store.dart';
 
 /// JavaScript + thao tác cuộn dùng chung cho tab ZFL Book và màn hình mở rộng.
 class BookWebViewScrollHelper {
+  static int _restoreGeneration = 0;
+
+  /// Hủy các lần `scrollTo` trễ (retry) — gọi khi người dùng cuộn tay.
+  static void cancelPendingRestores() {
+    _restoreGeneration++;
+  }
+
+  static bool positionsClose(
+    BookScrollPosition a,
+    BookScrollPosition b, {
+    double pixelTolerance = 28,
+    double ratioTolerance = 0.015,
+  }) {
+    if (a.scrollRatio > 0.01 && b.scrollRatio > 0.01) {
+      return (a.scrollRatio - b.scrollRatio).abs() <= ratioTolerance;
+    }
+    return (a.scrollY - b.scrollY).abs() <= pixelTolerance;
+  }
+
+  /// Đã ở đúng vị trí lưu (kể cả bù AppBar khi mở rộng) thì không restore lại.
+  static bool shouldSkipRestore(
+    BookScrollPosition saved,
+    BookScrollPosition? current, {
+    double scrollOffsetPx = 0,
+  }) {
+    if (current == null) return false;
+    if (scrollOffsetPx != 0) {
+      final targetY = (saved.scrollY + scrollOffsetPx).clamp(0.0, double.infinity);
+      return (current.scrollY - targetY).abs() <= 28;
+    }
+    return positionsClose(current, saved);
+  }
   static const String readPositionJs = '''
 (function() {
   var el = document.scrollingElement || document.documentElement;
@@ -13,7 +45,7 @@ class BookWebViewScrollHelper {
   var viewH = window.innerHeight || document.documentElement.clientHeight || 0;
   var max = Math.max(0, (el.scrollHeight || 0) - viewH);
   var ratio = max > 0 ? y / max : 0;
-  return JSON.stringify({y: y, ratio: ratio, url: location.href});
+  return JSON.stringify({y: y, ratio: ratio, max: max, url: location.href});
 })()
 ''';
 
@@ -21,7 +53,8 @@ class BookWebViewScrollHelper {
 (function() {
   if (window.__zflScrollHooked) return;
   window.__zflScrollHooked = true;
-  var timer = null;
+  var persistTimer = null;
+  var rafPending = false;
   function report() {
     var el = document.scrollingElement || document.documentElement;
     var y = window.pageYOffset || el.scrollTop || 0;
@@ -29,26 +62,39 @@ class BookWebViewScrollHelper {
     var max = Math.max(0, (el.scrollHeight || 0) - viewH);
     var ratio = max > 0 ? y / max : 0;
     if (window.ScrollReporter) {
-      ScrollReporter.postMessage(JSON.stringify({y: y, ratio: ratio, url: location.href}));
+      ScrollReporter.postMessage(JSON.stringify({y: y, ratio: ratio, max: max, url: location.href}));
     }
   }
   window.addEventListener('scroll', function() {
-    clearTimeout(timer);
-    timer = setTimeout(report, 350);
+    if (!rafPending) {
+      rafPending = true;
+      requestAnimationFrame(function() {
+        rafPending = false;
+        report();
+      });
+    }
+    clearTimeout(persistTimer);
+    persistTimer = setTimeout(report, 350);
   }, {passive: true});
   report();
 })();
 ''';
 
-  static String restorePositionJs(BookScrollPosition position) {
+  /// [scrollOffsetPx]: cộng vào scrollY sau khi tính (âm = cuộn lên, dương = cuộn xuống).
+  static String restorePositionJs(
+    BookScrollPosition position, {
+    double scrollOffsetPx = 0,
+  }) {
     final ratio = position.scrollRatio;
     final targetY = position.scrollY.round();
+    final offset = scrollOffsetPx.round();
     return '''
 (function() {
   var el = document.scrollingElement || document.documentElement;
   var viewH = window.innerHeight || document.documentElement.clientHeight || 0;
   var max = Math.max(0, (el.scrollHeight || 0) - viewH);
   var y = $ratio > 0.01 ? Math.round(max * $ratio) : $targetY;
+  y = Math.min(Math.max(0, y + $offset), max);
   window.scrollTo(0, y);
 })();
 ''';
@@ -100,19 +146,36 @@ class BookWebViewScrollHelper {
     WebViewController controller,
     BookScrollPosition position, {
     bool Function()? isMounted,
+    double scrollOffsetPx = 0,
   }) async {
-    if (position.scrollY <= 0 && position.scrollRatio <= 0) return;
+    if (position.scrollY <= 0 &&
+        position.scrollRatio <= 0 &&
+        scrollOffsetPx <= 0) {
+      return;
+    }
+
+    final generation = ++_restoreGeneration;
 
     Future<void> applyOnce() async {
-      await controller.runJavaScript(restorePositionJs(position));
+      if (generation != _restoreGeneration) return;
+      await controller.runJavaScript(
+        restorePositionJs(position, scrollOffsetPx: scrollOffsetPx),
+      );
     }
 
     await applyOnce();
-    for (final delayMs in <int>[400, 900, 1600]) {
-      await Future<void>.delayed(Duration(milliseconds: delayMs));
-      if (isMounted != null && !isMounted()) return;
-      await applyOnce();
+
+    // Một lần retry sau layout; hủy nếu người dùng đã cuộn (generation đổi).
+    await Future<void>.delayed(const Duration(milliseconds: 350));
+    if (generation != _restoreGeneration) return;
+    if (isMounted != null && !isMounted()) return;
+
+    final current = await readPosition(controller);
+    if (shouldSkipRestore(position, current, scrollOffsetPx: scrollOffsetPx)) {
+      return;
     }
+
+    await applyOnce();
   }
 
   static Future<void> installReporter(WebViewController controller) async {

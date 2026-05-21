@@ -33,6 +33,8 @@ class _ZflBookFullScreenWebviewState extends State<ZflBookFullScreenWebview>
   static const int _maxHistoryEntries = 80;
   static const double _toolbarHeight = 44;
   static const double _scrollHideThreshold = 14;
+  /// Chỉ ẩn AppBar khi trang cuộn được ít nhất bằng chiều cao toolbar + khoảng đệm.
+  static const double _minScrollableExtra = 40;
 
   late final WebViewController _controller;
   int progressLoadWeb = 0;
@@ -43,13 +45,23 @@ class _ZflBookFullScreenWebviewState extends State<ZflBookFullScreenWebview>
   bool _isRestoringScroll = false;
   bool _appBarVisible = true;
   double? _lastScrollY;
+  /// Bù một lần khi mở từ tab: cuộn lên để nội dung tab nằm dưới AppBar nổi.
+  bool _compensateAppBarOnNextRestore = false;
 
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
+    final initial = widget.initialScroll;
+    _compensateAppBarOnNextRestore = initial != null &&
+        (initial.scrollY > 0 || initial.scrollRatio > 0);
     _initController();
     unawaited(_openInitialPage());
+  }
+
+  /// Giảm scrollY khi vào fullscreen: AppBar đè lên WebView (khác tab).
+  double _scrollCompensationWhenOpeningFromTab(BuildContext context) {
+    return MediaQuery.paddingOf(context).top + _toolbarHeight;
   }
 
   void _initController() {
@@ -127,16 +139,20 @@ class _ZflBookFullScreenWebviewState extends State<ZflBookFullScreenWebview>
 
   void _onScrollReported(String message) {
     if (_isRestoringScroll || !mounted) return;
+    BookWebViewScrollHelper.cancelPendingRestores();
     try {
       final decoded = jsonDecode(message);
       if (decoded is! Map) return;
       final url = decoded['url'];
       final y = decoded['y'];
       final ratio = decoded['ratio'];
+      final maxScroll = decoded['max'];
       if (url is! String || url.isEmpty) return;
       if (y is! num) return;
 
-      _updateAppBarFromScroll(y.toDouble());
+      final maxScrollPx =
+          maxScroll is num ? maxScroll.toDouble() : 0.0;
+      _updateAppBarFromScroll(y.toDouble(), maxScrollPx);
 
       final position = BookScrollPosition(
         scrollY: y.toDouble(),
@@ -151,8 +167,18 @@ class _ZflBookFullScreenWebviewState extends State<ZflBookFullScreenWebview>
   }
 
   /// Ẩn thanh điều hướng khi cuộn xuống, hiện lại khi cuộn lên hoặc gần đầu trang.
-  void _updateAppBarFromScroll(double scrollY) {
+  /// Chỉ áp dụng khi nội dung đủ dài để cuộn (max >= toolbar + đệm).
+  void _updateAppBarFromScroll(double scrollY, double maxScroll) {
     if (_isRestoringScroll || !mounted) return;
+
+    final minScrollable = _toolbarHeight + _minScrollableExtra;
+    if (maxScroll < minScrollable) {
+      _lastScrollY = scrollY;
+      if (!_appBarVisible) {
+        setState(() => _appBarVisible = true);
+      }
+      return;
+    }
 
     if (scrollY <= 20) {
       _lastScrollY = scrollY;
@@ -250,12 +276,29 @@ class _ZflBookFullScreenWebviewState extends State<ZflBookFullScreenWebview>
     if (saved == null) return;
     if (saved.scrollY <= 0 && saved.scrollRatio <= 0) return;
 
+    var scrollOffsetPx = 0.0;
+    if (_compensateAppBarOnNextRestore && mounted) {
+      _compensateAppBarOnNextRestore = false;
+      scrollOffsetPx = -_scrollCompensationWhenOpeningFromTab(context);
+    }
+
+    BookWebViewScrollHelper.cancelPendingRestores();
+    final current = await BookWebViewScrollHelper.readPosition(_controller);
+    if (BookWebViewScrollHelper.shouldSkipRestore(
+      saved,
+      current,
+      scrollOffsetPx: scrollOffsetPx,
+    )) {
+      return;
+    }
+
     _isRestoringScroll = true;
     try {
       await BookWebViewScrollHelper.restorePosition(
         _controller,
         saved,
         isMounted: () => mounted,
+        scrollOffsetPx: scrollOffsetPx,
       );
     } finally {
       _isRestoringScroll = false;
@@ -391,14 +434,14 @@ class _ZflBookFullScreenWebviewState extends State<ZflBookFullScreenWebview>
               ),
               const Expanded(
                 child: Text(
-                  'ZFL Book',
+                  'Book',
                   style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
                   overflow: TextOverflow.ellipsis,
                 ),
               ),
               IconButton(
                 onPressed: () => unawaited(_goToBooksHomePage()),
-                icon: const Icon(Icons.menu_book, size: 20, color: Colors.orange),
+                icon: const Icon(Icons.menu_book, size: 20),
                 tooltip: 'Trang mục lục sách',
               ),
               FutureBuilder<bool>(
