@@ -207,6 +207,7 @@ class _FalunDafaExerciseHomePageState extends State<FalunDafaExerciseHomePage>
   List<Widget> get listWidgetBody {
     _listWidgetBody ??= [
       MenuHome(),
+      AllBooksWebview(),
       PlayerWidget9Baigiang(), // Không thể cùng lúc dùng 1 trang widget (Có khung Scaffold) 2 lần -> nên tạo 2 trang (Đồng thời tạo sẵn list link)
       PlayerWidget(),
     ];
@@ -257,14 +258,21 @@ class _FalunDafaExerciseHomePageState extends State<FalunDafaExerciseHomePage>
               activeIcon: Icon(Icons.home, color: Color(0xFF2196f3)), // rgba(49, 108, 208)
           ),
 
-          //2. Menu audio 09 bài giảng
+          //2. Menu mở sách Chuyển Pháp Luân
+          BottomNavigationBarItem(
+            icon: Icon(Icons.menu_book, color: Color.fromARGB(255, 71, 71, 71)), // Sử dụng icon thay vì Image.asset để tiết kiệm bộ nhớ
+            label: "ZFL Book",
+            activeIcon: Icon(Icons.menu_book, color: Colors.orange,),
+          ),
+
+          //3. Menu audio 09 bài giảng
           BottomNavigationBarItem(
             icon: Icon(Icons.audiotrack, color: Color.fromARGB(255, 71, 71, 71)), // Sử dụng icon thay vì Image.asset để tiết kiệm bộ nhớ
             label: "9 Lesson",
             activeIcon: Icon(Icons.audiotrack, color: Colors.orange,),
           ),
 
-          //3. Menu nhạc luyện công
+          //4. Menu nhạc luyện công
           BottomNavigationBarItem(
             icon: Icon(Icons.self_improvement, color: Color.fromARGB(255, 71, 71, 71)), // Sử dụng icon thay vì Image.asset để tiết kiệm bộ nhớ
             label: "Practice",
