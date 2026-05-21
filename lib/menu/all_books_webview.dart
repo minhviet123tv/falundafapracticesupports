@@ -9,8 +9,10 @@ import 'package:webview_flutter_android/webview_flutter_android.dart';
 import 'package:webview_flutter_wkwebview/webview_flutter_wkwebview.dart';
 
 import '../controller_app/link_internet_sachchuyenphapluan_quocte.dart';
+import '../common/book_webview_scroll_helper.dart';
 import '../common/book_webview_state_store.dart';
 import '../common/browser_helper.dart';
+import 'zfl_book_fullscreen_webview.dart';
 
 /*
 Lưu vị trí cuộn (pixel + tỷ lệ %) + URL đầy đủ (kể cả #mục) + lịch sử trang.
@@ -34,7 +36,6 @@ class _AllBooksWebviewState extends State<AllBooksWebview> with WidgetsBindingOb
   String? _currentUrl;
   Timer? _scrollSaveDebounce;
   bool _isRestoringScroll = false;
-  bool _scrollReporterInstalled = false;
 
   @override
   void initState() {
@@ -163,7 +164,6 @@ class _AllBooksWebviewState extends State<AllBooksWebview> with WidgetsBindingOb
   }
 
   Future<void> _loadReadingStateAndOpenUrl() async {
-    _scrollReporterInstalled = false;
     _readingState =
         await BookWebViewStateStore.load(languageAllPageFalundafa.languageCode);
 
@@ -196,10 +196,9 @@ class _AllBooksWebviewState extends State<AllBooksWebview> with WidgetsBindingOb
   Future<void> _onPageFinished(String url) async {
     if (!mounted || url.isEmpty) return;
 
-    _scrollReporterInstalled = false;
     final resolvedUrl = await _controller.currentUrl() ?? url;
     _commitUrlToHistory(resolvedUrl);
-    await _installScrollReporter();
+    await BookWebViewScrollHelper.installReporter(_controller);
     await _restoreScrollForUrl(resolvedUrl);
     await _persistReadingState();
 
@@ -237,45 +236,10 @@ class _AllBooksWebviewState extends State<AllBooksWebview> with WidgetsBindingOb
     );
   }
 
-  Future<BookScrollPosition?> _readScrollPosition() async {
-    try {
-      final result = await _controller.runJavaScriptReturningResult('''
-(function() {
-  var el = document.scrollingElement || document.documentElement;
-  var y = window.pageYOffset || el.scrollTop || document.body.scrollTop || 0;
-  var viewH = window.innerHeight || document.documentElement.clientHeight || 0;
-  var max = Math.max(0, (el.scrollHeight || 0) - viewH);
-  var ratio = max > 0 ? y / max : 0;
-  return JSON.stringify({y: y, ratio: ratio, url: location.href});
-})()
-''');
-
-      dynamic decoded = result;
-      if (result is String) {
-        final trimmed = result.trim();
-        if (trimmed.isEmpty) return null;
-        decoded = jsonDecode(trimmed);
-      }
-      if (decoded is! Map) return null;
-
-      final y = decoded['y'];
-      final ratio = decoded['ratio'];
-      if (y is! num) return null;
-
-      return BookScrollPosition(
-        scrollY: y.toDouble(),
-        scrollRatio: ratio is num ? ratio.clamp(0.0, 1.0).toDouble() : 0,
-      );
-    } catch (e) {
-      debugPrint('Read scroll failed: $e');
-      return null;
-    }
-  }
-
   Future<void> _captureScrollForUrl(String url) async {
     if (url.isEmpty || _isRestoringScroll) return;
 
-    final position = await _readScrollPosition();
+    final position = await BookWebViewScrollHelper.readPosition(_controller);
     if (position == null) return;
     if (position.scrollY <= 0 && position.scrollRatio <= 0) return;
 
@@ -289,37 +253,6 @@ class _AllBooksWebviewState extends State<AllBooksWebview> with WidgetsBindingOb
     _currentUrl = url;
   }
 
-  Future<void> _installScrollReporter() async {
-    if (_scrollReporterInstalled) return;
-    try {
-      await _controller.runJavaScript('''
-(function() {
-  if (window.__zflScrollHooked) return;
-  window.__zflScrollHooked = true;
-  var timer = null;
-  function report() {
-    var el = document.scrollingElement || document.documentElement;
-    var y = window.pageYOffset || el.scrollTop || 0;
-    var viewH = window.innerHeight || document.documentElement.clientHeight || 0;
-    var max = Math.max(0, (el.scrollHeight || 0) - viewH);
-    var ratio = max > 0 ? y / max : 0;
-    if (window.ScrollReporter) {
-      ScrollReporter.postMessage(JSON.stringify({y: y, ratio: ratio, url: location.href}));
-    }
-  }
-  window.addEventListener('scroll', function() {
-    clearTimeout(timer);
-    timer = setTimeout(report, 350);
-  }, {passive: true});
-  report();
-})();
-''');
-      _scrollReporterInstalled = true;
-    } catch (e) {
-      debugPrint('Install scroll reporter failed: $e');
-    }
-  }
-
   Future<void> _restoreScrollForUrl(String url) async {
     final saved = _readingState.scrollForUrl(url);
     if (saved == null) return;
@@ -327,32 +260,58 @@ class _AllBooksWebviewState extends State<AllBooksWebview> with WidgetsBindingOb
 
     _isRestoringScroll = true;
     try {
-      final ratio = saved.scrollRatio;
-      final targetY = saved.scrollY.round();
-
-      Future<void> applyOnce() async {
-        await _controller.runJavaScript('''
-(function() {
-  var el = document.scrollingElement || document.documentElement;
-  var viewH = window.innerHeight || document.documentElement.clientHeight || 0;
-  var max = Math.max(0, (el.scrollHeight || 0) - viewH);
-  var y = $ratio > 0.01 ? Math.round(max * $ratio) : $targetY;
-  window.scrollTo(0, y);
-})();
-''');
-      }
-
-      await applyOnce();
-      for (final delayMs in <int>[400, 900, 1600]) {
-        await Future<void>.delayed(Duration(milliseconds: delayMs));
-        if (!mounted) return;
-        await applyOnce();
-      }
-    } catch (e) {
-      debugPrint('Restore scroll failed: $e');
+      await BookWebViewScrollHelper.restorePosition(
+        _controller,
+        saved,
+        isMounted: () => mounted,
+      );
     } finally {
       _isRestoringScroll = false;
     }
+  }
+
+  /// Mở toàn màn hình tại đúng URL + vị trí cuộn hiện tại; khi quay lại đồng bộ tab.
+  Future<void> _openFullScreen() async {
+    final url = await _controller.currentUrl() ?? _currentUrl;
+    if (url == null || url.isEmpty || !mounted) return;
+
+    await _captureScrollForCurrentPage();
+    final scrollNow = _readingState.scrollForUrl(url) ??
+        await BookWebViewScrollHelper.readPosition(_controller);
+    await _persistReadingState();
+
+    final returned = await Navigator.of(context).push<bool>(
+      MaterialPageRoute<bool>(
+        builder: (context) => ZflBookFullScreenWebview(
+          languageCode: languageAllPageFalundafa.languageCode,
+          initialUrl: url,
+          initialScroll: scrollNow,
+        ),
+      ),
+    );
+
+    if (!mounted || returned != true) return;
+    await _syncFromStoreAfterFullScreen();
+    if (mounted) setState(() {});
+  }
+
+  /// Sau khi đóng màn hình mở rộng: load lại URL + cuộn từ kho lưu chung.
+  Future<void> _syncFromStoreAfterFullScreen() async {
+    _readingState =
+        await BookWebViewStateStore.load(languageAllPageFalundafa.languageCode);
+    final targetUrl = _readingState.lastUrl;
+    if (targetUrl == null || targetUrl.isEmpty) return;
+
+    final currentUrl = await _controller.currentUrl() ?? _currentUrl;
+    _currentUrl = targetUrl;
+
+    if (currentUrl != targetUrl) {
+      await _controller.loadRequest(Uri.parse(targetUrl));
+      return;
+    }
+
+    await BookWebViewScrollHelper.installReporter(_controller);
+    await _restoreScrollForUrl(targetUrl);
   }
 
   void _schedulePersist() {
@@ -406,7 +365,6 @@ class _AllBooksWebviewState extends State<AllBooksWebview> with WidgetsBindingOb
     if (_readingState.historyIndex > 0) {
       final newIndex = _readingState.historyIndex - 1;
       final url = _readingState.history[newIndex];
-      _scrollReporterInstalled = false;
       _readingState = _readingState.withNavigation(
         url: url,
         history: _readingState.history,
@@ -429,7 +387,6 @@ class _AllBooksWebviewState extends State<AllBooksWebview> with WidgetsBindingOb
     if (_readingState.historyIndex < _readingState.history.length - 1) {
       final newIndex = _readingState.historyIndex + 1;
       final url = _readingState.history[newIndex];
-      _scrollReporterInstalled = false;
       _readingState = _readingState.withNavigation(
         url: url,
         history: _readingState.history,
@@ -553,20 +510,10 @@ class _AllBooksWebviewState extends State<AllBooksWebview> with WidgetsBindingOb
                 return const SizedBox.shrink();
               },
             ),
-            FutureBuilder<String?>(
-              future: BrowserHelper.getCurrentUrl(_controller),
-              builder: (BuildContext context, AsyncSnapshot<String?> snapshot) {
-                if (snapshot.hasData) {
-                  return IconButton(
-                    onPressed: () {
-                      setState(() {});
-                      BrowserHelper.launchInApp(Uri.parse(snapshot.data!));
-                    },
-                    icon: const Icon(Icons.zoom_out_map, size: 20),
-                  );
-                }
-                return const SizedBox.shrink();
-              },
+            IconButton(
+              onPressed: () => unawaited(_openFullScreen()),
+              icon: const Icon(Icons.zoom_out_map, size: 20),
+              tooltip: 'Mở rộng màn hình',
             ),
           ],
           backgroundColor: Colors.white,
