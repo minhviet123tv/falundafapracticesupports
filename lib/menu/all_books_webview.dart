@@ -108,13 +108,15 @@ class _AllBooksWebviewState extends State<AllBooksWebview> with WidgetsBindingOb
       );
 
     if (controller.platform is AndroidWebViewController) {
-      AndroidWebViewController.enableDebugging(true);
       (controller.platform as AndroidWebViewController)
           .setMediaPlaybackRequiresUserGesture(false);
     }
 
     _controller = controller;
-    _getLanguageEnumBook();
+    // Trì hoãn load WebView sau frame đầu — giảm crash Chromium trên emulator 16KB.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      unawaited(_getLanguageEnumBook());
+    });
   }
 
   void _onScrollReported(String message) {
@@ -353,6 +355,22 @@ class _AllBooksWebviewState extends State<AllBooksWebview> with WidgetsBindingOb
     await _loadReadingStateAndOpenUrl();
   }
 
+  /// Về trang mục lục sách (`booksPage`) của ngôn ngữ đang chọn trong enum.
+  Future<void> _goToBooksHomePage() async {
+    await _captureScrollForCurrentPage();
+
+    final homeUrl = languageAllPageFalundafa.booksPage;
+    _currentUrl = homeUrl;
+    _readingState = _readingState.withScroll(
+      homeUrl,
+      const BookScrollPosition(scrollY: 0, scrollRatio: 0),
+    );
+
+    await _controller.loadRequest(Uri.parse(homeUrl));
+    await _persistReadingState();
+    if (mounted) setState(() {});
+  }
+
   Future<void> _goBack() async {
     await _captureScrollForCurrentPage();
     await _persistReadingState();
@@ -428,43 +446,53 @@ class _AllBooksWebviewState extends State<AllBooksWebview> with WidgetsBindingOb
     return SafeArea(
       child: Scaffold(
         appBar: AppBar(
-          title: PopupMenuButton<LanguageAllPageFalundafa>(
-            tooltip: 'Select language',
-            position: PopupMenuPosition.under,
-            color: Colors.white,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(border10)),
-            onSelected: (LanguageAllPageFalundafa value) {
-              unawaited(_onLanguageChanged(value));
-            },
-            itemBuilder: (context) {
-              return LanguageAllPageFalundafa.values
-                  .map(
-                    (value) => PopupMenuItem<LanguageAllPageFalundafa>(
-                      value: value,
-                      height: 44,
-                      child: Text(value.languageName),
-                    ),
-                  )
-                  .toList();
-            },
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.all(Radius.circular(border10)),
-                border: Border.all(color: Colors.white70),
-              ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    languageAllPageFalundafa.languageName,
-                    style: const TextStyle(fontWeight: FontWeight.w500, fontSize: 11),
+          title: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              PopupMenuButton<LanguageAllPageFalundafa>(
+                tooltip: 'Select language',
+                position: PopupMenuPosition.under,
+                color: Colors.white,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(border10)),
+                onSelected: (LanguageAllPageFalundafa value) {
+                  unawaited(_onLanguageChanged(value));
+                },
+                itemBuilder: (context) {
+                  return LanguageAllPageFalundafa.values
+                      .map(
+                        (value) => PopupMenuItem<LanguageAllPageFalundafa>(
+                          value: value,
+                          height: 44,
+                          child: Text(value.languageName),
+                        ),
+                      )
+                      .toList();
+                },
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.all(Radius.circular(border10)),
+                    border: Border.all(color: Colors.white70),
                   ),
-                  const SizedBox(width: 4),
-                  const Icon(Icons.arrow_drop_down, size: 18),
-                ],
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        languageAllPageFalundafa.languageName,
+                        style: const TextStyle(fontWeight: FontWeight.w500, fontSize: 11),
+                      ),
+                      const SizedBox(width: 4),
+                      const Icon(Icons.arrow_drop_down, size: 18),
+                    ],
+                  ),
+                ),
               ),
-            ),
+              IconButton(
+                onPressed: () => unawaited(_goToBooksHomePage()),
+                icon: const Icon(Icons.menu_book, size: 20),
+                tooltip: 'Trang mục lục sách',
+              ),
+            ],
           ),
           toolbarHeight: 40,
           actions: [

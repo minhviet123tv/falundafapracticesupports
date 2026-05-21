@@ -6,6 +6,7 @@ import 'package:webview_flutter/webview_flutter.dart';
 import 'package:webview_flutter_android/webview_flutter_android.dart';
 import 'package:webview_flutter_wkwebview/webview_flutter_wkwebview.dart';
 
+import '../controller_app/link_internet_sachchuyenphapluan_quocte.dart';
 import '../common/book_webview_scroll_helper.dart';
 import '../common/book_webview_state_store.dart';
 import '../common/browser_helper.dart';
@@ -30,6 +31,8 @@ class ZflBookFullScreenWebview extends StatefulWidget {
 class _ZflBookFullScreenWebviewState extends State<ZflBookFullScreenWebview>
     with WidgetsBindingObserver {
   static const int _maxHistoryEntries = 80;
+  static const double _toolbarHeight = 44;
+  static const double _scrollHideThreshold = 14;
 
   late final WebViewController _controller;
   int progressLoadWeb = 0;
@@ -38,6 +41,8 @@ class _ZflBookFullScreenWebviewState extends State<ZflBookFullScreenWebview>
   String? _currentUrl;
   Timer? _scrollSaveDebounce;
   bool _isRestoringScroll = false;
+  bool _appBarVisible = true;
+  double? _lastScrollY;
 
   @override
   void initState() {
@@ -131,6 +136,8 @@ class _ZflBookFullScreenWebviewState extends State<ZflBookFullScreenWebview>
       if (url is! String || url.isEmpty) return;
       if (y is! num) return;
 
+      _updateAppBarFromScroll(y.toDouble());
+
       final position = BookScrollPosition(
         scrollY: y.toDouble(),
         scrollRatio: ratio is num ? ratio.clamp(0.0, 1.0).toDouble() : 0,
@@ -141,6 +148,33 @@ class _ZflBookFullScreenWebviewState extends State<ZflBookFullScreenWebview>
       _readingState = _readingState.withScroll(url, position);
       _schedulePersist();
     } catch (_) {}
+  }
+
+  /// Ẩn thanh điều hướng khi cuộn xuống, hiện lại khi cuộn lên hoặc gần đầu trang.
+  void _updateAppBarFromScroll(double scrollY) {
+    if (_isRestoringScroll || !mounted) return;
+
+    if (scrollY <= 20) {
+      _lastScrollY = scrollY;
+      if (!_appBarVisible) {
+        setState(() => _appBarVisible = true);
+      }
+      return;
+    }
+
+    if (_lastScrollY != null) {
+      final delta = scrollY - _lastScrollY!;
+      var nextVisible = _appBarVisible;
+      if (delta > _scrollHideThreshold) {
+        nextVisible = false;
+      } else if (delta < -_scrollHideThreshold) {
+        nextVisible = true;
+      }
+      if (nextVisible != _appBarVisible) {
+        setState(() => _appBarVisible = nextVisible);
+      }
+    }
+    _lastScrollY = scrollY;
   }
 
   @override
@@ -161,7 +195,10 @@ class _ZflBookFullScreenWebviewState extends State<ZflBookFullScreenWebview>
     await BookWebViewScrollHelper.installReporter(_controller);
     await _restoreScrollForUrl(resolvedUrl);
     await _persistReadingState();
-    if (mounted) setState(() {});
+    _lastScrollY = null;
+    if (mounted) {
+      setState(() => _appBarVisible = true);
+    }
   }
 
   void _commitUrlToHistory(String url) {
@@ -244,6 +281,28 @@ class _ZflBookFullScreenWebviewState extends State<ZflBookFullScreenWebview>
     await BookWebViewStateStore.save(widget.languageCode, _readingState);
   }
 
+  LanguageAllPageFalundafa get _languageEnum {
+    return LanguageAllPageFalundafa.values.firstWhere(
+      (e) => e.languageCode == widget.languageCode,
+      orElse: () => LanguageAllPageFalundafa.vietnamese,
+    );
+  }
+
+  Future<void> _goToBooksHomePage() async {
+    await _captureScrollForCurrentPage();
+
+    final homeUrl = _languageEnum.booksPage;
+    _currentUrl = homeUrl;
+    _readingState = _readingState.withScroll(
+      homeUrl,
+      const BookScrollPosition(scrollY: 0, scrollRatio: 0),
+    );
+
+    if (mounted) setState(() => _appBarVisible = true);
+    await _controller.loadRequest(Uri.parse(homeUrl));
+    await _persistReadingState();
+  }
+
   Future<void> _closeAndReturn() async {
     await _captureScrollForCurrentPage();
     await _persistReadingState();
@@ -313,6 +372,80 @@ class _ZflBookFullScreenWebviewState extends State<ZflBookFullScreenWebview>
     super.dispose();
   }
 
+  Widget _buildCollapsibleToolbar(BuildContext context) {
+    final topInset = MediaQuery.paddingOf(context).top;
+    final barHeight = topInset + _toolbarHeight;
+
+    return Material(
+      color: Colors.white,
+      elevation: _appBarVisible ? 1 : 0,
+      child: SizedBox(
+        height: barHeight,
+        child: Padding(
+          padding: EdgeInsets.only(top: topInset),
+          child: Row(
+            children: [
+              IconButton(
+                icon: const Icon(Icons.arrow_back),
+                onPressed: () => unawaited(_closeAndReturn()),
+              ),
+              const Expanded(
+                child: Text(
+                  'ZFL Book',
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+              IconButton(
+                onPressed: () => unawaited(_goToBooksHomePage()),
+                icon: const Icon(Icons.menu_book, size: 20, color: Colors.orange),
+                tooltip: 'Trang mục lục sách',
+              ),
+              FutureBuilder<bool>(
+                future: _canGoBack(),
+                builder: (context, snapshot) {
+                  final enabled = snapshot.data ?? false;
+                  return IconButton(
+                    onPressed: enabled ? () => unawaited(_goBack()) : null,
+                    icon: Icon(
+                      Icons.arrow_circle_left_outlined,
+                      color: enabled ? null : Colors.grey.shade400,
+                    ),
+                  );
+                },
+              ),
+              FutureBuilder<bool>(
+                future: _canGoForward(),
+                builder: (context, snapshot) {
+                  final enabled = snapshot.data ?? false;
+                  return IconButton(
+                    onPressed: enabled ? () => unawaited(_goForward()) : null,
+                    icon: Icon(
+                      Icons.arrow_circle_right_outlined,
+                      color: enabled ? null : Colors.grey.shade400,
+                    ),
+                  );
+                },
+              ),
+              FutureBuilder<String?>(
+                future: BrowserHelper.getCurrentUrl(_controller),
+                builder: (context, snapshot) {
+                  if (!snapshot.hasData) return const SizedBox.shrink();
+                  return IconButton(
+                    onPressed: () {
+                      BrowserHelper.launchExternal(Uri.parse(snapshot.data!));
+                    },
+                    icon: const Icon(Icons.open_in_new, size: 20),
+                  );
+                },
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return PopScope(
@@ -323,57 +456,32 @@ class _ZflBookFullScreenWebviewState extends State<ZflBookFullScreenWebview>
         }
       },
       child: Scaffold(
-      appBar: AppBar(
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
-          onPressed: () => unawaited(_closeAndReturn()),
+        backgroundColor: Colors.white,
+        // WebView luôn full màn hình; AppBar nổi phía trên — không đẩy layout khi ẩn/hiện.
+        body: Stack(
+          fit: StackFit.expand,
+          children: [
+            progressLoadWeb <= 20
+                ? const Center(child: CircularProgressIndicator())
+                : WebViewWidget(controller: _controller),
+            Positioned(
+              top: 0,
+              left: 0,
+              right: 0,
+              child: ClipRect(
+                child: IgnorePointer(
+                  ignoring: !_appBarVisible,
+                  child: AnimatedSlide(
+                    offset: _appBarVisible ? Offset.zero : const Offset(0, -1),
+                    duration: const Duration(milliseconds: 220),
+                    curve: Curves.easeInOut,
+                    child: _buildCollapsibleToolbar(context),
+                  ),
+                ),
+              ),
+            ),
+          ],
         ),
-        title: const Text('ZFL Book', style: TextStyle(fontSize: 16)),
-        toolbarHeight: 44,
-        actions: [
-          FutureBuilder<bool>(
-            future: _canGoBack(),
-            builder: (context, snapshot) {
-              final enabled = snapshot.data ?? false;
-              return IconButton(
-                onPressed: enabled ? () => unawaited(_goBack()) : null,
-                icon: Icon(
-                  Icons.arrow_circle_left_outlined,
-                  color: enabled ? null : Colors.grey.shade400,
-                ),
-              );
-            },
-          ),
-          FutureBuilder<bool>(
-            future: _canGoForward(),
-            builder: (context, snapshot) {
-              final enabled = snapshot.data ?? false;
-              return IconButton(
-                onPressed: enabled ? () => unawaited(_goForward()) : null,
-                icon: Icon(
-                  Icons.arrow_circle_right_outlined,
-                  color: enabled ? null : Colors.grey.shade400,
-                ),
-              );
-            },
-          ),
-          FutureBuilder<String?>(
-            future: BrowserHelper.getCurrentUrl(_controller),
-            builder: (context, snapshot) {
-              if (!snapshot.hasData) return const SizedBox.shrink();
-              return IconButton(
-                onPressed: () {
-                  BrowserHelper.launchExternal(Uri.parse(snapshot.data!));
-                },
-                icon: const Icon(Icons.open_in_new, size: 20),
-              );
-            },
-          ),
-        ],
-      ),
-      body: progressLoadWeb <= 20
-          ? const Center(child: CircularProgressIndicator())
-          : WebViewWidget(controller: _controller),
       ),
     );
   }

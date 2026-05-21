@@ -59,7 +59,10 @@ class _RunAppFalunDafaExerciseState extends State<RunAppFalunDafaExercise>
     // Khởi tạo SharedPreferences cache
     _initializeSharedPreferences();
     
-    _checkForUpdateAll(); // update app
+    // Tránh tranh chấp main thread lúc khởi động (WebView / Play Core).
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      unawaited(_checkForUpdateAll());
+    });
     _countLogin(); //Đếm số lần login
   }
   
@@ -168,10 +171,12 @@ class FalunDafaExerciseHomePage extends StatefulWidget {
 }
 
 class _FalunDafaExerciseHomePageState extends State<FalunDafaExerciseHomePage> 
-    with AutomaticKeepAliveClientMixin, MemoryMonitorMixin {
+    with AutomaticKeepAliveClientMixin {
 
-  //A. Dữ liệu | List widget body của menu bottom - Tối ưu hóa bộ nhớ
-  List<Widget>? _listWidgetBody; // Danh sách các trang widget - lazy loading
+  static const int _tabCount = 4;
+
+  // Chỉ tạo tab khi người dùng mở lần đầu — tránh khởi tạo WebView + AudioPlayer cùng lúc.
+  final Map<int, Widget> _tabWidgets = <int, Widget>{};
   int indexMenu = 0;
   String title = '';
   final TextStyle styleTextTitle = const TextStyle(color: Colors.white, fontWeight: FontWeight.w700);
@@ -191,9 +196,6 @@ class _FalunDafaExerciseHomePageState extends State<FalunDafaExerciseHomePage>
     // Khởi tạo SharedPreferences cache
     _initializeSharedPreferences();
     
-    // Bắt đầu theo dõi bộ nhớ
-    startMemoryMonitoring();
-    
     indexMenu = 0;
     _getIndexMenu(); // Load thứ tự menu
   }
@@ -203,15 +205,23 @@ class _FalunDafaExerciseHomePageState extends State<FalunDafaExerciseHomePage>
     _sharedPreferences ??= await SharedPreferences.getInstance();
   }
   
-  // Lazy loading cho list widget body để tiết kiệm bộ nhớ
-  List<Widget> get listWidgetBody {
-    _listWidgetBody ??= [
-      MenuHome(),
-      AllBooksWebview(),
-      PlayerWidget9Baigiang(), // Không thể cùng lúc dùng 1 trang widget (Có khung Scaffold) 2 lần -> nên tạo 2 trang (Đồng thời tạo sẵn list link)
-      PlayerWidget(),
-    ];
-    return _listWidgetBody!;
+  Widget _createTab(int index) {
+    switch (index) {
+      case 0:
+        return MenuHome();
+      case 1:
+        return AllBooksWebview();
+      case 2:
+        return PlayerWidget9Baigiang();
+      case 3:
+        return PlayerWidget();
+      default:
+        return MenuHome();
+    }
+  }
+
+  Widget _tabForIndex(int index) {
+    return _tabWidgets.putIfAbsent(index, () => _createTab(index));
   }
 
   //B.1 Load index của menu bottom được lưu trong shared - Tối ưu hóa bộ nhớ
@@ -221,9 +231,8 @@ class _FalunDafaExerciseHomePageState extends State<FalunDafaExerciseHomePage>
     
     int indexSelectedHere = _sharedPreferences!.getInt("index_menu_bottom") ?? 0;
 
-    // Đề phòng trường hợp lưu index vượt quá số lượng của list widget
-    if(indexSelectedHere > listWidgetBody.length -1){
-      indexSelectedHere = listWidgetBody.length -1;
+    if (indexSelectedHere > _tabCount - 1) {
+      indexSelectedHere = _tabCount - 1;
     }
     indexMenu = indexSelectedHere;
     
@@ -240,8 +249,8 @@ class _FalunDafaExerciseHomePageState extends State<FalunDafaExerciseHomePage>
     
     return Scaffold(
 
-      //I. Body: Load để lấy widget làm body trong list
-      body: Center(child: listWidgetBody[indexMenu]),
+      //I. Body: chỉ build tab đang chọn (lazy)
+      body: Center(child: _tabForIndex(indexMenu)),
       backgroundColor: Colors.white, // Màu nền chung cho trang
 
       //II. Bottom NavigationBar - Danh sách các nút menu bottom
@@ -261,7 +270,7 @@ class _FalunDafaExerciseHomePageState extends State<FalunDafaExerciseHomePage>
           //2. Menu mở sách Chuyển Pháp Luân
           BottomNavigationBarItem(
             icon: Icon(Icons.menu_book, color: Color.fromARGB(255, 71, 71, 71)), // Sử dụng icon thay vì Image.asset để tiết kiệm bộ nhớ
-            label: "ZFL Book",
+            label: "Book",
             activeIcon: Icon(Icons.menu_book, color: Colors.orange,),
           ),
 
@@ -298,37 +307,10 @@ class _FalunDafaExerciseHomePageState extends State<FalunDafaExerciseHomePage>
     await _sharedPreferences!.setInt("index_menu_bottom", indexMenuBottom);
   }
 
-  // Xử lý khi kiểm tra bộ nhớ
-  @override
-  void onMemoryCheck(Map<String, dynamic> memoryInfo, bool isWithinLimit) {
-    if (!isWithinLimit) {
-      // Nếu bộ nhớ vượt quá giới hạn, thực hiện cleanup
-      _performMemoryCleanup();
-    }
-  }
-  
-  // Thực hiện cleanup bộ nhớ
-  void _performMemoryCleanup() {
-    // Giải phóng cache không cần thiết
-    if (_listWidgetBody != null && indexMenu < _listWidgetBody!.length) {
-      // Chỉ giữ lại widget hiện tại, giải phóng các widget khác
-      final currentWidget = _listWidgetBody![indexMenu];
-      _listWidgetBody = [currentWidget];
-    }
-    
-    // Force garbage collection
-    debugPrint('Performing memory cleanup due to high usage');
-  }
-
-  // Cleanup để giải phóng bộ nhớ khi widget bị dispose
   @override
   void dispose() {
-    // Dừng theo dõi bộ nhớ
-    stopMemoryMonitoring();
-    
-    // Giải phóng cache SharedPreferences
     _sharedPreferences = null;
-    _listWidgetBody = null;
+    _tabWidgets.clear();
     super.dispose();
   }
 }
