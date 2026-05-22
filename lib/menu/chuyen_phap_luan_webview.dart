@@ -13,11 +13,22 @@ import '../controller_app/link_internet_sachchuyenphapluan_quocte.dart';
 import '../common/book_webview_scroll_helper.dart';
 import '../common/book_webview_state_store.dart';
 import '../common/browser_helper.dart';
+import '../common/zfl_offline_downloader.dart';
+import '../common/zfl_offline_pack_store.dart';
+import '../common/zfl_offline_prompt_policy.dart';
+import '../common/zfl_offline_dialog_strings.dart';
+import '../common/zfl_offline_url_loader.dart';
 import 'zfl_book_fullscreen_webview.dart';
 
 /// Tab Book: đọc Chuyển Pháp Luân online theo [LanguageNameOfChuyenPhapLuan].
 class ChuyenPhapLuanWebview extends StatefulWidget {
   static const String routeName = 'ChuyenPhapLuanWebview_routeName';
+
+  static final ValueNotifier<int> bookTabSelectedTick = ValueNotifier<int>(0);
+
+  static void notifyBookTabSelected() {
+    bookTabSelectedTick.value++;
+  }
 
   @override
   State<ChuyenPhapLuanWebview> createState() => _ChuyenPhapLuanWebviewState();
@@ -38,6 +49,10 @@ class _ChuyenPhapLuanWebviewState extends State<ChuyenPhapLuanWebview>
   Timer? _scrollSaveDebounce;
   bool _isRestoringScroll = false;
   bool _restoreScrollAfterFullscreen = false;
+  bool _offlinePromptShowing = false;
+  bool _offlineDownloadRunning = false;
+  VoidCallback? _bookTabListener;
+  String? _pendingLogicalUrl;
 
   String get _languageCode => _language.name;
 
@@ -84,8 +99,26 @@ class _ChuyenPhapLuanWebviewState extends State<ChuyenPhapLuanWebview>
           onWebResourceError: (WebResourceError error) {
             debugPrint('WebView error: ${error.description}');
           },
-          onNavigationRequest: (NavigationRequest request) {
+          onNavigationRequest: (NavigationRequest request) async {
             if (request.url.startsWith('https://www.youtube.com/')) {
+              return NavigationDecision.prevent;
+            }
+            final url = request.url;
+            if (url.isEmpty ||
+                url.startsWith('file://') ||
+                (!url.startsWith('http://') && !url.startsWith('https://'))) {
+              return NavigationDecision.navigate;
+            }
+            if (await ZflOfflinePromptPolicy.hasInternet()) {
+              return NavigationDecision.navigate;
+            }
+            final local = await ZflOfflinePackStore.resolveLocalAbsolutePath(
+              _languageCode,
+              url,
+            );
+            if (local != null) {
+              _pendingLogicalUrl = url;
+              await _controller.loadRequest(Uri.file(local));
               return NavigationDecision.prevent;
             }
             return NavigationDecision.navigate;
@@ -120,9 +153,131 @@ class _ChuyenPhapLuanWebviewState extends State<ChuyenPhapLuanWebview>
     }
 
     _controller = controller;
+    _bookTabListener = () {
+      unawaited(_maybeOfferOfflineDownload(
+        ZflOfflinePromptTrigger.bookTabVisit,
+      ));
+    };
+    ChuyenPhapLuanWebview.bookTabSelectedTick.addListener(_bookTabListener!);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       unawaited(_loadSavedLanguageAndOpen());
     });
+  }
+
+  Future<void> _loadUrl(String remoteUrl) async {
+    _pendingLogicalUrl = remoteUrl;
+    await ZflOfflineUrlLoader.loadInController(
+      _controller,
+      languageCode: _languageCode,
+      remoteUrl: remoteUrl,
+    );
+  }
+
+  Future<String> _logicalUrlForWebView(String webViewUrl) async {
+    final pending = _pendingLogicalUrl;
+    if (pending != null &&
+        pending.isNotEmpty &&
+        (webViewUrl.startsWith('file://') || webViewUrl.isEmpty)) {
+      _pendingLogicalUrl = null;
+      return pending;
+    }
+    if (webViewUrl.startsWith('file://')) {
+      final path = Uri.parse(webViewUrl).toFilePath();
+      final remote = await ZflOfflinePackStore.remoteUrlForLocalFile(
+        _languageCode,
+        path,
+      );
+      if (remote != null) return remote;
+    }
+    return webViewUrl;
+  }
+
+  Future<void> _maybeOfferOfflineDownload(
+    ZflOfflinePromptTrigger trigger,
+  ) async {
+    if (!mounted || _offlinePromptShowing || _offlineDownloadRunning) return;
+    if (await ZflOfflinePackStore.isInstalled(_languageCode)) return;
+
+    final should = await ZflOfflinePromptPolicy.shouldOfferDownload(
+      languageCode: _languageCode,
+      language: _language,
+      trigger: trigger,
+    );
+    if (!should || !mounted) return;
+
+    _offlinePromptShowing = true;
+    final strings = ZflOfflineDialogStrings.forLanguage(_language);
+    final bookLabel = _language.tengoc.replaceAll('\n', ' ');
+    final download = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(strings.promptTitle),
+        content: Text(strings.promptBody(bookLabel)),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: Text(strings.buttonNo),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            child: Text(strings.buttonDownload),
+          ),
+        ],
+      ),
+    );
+    _offlinePromptShowing = false;
+
+    if (!mounted) return;
+    if (download == true) {
+      await ZflOfflinePackStore.setDeclined(_languageCode, false);
+      await _runOfflineDownload();
+    } else if (download == false &&
+        trigger != ZflOfflinePromptTrigger.languageChanged) {
+      await ZflOfflinePackStore.setDeclined(_languageCode, true);
+    }
+  }
+
+  Future<void> _runOfflineDownload() async {
+    if (_offlineDownloadRunning || !mounted) return;
+    _offlineDownloadRunning = true;
+    final strings = ZflOfflineDialogStrings.forLanguage(_language);
+
+    unawaited(showDialog<void>(
+      context: context,
+      barrierDismissible: false,
+      builder: (ctx) => PopScope(
+        canPop: false,
+        child: AlertDialog(
+          title: Text(strings.downloadingTitle),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const LinearProgressIndicator(),
+              const SizedBox(height: 12),
+              Text(strings.downloadingHint),
+            ],
+          ),
+        ),
+      ),
+    ));
+
+    final ok = await ZflOfflineDownloader.downloadPack(
+      languageCode: _languageCode,
+      startUrl: _language.urlChuyenPhapLuan,
+      onProgress: (_, __, ___) {},
+    );
+
+    if (mounted) {
+      Navigator.of(context, rootNavigator: true).pop();
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            ok ? strings.successMessage : strings.failureMessage,
+          ),
+        ),
+      );
+    }
+    _offlineDownloadRunning = false;
   }
 
   void _onScrollReported(String message) {
@@ -175,6 +330,9 @@ class _ChuyenPhapLuanWebviewState extends State<ChuyenPhapLuanWebview>
     await _loadReadingStateAndOpenUrl();
     if (mounted) {
       setState(() {});
+      await _maybeOfferOfflineDownload(
+        ZflOfflinePromptTrigger.firstOpenLanguage,
+      );
     }
   }
 
@@ -204,16 +362,17 @@ class _ChuyenPhapLuanWebviewState extends State<ChuyenPhapLuanWebview>
     );
     _currentUrl = urlToLoad;
 
-    await _controller.loadRequest(Uri.parse(urlToLoad));
+    await _loadUrl(urlToLoad);
   }
 
   Future<void> _onPageFinished(String url) async {
     if (!mounted || url.isEmpty) return;
 
-    final resolvedUrl =
+    final rawUrl =
         await BookWebViewScrollHelper.readPageUrl(_controller) ??
             await _controller.currentUrl() ??
             url;
+    final resolvedUrl = await _logicalUrlForWebView(rawUrl);
     _commitUrlToHistory(resolvedUrl);
     _isRestoringScroll = true;
     try {
@@ -426,6 +585,11 @@ class _ChuyenPhapLuanWebviewState extends State<ChuyenPhapLuanWebview>
 
     await _saveLanguagePreference(value);
     await _loadReadingStateAndOpenUrl();
+    if (mounted) {
+      await _maybeOfferOfflineDownload(
+        ZflOfflinePromptTrigger.languageChanged,
+      );
+    }
   }
 
   /// Về đầu sách Chuyển Pháp Luân (`urlChuyenPhapLuan`) của ngôn ngữ hiện tại.
@@ -439,7 +603,7 @@ class _ChuyenPhapLuanWebviewState extends State<ChuyenPhapLuanWebview>
       const BookScrollPosition(scrollY: 0, scrollRatio: 0),
     );
 
-    await _controller.loadRequest(Uri.parse(homeUrl));
+    await _loadUrl(homeUrl);
     await _persistReadingState();
     if (mounted) setState(() {});
   }
@@ -462,7 +626,7 @@ class _ChuyenPhapLuanWebviewState extends State<ChuyenPhapLuanWebview>
         historyIndex: newIndex,
       );
       _currentUrl = url;
-      await _controller.loadRequest(Uri.parse(url));
+      await _loadUrl(url);
     }
   }
 
@@ -484,7 +648,7 @@ class _ChuyenPhapLuanWebviewState extends State<ChuyenPhapLuanWebview>
         historyIndex: newIndex,
       );
       _currentUrl = url;
-      await _controller.loadRequest(Uri.parse(url));
+      await _loadUrl(url);
     }
   }
 
@@ -521,6 +685,10 @@ class _ChuyenPhapLuanWebviewState extends State<ChuyenPhapLuanWebview>
 
   @override
   void dispose() {
+    if (_bookTabListener != null) {
+      ChuyenPhapLuanWebview.bookTabSelectedTick
+          .removeListener(_bookTabListener!);
+    }
     WidgetsBinding.instance.removeObserver(this);
     _scrollSaveDebounce?.cancel();
     unawaited(_captureScrollForCurrentPage());

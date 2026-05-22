@@ -10,6 +10,7 @@ import 'player_widget.dart';
 import 'player_widget_9baigiang.dart';
 
 import 'menu/chuyen_phap_luan_webview.dart';
+import 'common/zfl_offline_pack_store.dart';
 import 'menu_huongdan_page.dart';
 import 'common/memory_config.dart';
 import 'common/memory_monitor.dart';
@@ -295,6 +296,10 @@ class _FalunDafaExerciseHomePageState extends State<FalunDafaExerciseHomePage>
         onTap: (index){
           indexMenu = index;
           saveMenuBottom(index); // Lưu index của menu bottom vào shared
+          if (index == 1) {
+            unawaited(ZflOfflinePackStore.incrementBookTabVisitCount());
+            ChuyenPhapLuanWebview.notifyBookTabSelected();
+          }
           setState(() { }); // Cập nhật dữ liệu của trang
         },
       ),
