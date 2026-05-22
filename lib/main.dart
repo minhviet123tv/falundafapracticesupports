@@ -10,6 +10,7 @@ import 'player_widget.dart';
 import 'player_widget_9baigiang.dart';
 
 import 'menu/chuyen_phap_luan_webview.dart';
+import 'common/book_tab_chrome.dart';
 import 'menu_huongdan_page.dart';
 import 'common/memory_config.dart';
 import 'common/memory_monitor.dart';
@@ -248,14 +249,11 @@ class _FalunDafaExerciseHomePageState extends State<FalunDafaExerciseHomePage>
   Widget build(BuildContext context) {
     super.build(context); // Cần thiết cho AutomaticKeepAliveClientMixin
     
-    return Scaffold(
-
-      //I. Body: chỉ build tab đang chọn (lazy)
-      body: Center(child: _tabForIndex(indexMenu)),
-      backgroundColor: Colors.white, // Màu nền chung cho trang
-
-      //II. Bottom NavigationBar - Danh sách các nút menu bottom
-      bottomNavigationBar: BottomNavigationBar(
+    return ValueListenableBuilder<bool>(
+      valueListenable: BookTabChrome.immersive,
+      builder: (context, bookImmersive, _) {
+        final slideBottomNav = bookImmersive && indexMenu == 1;
+        final bottomNav = BottomNavigationBar(
         currentIndex: indexMenu, // Chỉ định index đang được chọn đồng thời trong menu và listWidgetBody
         selectedItemColor: Colors.blue,
         type: BottomNavigationBarType.fixed, // Tối ưu hóa bộ nhớ
@@ -293,11 +291,56 @@ class _FalunDafaExerciseHomePageState extends State<FalunDafaExerciseHomePage>
 
         // Xử lý khi click vào từng menu bottom
         onTap: (index){
+          if (index != 1) {
+            BookTabChrome.immersive.value = false;
+          }
           indexMenu = index;
           saveMenuBottom(index); // Lưu index của menu bottom vào shared
           setState(() { }); // Cập nhật dữ liệu của trang
         },
-      ),
+      );
+
+        // Tab Book: menu bottom nổi trên body (extendBody) — khi ẩn không còn vùng trắng phía dưới.
+        if (indexMenu == 1) {
+          return Scaffold(
+            extendBody: true,
+            backgroundColor: Colors.white,
+            body: Stack(
+              fit: StackFit.expand,
+              children: [
+                Positioned.fill(child: _tabForIndex(indexMenu)),
+                Positioned(
+                  left: 0,
+                  right: 0,
+                  bottom: 0,
+                  child: ClipRect(
+                    child: AnimatedSlide(
+                      offset: slideBottomNav
+                          ? const Offset(0, 1)
+                          : Offset.zero,
+                      duration: const Duration(milliseconds: 220),
+                      curve: Curves.easeInOut,
+                      child: Material(
+                        color: Colors.white,
+                        child: SafeArea(
+                          top: false,
+                          child: bottomNav,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          );
+        }
+
+        return Scaffold(
+          body: Center(child: _tabForIndex(indexMenu)),
+          backgroundColor: Colors.white,
+          bottomNavigationBar: bottomNav,
+        );
+      },
     );
   }
 

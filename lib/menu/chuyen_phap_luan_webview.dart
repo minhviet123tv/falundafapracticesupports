@@ -10,10 +10,10 @@ import 'package:webview_flutter_android/webview_flutter_android.dart';
 import 'package:webview_flutter_wkwebview/webview_flutter_wkwebview.dart';
 
 import '../controller_app/link_internet_sachchuyenphapluan_quocte.dart';
+import '../common/book_tab_chrome.dart';
 import '../common/book_webview_scroll_helper.dart';
 import '../common/book_webview_state_store.dart';
 import '../common/browser_helper.dart';
-import 'zfl_book_fullscreen_webview.dart';
 
 /// Tab Book: đọc Chuyển Pháp Luân online theo [LanguageNameOfChuyenPhapLuan].
 class ChuyenPhapLuanWebview extends StatefulWidget {
@@ -24,11 +24,25 @@ class ChuyenPhapLuanWebview extends StatefulWidget {
 }
 
 class _ChuyenPhapLuanWebviewState extends State<ChuyenPhapLuanWebview>
-    with WidgetsBindingObserver {
+    with WidgetsBindingObserver, SingleTickerProviderStateMixin {
   static const String _prefsLanguageKey = 'LanguageNameOfChuyenPhapLuan';
   static const int _maxHistoryEntries = 80;
+  static const double _toolbarHeight = BookWebViewScrollHelper.bookAppBarHeightPx;
+  static const double _scrollDirectionThreshold = 36;
+  static const double _minScrollableExtra = 40;
+  static const Color _statusBarBackground = Colors.black;
+  static const SystemUiOverlayStyle _immersiveOverlayStyle = SystemUiOverlayStyle(
+    statusBarColor: Colors.black,
+    statusBarIconBrightness: Brightness.light,
+    systemNavigationBarColor: Colors.white,
+    systemNavigationBarIconBrightness: Brightness.dark,
+  );
+  static const Duration _immersiveAnimDuration = Duration(milliseconds: 220);
+  static const Curve _immersiveAnimCurve = Curves.easeInOut;
+  static const double _overlayToolbarHorizontalPadding = 10;
 
   late final WebViewController _controller;
+  late final AnimationController _immersiveAnim;
   late LanguageNameOfChuyenPhapLuan _language;
   final double _border10 = 10.0;
   int progressLoadWeb = 0;
@@ -37,14 +51,23 @@ class _ChuyenPhapLuanWebviewState extends State<ChuyenPhapLuanWebview>
   String? _currentUrl;
   Timer? _scrollSaveDebounce;
   bool _isRestoringScroll = false;
-  bool _restoreScrollAfterFullscreen = false;
+  bool _overlayAppBarVisible = false;
+  double? _lastScrollY;
+  double _directionalScrollAccum = 0;
+  VoidCallback? _chromeListener;
 
   String get _languageCode => _language.name;
+
+  bool get _inImmersiveMode => _immersiveAnim.value >= 1.0;
 
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
+    _immersiveAnim = AnimationController(
+      vsync: this,
+      duration: _immersiveAnimDuration,
+    );
     _language = LanguageNameOfChuyenPhapLuan.vietnamese;
 
     late final PlatformWebViewControllerCreationParams params;
@@ -120,6 +143,14 @@ class _ChuyenPhapLuanWebviewState extends State<ChuyenPhapLuanWebview>
     }
 
     _controller = controller;
+    _chromeListener = () {
+      if (!BookTabChrome.immersive.value &&
+          _immersiveAnim.value > 0 &&
+          mounted) {
+        unawaited(_exitImmersiveMode());
+      }
+    };
+    BookTabChrome.immersive.addListener(_chromeListener!);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       unawaited(_loadSavedLanguageAndOpen());
     });
@@ -134,8 +165,14 @@ class _ChuyenPhapLuanWebviewState extends State<ChuyenPhapLuanWebview>
       final url = decoded['url'];
       final y = decoded['y'];
       final ratio = decoded['ratio'];
+      final maxScroll = decoded['max'];
       if (url is! String || url.isEmpty) return;
       if (y is! num) return;
+
+      if (_inImmersiveMode) {
+        final maxScrollPx = maxScroll is num ? maxScroll.toDouble() : 0.0;
+        _updateOverlayAppBarFromScroll(y.toDouble(), maxScrollPx);
+      }
 
       final position = BookScrollPosition(
         scrollY: y.toDouble(),
@@ -152,6 +189,54 @@ class _ChuyenPhapLuanWebviewState extends State<ChuyenPhapLuanWebview>
     } catch (e) {
       debugPrint('Scroll report parse error: $e');
     }
+  }
+
+  void _updateOverlayAppBarFromScroll(double scrollY, double maxScroll) {
+    if (_isRestoringScroll || !mounted || !_inImmersiveMode) return;
+
+    final minScrollable = _toolbarHeight + _minScrollableExtra;
+    if (maxScroll < minScrollable) {
+      _lastScrollY = scrollY;
+      _directionalScrollAccum = 0;
+      if (!_overlayAppBarVisible) {
+        setState(() => _overlayAppBarVisible = true);
+      }
+      return;
+    }
+
+    if (scrollY <= 20) {
+      _lastScrollY = scrollY;
+      _directionalScrollAccum = 0;
+      if (!_overlayAppBarVisible) {
+        setState(() => _overlayAppBarVisible = true);
+      }
+      return;
+    }
+
+    if (_lastScrollY != null) {
+      final delta = scrollY - _lastScrollY!;
+      if (delta != 0) {
+        if (delta > 0 && _directionalScrollAccum < 0) {
+          _directionalScrollAccum = 0;
+        } else if (delta < 0 && _directionalScrollAccum > 0) {
+          _directionalScrollAccum = 0;
+        }
+        _directionalScrollAccum += delta;
+
+        var nextVisible = _overlayAppBarVisible;
+        if (_directionalScrollAccum >= _scrollDirectionThreshold) {
+          nextVisible = false;
+          _directionalScrollAccum = 0;
+        } else if (_directionalScrollAccum <= -_scrollDirectionThreshold) {
+          nextVisible = true;
+          _directionalScrollAccum = 0;
+        }
+        if (nextVisible != _overlayAppBarVisible) {
+          setState(() => _overlayAppBarVisible = nextVisible);
+        }
+      }
+    }
+    _lastScrollY = scrollY;
   }
 
   @override
@@ -218,15 +303,13 @@ class _ChuyenPhapLuanWebviewState extends State<ChuyenPhapLuanWebview>
     _isRestoringScroll = true;
     try {
       await BookWebViewScrollHelper.installReporter(_controller);
-      if (_restoreScrollAfterFullscreen) {
-        _restoreScrollAfterFullscreen = false;
-        await _restoreScrollForUrl(resolvedUrl, afterFullscreen: true);
-      }
       await _persistReadingState();
     } finally {
       _isRestoringScroll = false;
     }
 
+    _lastScrollY = null;
+    _directionalScrollAccum = 0;
     if (mounted) {
       setState(() {});
     }
@@ -283,111 +366,36 @@ class _ChuyenPhapLuanWebviewState extends State<ChuyenPhapLuanWebview>
     await _captureScrollForUrl(url);
   }
 
-  Future<void> _restoreScrollForUrl(
-    String url, {
-    bool afterFullscreen = false,
-  }) async {
-    final saved = BookWebViewScrollHelper.scrollForUrl(
-      _readingState.scrollByUrl,
-      url,
-    );
-    if (saved == null) return;
-    if (saved.scrollY <= 0 && saved.scrollRatio <= 0) return;
-
-    const useScrollRatio = false;
-
-    BookWebViewScrollHelper.cancelPendingRestoresOnUserScroll();
-    final current = await BookWebViewScrollHelper.readPosition(_controller);
-    if (BookWebViewScrollHelper.shouldSkipRestore(
-      saved,
-      current,
-      useScrollRatio: useScrollRatio,
-    )) {
-      return;
-    }
-
-    if (!_isRestoringScroll) {
-      _isRestoringScroll = true;
-      try {
-        await BookWebViewScrollHelper.restorePosition(
-          _controller,
-          saved,
-          isMounted: () => mounted,
-          useScrollRatio: useScrollRatio,
-        );
-      } finally {
-        _isRestoringScroll = false;
-      }
-      return;
-    }
-
-    await BookWebViewScrollHelper.restorePosition(
-      _controller,
-      saved,
-      isMounted: () => mounted,
-      useScrollRatio: useScrollRatio,
-      retryDelaysMs: const <int>[500],
-    );
-  }
-
-  Future<void> _openFullScreen() async {
-    final url = await BookWebViewScrollHelper.readPageUrl(_controller) ??
-        await _controller.currentUrl() ??
-        _currentUrl;
-    if (url == null || url.isEmpty || !mounted) return;
-
-    _currentUrl = url;
-    await _captureScrollForUrl(url);
-    final scrollNow =
-        await BookWebViewScrollHelper.readPosition(_controller) ??
-            BookWebViewScrollHelper.scrollForUrl(_readingState.scrollByUrl, url);
-    await _persistReadingState();
-
-    final returned = await Navigator.of(context).push<bool>(
-      MaterialPageRoute<bool>(
-        builder: (context) => ZflBookFullScreenWebview(
-          languageCode: _languageCode,
-          initialUrl: url,
-          homeUrl: _language.urlChuyenPhapLuan,
-          initialScroll: scrollNow,
-          openedFromBookTab: true,
-        ),
-      ),
-    );
-
-    if (!mounted || returned != true) return;
-    _restoreScrollAfterFullscreen = true;
-    await _syncFromStoreAfterFullScreen();
-    if (mounted) setState(() {});
-  }
-
-  Future<void> _syncFromStoreAfterFullScreen() async {
-    _readingState = await BookWebViewStateStore.load(_languageCode);
-    final targetUrl = _readingState.lastUrl;
-    if (targetUrl == null || targetUrl.isEmpty) return;
-
-    final currentUrl = await _controller.currentUrl() ?? _currentUrl;
-    _currentUrl = targetUrl;
-
-    final samePage = BookWebViewScrollHelper.normalizeUrlKey(currentUrl ?? '') ==
-        BookWebViewScrollHelper.normalizeUrlKey(targetUrl);
-
-    if (!samePage) {
-      await _controller.loadRequest(Uri.parse(targetUrl));
-      return;
-    }
-
-    if (_restoreScrollAfterFullscreen) {
-      _isRestoringScroll = true;
-      try {
-        await BookWebViewScrollHelper.installReporter(_controller);
-        await _restoreScrollForUrl(targetUrl, afterFullscreen: true);
-      } finally {
-        _isRestoringScroll = false;
-      }
+  Future<void> _toggleImmersiveMode() async {
+    if (_inImmersiveMode || _immersiveAnim.status == AnimationStatus.forward) {
+      await _exitImmersiveMode();
     } else {
-      await BookWebViewScrollHelper.installReporter(_controller);
+      await _enterImmersiveMode();
     }
+  }
+
+  Future<void> _enterImmersiveMode() async {
+    if (_immersiveAnim.status == AnimationStatus.forward) return;
+    await _captureScrollForCurrentPage();
+    await _persistReadingState();
+    if (!mounted) return;
+    _overlayAppBarVisible = false;
+    _lastScrollY = null;
+    _directionalScrollAccum = 0;
+    BookTabChrome.immersive.value = true;
+    await _immersiveAnim.forward();
+  }
+
+  Future<void> _exitImmersiveMode() async {
+    if (_immersiveAnim.status == AnimationStatus.reverse) return;
+    await _captureScrollForCurrentPage();
+    await _persistReadingState();
+    if (!mounted) return;
+    _overlayAppBarVisible = true;
+    _lastScrollY = null;
+    _directionalScrollAccum = 0;
+    BookTabChrome.immersive.value = false;
+    await _immersiveAnim.reverse();
   }
 
   void _schedulePersist() {
@@ -499,6 +507,10 @@ class _ChuyenPhapLuanWebviewState extends State<ChuyenPhapLuanWebview>
   }
 
   Future<void> _onSystemBack() async {
+    if (_immersiveAnim.value > 0) {
+      await _exitImmersiveMode();
+      return;
+    }
     if (await _canGoBack()) {
       await _goBack();
       return;
@@ -521,11 +533,265 @@ class _ChuyenPhapLuanWebviewState extends State<ChuyenPhapLuanWebview>
 
   @override
   void dispose() {
+    if (_chromeListener != null) {
+      BookTabChrome.immersive.removeListener(_chromeListener!);
+    }
+    if (BookTabChrome.immersive.value) {
+      BookTabChrome.immersive.value = false;
+    }
+    _immersiveAnim.dispose();
     WidgetsBinding.instance.removeObserver(this);
     _scrollSaveDebounce?.cancel();
     unawaited(_captureScrollForCurrentPage());
     unawaited(_persistReadingState());
     super.dispose();
+  }
+
+  Widget _languageMenuButton({bool compact = false}) {
+    return PopupMenuButton<LanguageNameOfChuyenPhapLuan>(
+      tooltip: 'Chọn ngôn ngữ',
+      position: PopupMenuPosition.under,
+      color: Colors.white,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(_border10),
+      ),
+      onSelected: (LanguageNameOfChuyenPhapLuan value) {
+        unawaited(_onLanguageChanged(value));
+      },
+      itemBuilder: (context) {
+        return LanguageNameOfChuyenPhapLuan.values
+            .map(
+              (value) => PopupMenuItem<LanguageNameOfChuyenPhapLuan>(
+                value: value,
+                height: 44,
+                child: Text(value.tengoc),
+              ),
+            )
+            .toList();
+      },
+      child: Container(
+        padding: EdgeInsets.symmetric(
+          horizontal: compact ? 6 : 10,
+          vertical: compact ? 4 : 8,
+        ),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.all(Radius.circular(_border10)),
+          border: Border.all(
+            color: compact ? Colors.black26 : Colors.white70,
+          ),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              _language.tengoc.replaceAll('\n', ' '),
+              style: TextStyle(
+                fontWeight: FontWeight.w500,
+                fontSize: compact ? 10 : 11,
+                color: compact ? Colors.black87 : null,
+              ),
+            ),
+            const SizedBox(width: 2),
+            Icon(Icons.arrow_drop_down, size: compact ? 16 : 18),
+          ],
+        ),
+      ),
+    );
+  }
+
+  List<Widget> _navigationActions({required bool immersive}) {
+    return [
+      FutureBuilder<bool>(
+        future: _canGoBack(),
+        builder: (context, snapshot) {
+          final enabled = snapshot.data ?? false;
+          return IconButton(
+            onPressed: enabled ? () => unawaited(_goBack()) : null,
+            icon: Icon(
+              Icons.arrow_circle_left_outlined,
+              color: enabled ? null : Colors.grey.shade400,
+            ),
+          );
+        },
+      ),
+      FutureBuilder<bool>(
+        future: _canGoForward(),
+        builder: (context, snapshot) {
+          final enabled = snapshot.data ?? false;
+          return IconButton(
+            onPressed: enabled ? () => unawaited(_goForward()) : null,
+            icon: Icon(
+              Icons.arrow_circle_right_outlined,
+              color: enabled ? null : Colors.grey.shade400,
+            ),
+          );
+        },
+      ),
+      FutureBuilder<dynamic>(
+        future: BrowserHelper.getCurrentUrl(_controller),
+        builder: (context, snapshot) {
+          if (!snapshot.hasData) return const SizedBox.shrink();
+          return IconButton(
+            onPressed: () {
+              BrowserHelper.launchExternal(
+                Uri.parse(snapshot.data.toString()),
+              );
+            },
+            icon: const Icon(Icons.open_in_new, size: 20),
+          );
+        },
+      ),
+      IconButton(
+        onPressed: () => unawaited(_toggleImmersiveMode()),
+        icon: Icon(
+          immersive ? Icons.fullscreen_exit : Icons.zoom_out_map,
+          size: 20,
+        ),
+        tooltip: immersive ? 'Thu gọn' : 'Mở rộng màn hình',
+      ),
+    ];
+  }
+
+  Widget _buildNormalToolbar() {
+    return Material(
+      color: Colors.white,
+      elevation: 1,
+      child: SizedBox(
+        height: _toolbarHeight,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(
+            horizontal: _overlayToolbarHorizontalPadding,
+          ),
+          child: Row(
+            children: [
+              _languageMenuButton(),
+              IconButton(
+                onPressed: () => unawaited(_goToZflHomePage()),
+                icon: const Icon(Icons.menu_book, size: 20),
+                tooltip: 'Về đầu sách',
+              ),
+              const Spacer(),
+              ..._navigationActions(immersive: false),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildOverlayToolbar() {
+    return Material(
+      color: Colors.white,
+      elevation: _overlayAppBarVisible ? 1 : 0,
+      child: SizedBox(
+        height: _toolbarHeight,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(
+            horizontal: _overlayToolbarHorizontalPadding,
+          ),
+          child: Row(
+            children: [
+              _languageMenuButton(compact: true),
+              IconButton(
+                onPressed: () => unawaited(_goToZflHomePage()),
+                icon: const Icon(Icons.menu_book, size: 20),
+                tooltip: 'Về đầu sách',
+                padding: const EdgeInsets.symmetric(horizontal: 2),
+                constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
+              ),
+              const Spacer(),
+              ..._navigationActions(immersive: true),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _webViewBody() {
+    return progressLoadWeb <= 20
+        ? const Center(child: CircularProgressIndicator())
+        : WebViewWidget(controller: _controller);
+  }
+
+  Widget _buildUnifiedChrome(BuildContext context) {
+    final topInset = MediaQuery.paddingOf(context).top;
+    final bottomInset = MediaQuery.paddingOf(context).bottom;
+    final bottomNavReserve = kBottomNavigationBarHeight + bottomInset;
+    final t = Curves.easeInOut.transform(_immersiveAnim.value);
+    final bottomPad = (1 - t) * bottomNavReserve;
+
+    return AnnotatedRegion<SystemUiOverlayStyle>(
+      value: t >= 0.5 ? _immersiveOverlayStyle : SystemUiOverlayStyle.dark,
+      child: Scaffold(
+        backgroundColor: Colors.white,
+        body: Padding(
+          padding: EdgeInsets.only(bottom: bottomPad),
+          child: Stack(
+            fit: StackFit.expand,
+            children: [
+              Positioned(
+                top: topInset + (1 - t) * _toolbarHeight,
+                left: 0,
+                right: 0,
+                bottom: 0,
+                child: _webViewBody(),
+              ),
+              Positioned(
+                top: 0,
+                left: 0,
+                right: 0,
+                child: Opacity(
+                  opacity: t,
+                  child: ColoredBox(
+                    color: _statusBarBackground,
+                    child: SizedBox(height: topInset),
+                  ),
+                ),
+              ),
+              Positioned(
+                top: topInset,
+                left: 0,
+                right: 0,
+                child: ClipRect(
+                  child: Transform.translate(
+                    offset: Offset(0, -t * _toolbarHeight),
+                    child: Opacity(
+                      opacity: 1 - t,
+                      child: IgnorePointer(
+                        ignoring: t > 0.5,
+                        child: _buildNormalToolbar(),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+              Positioned(
+                top: topInset,
+                left: 0,
+                right: 0,
+                child: ClipRect(
+                  child: IgnorePointer(
+                    ignoring: !_inImmersiveMode || !_overlayAppBarVisible,
+                    child: AnimatedSlide(
+                      offset: _overlayAppBarVisible
+                          ? Offset.zero
+                          : const Offset(0, -1),
+                      duration: _immersiveAnimDuration,
+                      curve: _immersiveAnimCurve,
+                      child: Opacity(
+                        opacity: t,
+                        child: _buildOverlayToolbar(),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
   }
 
   @override
@@ -537,122 +803,9 @@ class _ChuyenPhapLuanWebviewState extends State<ChuyenPhapLuanWebview>
           unawaited(_onSystemBack());
         }
       },
-      child: SafeArea(
-        child: Scaffold(
-          appBar: AppBar(
-            title: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                PopupMenuButton<LanguageNameOfChuyenPhapLuan>(
-                  tooltip: 'Chọn ngôn ngữ',
-                  position: PopupMenuPosition.under,
-                  color: Colors.white,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(_border10),
-                  ),
-                  onSelected: (LanguageNameOfChuyenPhapLuan value) {
-                    unawaited(_onLanguageChanged(value));
-                  },
-                  itemBuilder: (context) {
-                    return LanguageNameOfChuyenPhapLuan.values
-                        .map(
-                          (value) => PopupMenuItem<LanguageNameOfChuyenPhapLuan>(
-                            value: value,
-                            height: 44,
-                            child: Text(value.tengoc),
-                          ),
-                        )
-                        .toList();
-                  },
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 10,
-                      vertical: 8,
-                    ),
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.all(Radius.circular(_border10)),
-                      border: Border.all(color: Colors.white70),
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Text(
-                          _language.tengoc,
-                          style: const TextStyle(
-                            fontWeight: FontWeight.w500,
-                            fontSize: 11,
-                          ),
-                        ),
-                        const SizedBox(width: 4),
-                        const Icon(Icons.arrow_drop_down, size: 18),
-                      ],
-                    ),
-                  ),
-                ),
-                IconButton(
-                  onPressed: () => unawaited(_goToZflHomePage()),
-                  icon: const Icon(Icons.menu_book, size: 20),
-                  tooltip: 'Về đầu sách',
-                ),
-              ],
-            ),
-            toolbarHeight: BookWebViewScrollHelper.bookAppBarHeightPx,
-            actions: [
-              FutureBuilder<bool>(
-                future: _canGoBack(),
-                builder: (context, snapshot) {
-                  final enabled = snapshot.data ?? false;
-                  return IconButton(
-                    onPressed: enabled ? () => unawaited(_goBack()) : null,
-                    icon: Icon(
-                      Icons.arrow_circle_left_outlined,
-                      color: enabled ? null : Colors.grey.shade400,
-                    ),
-                  );
-                },
-              ),
-              FutureBuilder<bool>(
-                future: _canGoForward(),
-                builder: (context, snapshot) {
-                  final enabled = snapshot.data ?? false;
-                  return IconButton(
-                    onPressed: enabled ? () => unawaited(_goForward()) : null,
-                    icon: Icon(
-                      Icons.arrow_circle_right_outlined,
-                      color: enabled ? null : Colors.grey.shade400,
-                    ),
-                  );
-                },
-              ),
-              FutureBuilder<dynamic>(
-                future: BrowserHelper.getCurrentUrl(_controller),
-                builder: (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
-                  if (snapshot.hasData) {
-                    return IconButton(
-                      onPressed: () {
-                        BrowserHelper.launchExternal(
-                          Uri.parse(snapshot.data.toString()),
-                        );
-                      },
-                      icon: const Icon(Icons.open_in_new, size: 20),
-                    );
-                  }
-                  return const SizedBox.shrink();
-                },
-              ),
-              IconButton(
-                onPressed: () => unawaited(_openFullScreen()),
-                icon: const Icon(Icons.zoom_out_map, size: 20),
-                tooltip: 'Mở rộng màn hình',
-              ),
-            ],
-            backgroundColor: Colors.white,
-          ),
-          backgroundColor: Colors.white,
-          body: (progressLoadWeb <= 20)
-              ? const Center(child: CircularProgressIndicator())
-              : WebViewWidget(controller: _controller),
-        ),
+      child: AnimatedBuilder(
+        animation: _immersiveAnim,
+        builder: (context, child) => _buildUnifiedChrome(context),
       ),
     );
   }
