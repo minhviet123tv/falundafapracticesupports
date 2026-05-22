@@ -4,9 +4,9 @@ globs: lib/**/*webview*.dart,lib/common/book_webview*.dart
 alwaysApply: false
 ---
 
-# WebView reading scroll (tab + fullscreen)
+# WebView reading scroll (tab Book immersive + All Books)
 
-Áp dụng khi tab thường + màn fullscreen dùng chung store/JS helper.
+Áp dụng khi WebView đọc sách dùng chung store/JS helper.
 
 ## Lưu vị trí đọc
 
@@ -29,29 +29,20 @@ BookWebViewScrollHelper.cancelPendingRestores();
 if (BookWebViewScrollHelper.shouldSkipRestore(saved, current, scrollOffsetPx: offset)) return;
 ```
 
-## AppBar ẩn/hiện (fullscreen overlay)
+## AppBar ẩn/hiện (overlay — tab Book immersive)
 
 - Ẩn khi cuộn xuống, hiện khi cuộn lên / gần đầu trang (`scrollY <= ~20`).
 - Chỉ toggle khi **đủ chiều cao cuộn**: `maxScroll >= toolbarHeight + ~40`.
 - Dùng **cộng dồn** `delta` cùng chiều (`~36px`), không chỉ delta một frame — cuộn chậm vẫn ẩn/hiện.
 - Đổi chiều cuộn → reset accum; đã ẩn/hiện rồi thì không `setState` lại cùng chiều.
-
-## Tab → fullscreen (AppBar đè WebView)
-
-- Mở từ tab (`openedFromBookTab: true`): **ẩn AppBar** đến khi cuộn tay (~8px) — tiêu đề không bị che lúc vào.
-- Không bù scroll khi dùng chế độ ẩn AppBar lúc vào; bù `-(statusBar + toolbar)` chỉ khi mở fullscreen không qua tab.
-
-## Đồng bộ tab ↔ fullscreen
-
-- Store chung theo `languageCode`; trước mở rộng: `capture` + `persist`.
-- Khi đóng: `capture` + `persist`; tab `load` store → restore **chỉ nếu** lệch vị trí hiện tại.
-- Tab WebView không destroy khi mở rộng — tránh restore thừa nếu đã đúng chỗ.
+- Tab Book **mở rộng**: immersive trong tab (`BookTabChrome`), không push trang mới.
 
 ## File mẫu (dự án này)
 
 - `lib/common/book_webview_scroll_helper.dart` — JS + restore/cancel
 - `lib/common/book_webview_state_store.dart` — persist
-- `lib/menu/all_books_webview.dart` — tab
-- `lib/menu/zfl_book_fullscreen_webview.dart` — fullscreen + AppBar
+- `lib/common/book_tab_chrome.dart` — ẩn menu bottom khi immersive
+- `lib/menu/chuyen_phap_luan_webview.dart` — tab Book + immersive
+- `lib/menu/all_books_webview.dart` — All Books (enum đa ngôn ngữ)
 
 Copy rule + helper/store pattern sang dự án khác; đổi tên channel/store key cho phù hợp.

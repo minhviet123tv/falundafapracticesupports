@@ -547,7 +547,7 @@ class _ChuyenPhapLuanWebviewState extends State<ChuyenPhapLuanWebview>
     super.dispose();
   }
 
-  Widget _languageMenuButton({bool compact = false}) {
+  Widget _languageMenuButton() {
     return PopupMenuButton<LanguageNameOfChuyenPhapLuan>(
       tooltip: 'Chọn ngôn ngữ',
       position: PopupMenuPosition.under,
@@ -569,30 +569,20 @@ class _ChuyenPhapLuanWebviewState extends State<ChuyenPhapLuanWebview>
             )
             .toList();
       },
-      child: Container(
-        padding: EdgeInsets.symmetric(
-          horizontal: compact ? 6 : 10,
-          vertical: compact ? 4 : 8,
-        ),
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.all(Radius.circular(_border10)),
-          border: Border.all(
-            color: compact ? Colors.black26 : Colors.white70,
-          ),
-        ),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
             Text(
               _language.tengoc.replaceAll('\n', ' '),
-              style: TextStyle(
+              style: const TextStyle(
                 fontWeight: FontWeight.w500,
-                fontSize: compact ? 10 : 11,
-                color: compact ? Colors.black87 : null,
+                fontSize: 11,
               ),
             ),
-            const SizedBox(width: 2),
-            Icon(Icons.arrow_drop_down, size: compact ? 16 : 18),
+            const SizedBox(width: 4),
+            const Icon(Icons.arrow_drop_down, size: 18),
           ],
         ),
       ),
@@ -652,10 +642,13 @@ class _ChuyenPhapLuanWebviewState extends State<ChuyenPhapLuanWebview>
     ];
   }
 
-  Widget _buildNormalToolbar() {
+  /// Một AppBar tab Book — chỉ đổi icon Mở rộng/Thu gọn khi immersive.
+  Widget _buildBookToolbar() {
+    final immersive = BookTabChrome.immersive.value;
+    final showElevation = !immersive || _overlayAppBarVisible;
     return Material(
       color: Colors.white,
-      elevation: 1,
+      elevation: showElevation ? 1 : 0,
       child: SizedBox(
         height: _toolbarHeight,
         child: Padding(
@@ -671,7 +664,7 @@ class _ChuyenPhapLuanWebviewState extends State<ChuyenPhapLuanWebview>
                 tooltip: 'Về đầu sách',
               ),
               const Spacer(),
-              ..._navigationActions(immersive: false),
+              ..._navigationActions(immersive: immersive),
             ],
           ),
         ),
@@ -679,29 +672,50 @@ class _ChuyenPhapLuanWebviewState extends State<ChuyenPhapLuanWebview>
     );
   }
 
-  Widget _buildOverlayToolbar() {
-    return Material(
-      color: Colors.white,
-      elevation: _overlayAppBarVisible ? 1 : 0,
-      child: SizedBox(
-        height: _toolbarHeight,
-        child: Padding(
-          padding: const EdgeInsets.symmetric(
-            horizontal: _overlayToolbarHorizontalPadding,
-          ),
-          child: Row(
-            children: [
-              _languageMenuButton(compact: true),
-              IconButton(
-                onPressed: () => unawaited(_goToZflHomePage()),
-                icon: const Icon(Icons.menu_book, size: 20),
-                tooltip: 'Về đầu sách',
-                padding: const EdgeInsets.symmetric(horizontal: 2),
-                constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
-              ),
-              const Spacer(),
-              ..._navigationActions(immersive: true),
-            ],
+  Widget _buildBookToolbarLayer(double immersiveProgress) {
+    var bar = _buildBookToolbar();
+    final useScrollHide = BookTabChrome.immersive.value;
+
+    if (useScrollHide) {
+      bar = AnimatedSlide(
+        offset: _overlayAppBarVisible
+            ? Offset.zero
+            : const Offset(0, -1),
+        duration: _immersiveAnimDuration,
+        curve: _immersiveAnimCurve,
+        child: bar,
+      );
+    }
+
+    // Thu gọn: giữ AppBar tab Book hiện, chỉ animate WebView + menu bottom.
+    if (_immersiveAnim.status == AnimationStatus.reverse) {
+      return ClipRect(
+        child: IgnorePointer(
+          ignoring: useScrollHide && !_overlayAppBarVisible,
+          child: bar,
+        ),
+      );
+    }
+
+    if (immersiveProgress >= 1.0) {
+      return ClipRect(
+        child: IgnorePointer(
+          ignoring: useScrollHide && !_overlayAppBarVisible,
+          child: bar,
+        ),
+      );
+    }
+
+    // Mở rộng: trượt AppBar tab Book lên rồi ẩn (cùng một widget).
+    final curved = Curves.easeInOut.transform(immersiveProgress);
+    return ClipRect(
+      child: Transform.translate(
+        offset: Offset(0, -curved * _toolbarHeight),
+        child: Opacity(
+          opacity: (1 - curved).clamp(0.0, 1.0),
+          child: IgnorePointer(
+            ignoring: curved > 0.5,
+            child: bar,
           ),
         ),
       ),
@@ -753,39 +767,7 @@ class _ChuyenPhapLuanWebviewState extends State<ChuyenPhapLuanWebview>
                 top: topInset,
                 left: 0,
                 right: 0,
-                child: ClipRect(
-                  child: Transform.translate(
-                    offset: Offset(0, -t * _toolbarHeight),
-                    child: Opacity(
-                      opacity: 1 - t,
-                      child: IgnorePointer(
-                        ignoring: t > 0.5,
-                        child: _buildNormalToolbar(),
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-              Positioned(
-                top: topInset,
-                left: 0,
-                right: 0,
-                child: ClipRect(
-                  child: IgnorePointer(
-                    ignoring: !_inImmersiveMode || !_overlayAppBarVisible,
-                    child: AnimatedSlide(
-                      offset: _overlayAppBarVisible
-                          ? Offset.zero
-                          : const Offset(0, -1),
-                      duration: _immersiveAnimDuration,
-                      curve: _immersiveAnimCurve,
-                      child: Opacity(
-                        opacity: t,
-                        child: _buildOverlayToolbar(),
-                      ),
-                    ),
-                  ),
-                ),
+                child: _buildBookToolbarLayer(t),
               ),
             ],
           ),

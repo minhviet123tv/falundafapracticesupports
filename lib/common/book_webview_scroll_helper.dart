@@ -4,28 +4,13 @@ import 'package:webview_flutter/webview_flutter.dart';
 
 import 'book_webview_state_store.dart';
 
-/// JavaScript + thao tác cuộn dùng chung cho tab ZFL Book và màn hình mở rộng.
+/// JavaScript + thao tác cuộn dùng chung cho WebView đọc sách (tab Book, All Books).
 class BookWebViewScrollHelper {
-  /// Chiều cao AppBar/toolbar Book (tab + mở rộng phải trùng để bù ± đúng).
+  /// Chiều cao AppBar/toolbar đọc sách (tab Book immersive + overlay).
   static const double bookAppBarHeightPx = 44;
 
   static int _restoreGeneration = 0;
   static int? _activeRestoreGeneration;
-
-  /// Tab Book → Mở rộng: AppBar nổi đè WebView → cuộn **lên** (âm) bằng [bookAppBarHeightPx].
-  static double scrollOffsetOpeningFullscreenFromBookTab() {
-    return -bookAppBarHeightPx;
-  }
-
-  /// Mở rộng → tab Book: lưu scroll **xuống** (dương) để khớp tọa độ tab (layout không đè).
-  static BookScrollPosition positionForBookTabFromFullscreen(
-    BookScrollPosition fullscreenPosition,
-  ) {
-    return BookScrollPosition(
-      scrollY: fullscreenPosition.scrollY + bookAppBarHeightPx,
-      scrollRatio: 0,
-    );
-  }
 
   /// Chuẩn hóa URL làm khóa lưu cuộn (tránh lệch http/https, slash cuối).
   static String normalizeUrlKey(String url) {
@@ -72,7 +57,7 @@ class BookWebViewScrollHelper {
     return (a.scrollY - b.scrollY).abs() <= pixelTolerance;
   }
 
-  /// Đã ở đúng vị trí lưu (kể cả bù AppBar khi mở rộng) thì không restore lại.
+  /// Đã ở đúng vị trí lưu thì không restore lại.
   static bool shouldSkipRestore(
     BookScrollPosition saved,
     BookScrollPosition? current, {

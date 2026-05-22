@@ -13,7 +13,6 @@ import '../controller_app/link_internet_sachchuyenphapluan_quocte.dart';
 import '../common/book_webview_scroll_helper.dart';
 import '../common/book_webview_state_store.dart';
 import '../common/browser_helper.dart';
-import 'zfl_book_fullscreen_webview.dart';
 
 /*
 Lưu vị trí cuộn (pixel + tỷ lệ %) + URL đầy đủ (kể cả #mục) + lịch sử trang.
@@ -37,8 +36,6 @@ class _AllBooksWebviewState extends State<AllBooksWebview> with WidgetsBindingOb
   String? _currentUrl;
   Timer? _scrollSaveDebounce;
   bool _isRestoringScroll = false;
-  /// Chỉ restore cuộn sau khi đóng Mở rộng — không restore khi user chọn link mới.
-  bool _restoreScrollAfterFullscreen = false;
 
   @override
   void initState() {
@@ -216,10 +213,6 @@ class _AllBooksWebviewState extends State<AllBooksWebview> with WidgetsBindingOb
     _isRestoringScroll = true;
     try {
       await BookWebViewScrollHelper.installReporter(_controller);
-      if (_restoreScrollAfterFullscreen) {
-        _restoreScrollAfterFullscreen = false;
-        await _restoreScrollForUrl(resolvedUrl, afterFullscreen: true);
-      }
       await _persistReadingState();
     } finally {
       _isRestoringScroll = false;
@@ -279,119 +272,6 @@ class _AllBooksWebviewState extends State<AllBooksWebview> with WidgetsBindingOb
     if (url == null || url.isEmpty) return;
     _currentUrl = url;
     await _captureScrollForUrl(url);
-  }
-
-  Future<void> _restoreScrollForUrl(
-    String url, {
-    bool afterFullscreen = false,
-  }) async {
-    final saved = BookWebViewScrollHelper.scrollForUrl(
-      _readingState.scrollByUrl,
-      url,
-    );
-    if (saved == null) return;
-    if (saved.scrollY <= 0 && saved.scrollRatio <= 0) return;
-
-    // Luôn restore theo pixel — tránh nhảy khi % đổi do ảnh/layout tải muộn.
-    const useScrollRatio = false;
-
-    BookWebViewScrollHelper.cancelPendingRestoresOnUserScroll();
-    final current = await BookWebViewScrollHelper.readPosition(_controller);
-    if (BookWebViewScrollHelper.shouldSkipRestore(
-      saved,
-      current,
-      useScrollRatio: useScrollRatio,
-    )) {
-      return;
-    }
-
-    if (!_isRestoringScroll) {
-      _isRestoringScroll = true;
-      try {
-        await BookWebViewScrollHelper.restorePosition(
-          _controller,
-          saved,
-          isMounted: () => mounted,
-          useScrollRatio: useScrollRatio,
-        );
-      } finally {
-        _isRestoringScroll = false;
-      }
-      return;
-    }
-
-    await BookWebViewScrollHelper.restorePosition(
-      _controller,
-      saved,
-      isMounted: () => mounted,
-      useScrollRatio: useScrollRatio,
-      retryDelaysMs: afterFullscreen
-          ? const <int>[500]
-          : const <int>[500],
-    );
-  }
-
-  /// Mở toàn màn hình tại đúng URL + vị trí cuộn hiện tại; khi quay lại đồng bộ tab.
-  Future<void> _openFullScreen() async {
-    final url = await BookWebViewScrollHelper.readPageUrl(_controller) ??
-        await _controller.currentUrl() ??
-        _currentUrl;
-    if (url == null || url.isEmpty || !mounted) return;
-
-    _currentUrl = url;
-    await _captureScrollForUrl(url);
-    final scrollNow =
-        await BookWebViewScrollHelper.readPosition(_controller) ??
-            BookWebViewScrollHelper.scrollForUrl(_readingState.scrollByUrl, url);
-    await _persistReadingState();
-
-    final returned = await Navigator.of(context).push<bool>(
-      MaterialPageRoute<bool>(
-        builder: (context) => ZflBookFullScreenWebview(
-          languageCode: languageAllPageFalundafa.languageCode,
-          initialUrl: url,
-          homeUrl: languageAllPageFalundafa.booksPage,
-          initialScroll: scrollNow,
-          openedFromBookTab: true,
-        ),
-      ),
-    );
-
-    if (!mounted || returned != true) return;
-    _restoreScrollAfterFullscreen = true;
-    await _syncFromStoreAfterFullScreen();
-    if (mounted) setState(() {});
-  }
-
-  /// Sau khi đóng màn hình mở rộng: load lại URL + cuộn từ kho lưu chung.
-  Future<void> _syncFromStoreAfterFullScreen() async {
-    _readingState =
-        await BookWebViewStateStore.load(languageAllPageFalundafa.languageCode);
-    final targetUrl = _readingState.lastUrl;
-    if (targetUrl == null || targetUrl.isEmpty) return;
-
-    final currentUrl = await _controller.currentUrl() ?? _currentUrl;
-    _currentUrl = targetUrl;
-
-    final samePage = BookWebViewScrollHelper.normalizeUrlKey(currentUrl ?? '') ==
-        BookWebViewScrollHelper.normalizeUrlKey(targetUrl);
-
-    if (!samePage) {
-      await _controller.loadRequest(Uri.parse(targetUrl));
-      return;
-    }
-
-    if (_restoreScrollAfterFullscreen) {
-      _isRestoringScroll = true;
-      try {
-        await BookWebViewScrollHelper.installReporter(_controller);
-        await _restoreScrollForUrl(targetUrl, afterFullscreen: true);
-      } finally {
-        _isRestoringScroll = false;
-      }
-    } else {
-      await BookWebViewScrollHelper.installReporter(_controller);
-    }
   }
 
   void _schedulePersist() {
@@ -639,11 +519,6 @@ class _AllBooksWebviewState extends State<AllBooksWebview> with WidgetsBindingOb
                 }
                 return const SizedBox.shrink();
               },
-            ),
-            IconButton(
-              onPressed: () => unawaited(_openFullScreen()),
-              icon: const Icon(Icons.zoom_out_map, size: 20),
-              tooltip: 'Mở rộng màn hình',
             ),
           ],
           backgroundColor: Colors.white,
