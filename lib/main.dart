@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:in_app_update/in_app_update.dart';
 
+import 'menu/all_books_webview.dart';
 import 'menu/intro_list_widget_body.dart';
 import 'menu/introduction_screen.dart';
 import 'player_widget.dart';
@@ -270,7 +271,7 @@ class _FalunDafaExerciseHomePageState extends State<FalunDafaExerciseHomePage>
           //2. Menu mở sách Chuyển Pháp Luân
           BottomNavigationBarItem(
             icon: Icon(Icons.menu_book, color: Color.fromARGB(255, 71, 71, 71)), // Sử dụng icon thay vì Image.asset để tiết kiệm bộ nhớ
-            label: "ZFL Book",
+            label: "Book",
             activeIcon: Icon(Icons.menu_book, color: Colors.orange,),
           ),
 
