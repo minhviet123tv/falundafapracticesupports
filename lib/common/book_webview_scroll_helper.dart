@@ -10,6 +10,7 @@ class BookWebViewScrollHelper {
   static const double bookAppBarHeightPx = 44;
 
   static int _restoreGeneration = 0;
+  static int? _activeRestoreGeneration;
 
   /// Tab Book → Mở rộng: AppBar nổi đè WebView → cuộn **lên** (âm) bằng [bookAppBarHeightPx].
   static double scrollOffsetOpeningFullscreenFromBookTab() {
@@ -37,9 +38,12 @@ class BookWebViewScrollHelper {
     return uri.replace(path: path).toString();
   }
 
-  /// Hủy các lần `scrollTo` trễ (retry) — gọi khi người dùng cuộn tay.
-  static void cancelPendingRestores() {
-    _restoreGeneration++;
+  /// Hủy retry `scrollTo` đang chờ — chỉ khi người dùng cuộn tay trong lúc restore.
+  static void cancelPendingRestoresOnUserScroll() {
+    if (_activeRestoreGeneration != null) {
+      _restoreGeneration++;
+      _activeRestoreGeneration = null;
+    }
   }
 
   /// Tìm vị trí cuộn đã lưu theo URL gốc hoặc URL chuẩn hóa.
@@ -166,6 +170,30 @@ class BookWebViewScrollHelper {
     }
   }
 
+  /// URL thật trên trang (gồm hash) — ổn định hơn `WebViewController.currentUrl()` trên SPA.
+  static Future<String?> readPageUrl(WebViewController controller) async {
+    try {
+      final result =
+          await controller.runJavaScriptReturningResult('location.href');
+      dynamic href = result;
+      if (result is String) {
+        final trimmed = result.trim();
+        if (trimmed.isEmpty) return null;
+        try {
+          href = jsonDecode(trimmed);
+        } catch (_) {
+          href = trimmed;
+        }
+      }
+      if (href is! String) return null;
+      final url = href.trim();
+      if (url.isEmpty || url == 'about:blank') return null;
+      return url;
+    } catch (_) {
+      return null;
+    }
+  }
+
   static Future<BookScrollPosition?> readPosition(WebViewController controller) async {
     try {
       final result = await controller.runJavaScriptReturningResult(readPositionJs);
@@ -193,8 +221,8 @@ class BookWebViewScrollHelper {
     BookScrollPosition position, {
     bool Function()? isMounted,
     double scrollOffsetPx = 0,
-    bool useScrollRatio = true,
-    List<int> retryDelaysMs = const <int>[350, 700, 1200],
+    bool useScrollRatio = false,
+    List<int> retryDelaysMs = const <int>[500],
   }) async {
     if (position.scrollY <= 0 &&
         position.scrollRatio <= 0 &&
@@ -203,6 +231,7 @@ class BookWebViewScrollHelper {
     }
 
     final generation = ++_restoreGeneration;
+    _activeRestoreGeneration = generation;
 
     Future<void> applyOnce() async {
       if (generation != _restoreGeneration) return;
@@ -215,24 +244,30 @@ class BookWebViewScrollHelper {
       );
     }
 
-    await applyOnce();
-
-    for (final delayMs in retryDelaysMs) {
-      await Future<void>.delayed(Duration(milliseconds: delayMs));
-      if (generation != _restoreGeneration) return;
-      if (isMounted != null && !isMounted()) return;
-
-      final current = await readPosition(controller);
-      if (shouldSkipRestore(
-        position,
-        current,
-        scrollOffsetPx: scrollOffsetPx,
-        useScrollRatio: useScrollRatio,
-      )) {
-        return;
-      }
-
+    try {
       await applyOnce();
+
+      for (final delayMs in retryDelaysMs) {
+        await Future<void>.delayed(Duration(milliseconds: delayMs));
+        if (generation != _restoreGeneration) return;
+        if (isMounted != null && !isMounted()) return;
+
+        final current = await readPosition(controller);
+        if (shouldSkipRestore(
+          position,
+          current,
+          scrollOffsetPx: scrollOffsetPx,
+          useScrollRatio: useScrollRatio,
+        )) {
+          return;
+        }
+
+        await applyOnce();
+      }
+    } finally {
+      if (_activeRestoreGeneration == generation) {
+        _activeRestoreGeneration = null;
+      }
     }
   }
 

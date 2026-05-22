@@ -146,6 +146,36 @@ class BookReadingState {
     );
   }
 
+  /// Chỉ giữ vị trí cuộn của trang đang đọc (một URL).
+  BookReadingState withOnlyCurrentScroll(
+    String urlKey,
+    BookScrollPosition position,
+  ) {
+    final map = <String, BookScrollPosition>{};
+    if (position.scrollY > 0 || position.scrollRatio > 0) {
+      map[urlKey] = position;
+    }
+    return BookReadingState(
+      lastUrl: lastUrl,
+      history: history,
+      historyIndex: historyIndex,
+      scrollByUrl: map,
+    );
+  }
+
+  /// Xóa vị trí đã lưu — dùng khi người dùng mở lại link (xem từ đầu).
+  BookReadingState withoutScrollForUrl(String urlKey) {
+    if (!scrollByUrl.containsKey(urlKey)) return this;
+    final nextScroll = Map<String, BookScrollPosition>.from(scrollByUrl);
+    nextScroll.remove(urlKey);
+    return BookReadingState(
+      lastUrl: lastUrl,
+      history: history,
+      historyIndex: historyIndex,
+      scrollByUrl: nextScroll,
+    );
+  }
+
   BookReadingState withNavigation({
     required String url,
     required List<String> history,

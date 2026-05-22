@@ -37,6 +37,8 @@ class _AllBooksWebviewState extends State<AllBooksWebview> with WidgetsBindingOb
   String? _currentUrl;
   Timer? _scrollSaveDebounce;
   bool _isRestoringScroll = false;
+  /// Chỉ restore cuộn sau khi đóng Mở rộng — không restore khi user chọn link mới.
+  bool _restoreScrollAfterFullscreen = false;
 
   @override
   void initState() {
@@ -66,11 +68,14 @@ class _AllBooksWebviewState extends State<AllBooksWebview> with WidgetsBindingOb
             });
           },
           onPageStarted: (String url) {
-            // Chỉ lưu cuộn trang đang RỜI (URL khác URL mới) — tránh ghi đè bằng 0 khi mở lại app.
             final leaving = _currentUrl;
             if (leaving != null && leaving.isNotEmpty && leaving != url) {
               unawaited(_captureScrollForUrl(leaving));
             }
+            // Mở link (kể cả link từng xem): không khôi phục scroll cũ của URL đích.
+            _readingState = _readingState.withoutScrollForUrl(
+              BookWebViewScrollHelper.normalizeUrlKey(url),
+            );
           },
           onPageFinished: (String url) {
             unawaited(_onPageFinished(url));
@@ -122,7 +127,7 @@ class _AllBooksWebviewState extends State<AllBooksWebview> with WidgetsBindingOb
 
   void _onScrollReported(String message) {
     if (_isRestoringScroll || !mounted) return;
-    BookWebViewScrollHelper.cancelPendingRestores();
+    BookWebViewScrollHelper.cancelPendingRestoresOnUserScroll();
     try {
       final decoded = jsonDecode(message);
       if (decoded is! Map) return;
@@ -139,7 +144,7 @@ class _AllBooksWebviewState extends State<AllBooksWebview> with WidgetsBindingOb
       if (position.scrollY <= 0 && position.scrollRatio <= 0) return;
 
       _currentUrl = url;
-      _readingState = _readingState.withScroll(
+      _readingState = _readingState.withOnlyCurrentScroll(
         BookWebViewScrollHelper.normalizeUrlKey(url),
         position,
       );
@@ -203,12 +208,18 @@ class _AllBooksWebviewState extends State<AllBooksWebview> with WidgetsBindingOb
   Future<void> _onPageFinished(String url) async {
     if (!mounted || url.isEmpty) return;
 
-    final resolvedUrl = await _controller.currentUrl() ?? url;
+    final resolvedUrl =
+        await BookWebViewScrollHelper.readPageUrl(_controller) ??
+            await _controller.currentUrl() ??
+            url;
     _commitUrlToHistory(resolvedUrl);
     _isRestoringScroll = true;
     try {
       await BookWebViewScrollHelper.installReporter(_controller);
-      await _restoreScrollForUrl(resolvedUrl);
+      if (_restoreScrollAfterFullscreen) {
+        _restoreScrollAfterFullscreen = false;
+        await _restoreScrollForUrl(resolvedUrl, afterFullscreen: true);
+      }
       await _persistReadingState();
     } finally {
       _isRestoringScroll = false;
@@ -255,17 +266,19 @@ class _AllBooksWebviewState extends State<AllBooksWebview> with WidgetsBindingOb
     if (position == null) return;
     if (position.scrollY <= 0 && position.scrollRatio <= 0) return;
 
-    _readingState = _readingState.withScroll(
+    _readingState = _readingState.withOnlyCurrentScroll(
       BookWebViewScrollHelper.normalizeUrlKey(url),
       position,
     );
   }
 
   Future<void> _captureScrollForCurrentPage() async {
-    final url = await _controller.currentUrl() ?? _currentUrl;
+    final url = await BookWebViewScrollHelper.readPageUrl(_controller) ??
+        await _controller.currentUrl() ??
+        _currentUrl;
     if (url == null || url.isEmpty) return;
-    await _captureScrollForUrl(url);
     _currentUrl = url;
+    await _captureScrollForUrl(url);
   }
 
   Future<void> _restoreScrollForUrl(
@@ -279,9 +292,10 @@ class _AllBooksWebviewState extends State<AllBooksWebview> with WidgetsBindingOb
     if (saved == null) return;
     if (saved.scrollY <= 0 && saved.scrollRatio <= 0) return;
 
-    final useScrollRatio = !afterFullscreen && saved.scrollRatio > 0.01;
+    // Luôn restore theo pixel — tránh nhảy khi % đổi do ảnh/layout tải muộn.
+    const useScrollRatio = false;
 
-    BookWebViewScrollHelper.cancelPendingRestores();
+    BookWebViewScrollHelper.cancelPendingRestoresOnUserScroll();
     final current = await BookWebViewScrollHelper.readPosition(_controller);
     if (BookWebViewScrollHelper.shouldSkipRestore(
       saved,
@@ -312,17 +326,20 @@ class _AllBooksWebviewState extends State<AllBooksWebview> with WidgetsBindingOb
       isMounted: () => mounted,
       useScrollRatio: useScrollRatio,
       retryDelaysMs: afterFullscreen
-          ? const <int>[350, 700, 1200]
-          : const <int>[350, 700, 1200],
+          ? const <int>[500]
+          : const <int>[500],
     );
   }
 
   /// Mở toàn màn hình tại đúng URL + vị trí cuộn hiện tại; khi quay lại đồng bộ tab.
   Future<void> _openFullScreen() async {
-    final url = await _controller.currentUrl() ?? _currentUrl;
+    final url = await BookWebViewScrollHelper.readPageUrl(_controller) ??
+        await _controller.currentUrl() ??
+        _currentUrl;
     if (url == null || url.isEmpty || !mounted) return;
 
-    await _captureScrollForCurrentPage();
+    _currentUrl = url;
+    await _captureScrollForUrl(url);
     final scrollNow =
         await BookWebViewScrollHelper.readPosition(_controller) ??
             BookWebViewScrollHelper.scrollForUrl(_readingState.scrollByUrl, url);
@@ -340,6 +357,7 @@ class _AllBooksWebviewState extends State<AllBooksWebview> with WidgetsBindingOb
     );
 
     if (!mounted || returned != true) return;
+    _restoreScrollAfterFullscreen = true;
     await _syncFromStoreAfterFullScreen();
     if (mounted) setState(() {});
   }
@@ -362,12 +380,16 @@ class _AllBooksWebviewState extends State<AllBooksWebview> with WidgetsBindingOb
       return;
     }
 
-    _isRestoringScroll = true;
-    try {
+    if (_restoreScrollAfterFullscreen) {
+      _isRestoringScroll = true;
+      try {
+        await BookWebViewScrollHelper.installReporter(_controller);
+        await _restoreScrollForUrl(targetUrl, afterFullscreen: true);
+      } finally {
+        _isRestoringScroll = false;
+      }
+    } else {
       await BookWebViewScrollHelper.installReporter(_controller);
-      await _restoreScrollForUrl(targetUrl, afterFullscreen: true);
-    } finally {
-      _isRestoringScroll = false;
     }
   }
 
@@ -379,7 +401,9 @@ class _AllBooksWebviewState extends State<AllBooksWebview> with WidgetsBindingOb
   }
 
   Future<void> _persistReadingState() async {
-    final url = await _controller.currentUrl() ?? _currentUrl;
+    final url = await BookWebViewScrollHelper.readPageUrl(_controller) ??
+        await _controller.currentUrl() ??
+        _currentUrl;
     if (url != null && url.isNotEmpty) {
       _readingState = _readingState.withNavigation(
         url: url,
@@ -416,8 +440,8 @@ class _AllBooksWebviewState extends State<AllBooksWebview> with WidgetsBindingOb
 
     final homeUrl = languageAllPageFalundafa.booksPage;
     _currentUrl = homeUrl;
-    _readingState = _readingState.withScroll(
-      homeUrl,
+    _readingState = _readingState.withOnlyCurrentScroll(
+      BookWebViewScrollHelper.normalizeUrlKey(homeUrl),
       const BookScrollPosition(scrollY: 0, scrollRatio: 0),
     );
 

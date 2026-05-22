@@ -101,6 +101,9 @@ class _ZflBookFullScreenWebviewState extends State<ZflBookFullScreenWebview>
             if (leaving != null && leaving.isNotEmpty && leaving != url) {
               unawaited(_captureScrollForUrl(leaving));
             }
+            _readingState = _readingState.withoutScrollForUrl(
+              BookWebViewScrollHelper.normalizeUrlKey(url),
+            );
           },
           onPageFinished: (String url) {
             unawaited(_onPageFinished(url));
@@ -135,24 +138,31 @@ class _ZflBookFullScreenWebviewState extends State<ZflBookFullScreenWebview>
   }
 
   Future<void> _openInitialPage() async {
-    _readingState = await BookWebViewStateStore.load(widget.languageCode);
-    _currentUrl = widget.initialUrl;
+    final stored = await BookWebViewStateStore.load(widget.languageCode);
+    final openUrl = widget.initialUrl;
+    final urlKey = BookWebViewScrollHelper.normalizeUrlKey(openUrl);
 
+    final scrollMap = <String, BookScrollPosition>{};
     if (widget.initialScroll != null &&
-        (widget.initialScroll!.scrollY > 0 || widget.initialScroll!.scrollRatio > 0)) {
-      _readingState = _readingState.withScroll(
-        BookWebViewScrollHelper.normalizeUrlKey(widget.initialUrl),
-        widget.initialScroll!,
-      );
+        (widget.initialScroll!.scrollY > 0 ||
+            widget.initialScroll!.scrollRatio > 0)) {
+      scrollMap[urlKey] = widget.initialScroll!;
     }
 
-    _commitUrlToHistory(widget.initialUrl);
-    await _controller.loadRequest(Uri.parse(widget.initialUrl));
+    _readingState = BookReadingState(
+      lastUrl: openUrl,
+      history: <String>[openUrl],
+      historyIndex: 0,
+      scrollByUrl: scrollMap,
+    );
+    _currentUrl = openUrl;
+
+    await _controller.loadRequest(Uri.parse(openUrl));
   }
 
   void _onScrollReported(String message) {
     if (_isRestoringScroll || !mounted) return;
-    BookWebViewScrollHelper.cancelPendingRestores();
+    BookWebViewScrollHelper.cancelPendingRestoresOnUserScroll();
     try {
       final decoded = jsonDecode(message);
       if (decoded is! Map) return;
@@ -174,7 +184,7 @@ class _ZflBookFullScreenWebviewState extends State<ZflBookFullScreenWebview>
       if (position.scrollY <= 0 && position.scrollRatio <= 0) return;
 
       _currentUrl = url;
-      _readingState = _readingState.withScroll(
+      _readingState = _readingState.withOnlyCurrentScroll(
         BookWebViewScrollHelper.normalizeUrlKey(url),
         position,
       );
@@ -245,7 +255,10 @@ class _ZflBookFullScreenWebviewState extends State<ZflBookFullScreenWebview>
   Future<void> _onPageFinished(String url) async {
     if (!mounted || url.isEmpty) return;
 
-    final resolvedUrl = await _controller.currentUrl() ?? url;
+    final resolvedUrl =
+        await BookWebViewScrollHelper.readPageUrl(_controller) ??
+            await _controller.currentUrl() ??
+            url;
     _commitUrlToHistory(resolvedUrl);
     _isRestoringScroll = true;
     try {
@@ -299,17 +312,19 @@ class _ZflBookFullScreenWebviewState extends State<ZflBookFullScreenWebview>
       position = BookWebViewScrollHelper.positionForBookTabFromFullscreen(position);
     }
     if (position.scrollY <= 0 && position.scrollRatio <= 0) return;
-    _readingState = _readingState.withScroll(
+    _readingState = _readingState.withOnlyCurrentScroll(
       BookWebViewScrollHelper.normalizeUrlKey(url),
       position,
     );
   }
 
   Future<void> _captureScrollForCurrentPage() async {
-    final url = await _controller.currentUrl() ?? _currentUrl;
+    final url = await BookWebViewScrollHelper.readPageUrl(_controller) ??
+        await _controller.currentUrl() ??
+        _currentUrl;
     if (url == null || url.isEmpty) return;
-    await _captureScrollForUrl(url);
     _currentUrl = url;
+    await _captureScrollForUrl(url);
   }
 
   Future<void> _restoreScrollForUrl(String url) async {
@@ -350,7 +365,7 @@ class _ZflBookFullScreenWebviewState extends State<ZflBookFullScreenWebview>
       return;
     }
 
-    BookWebViewScrollHelper.cancelPendingRestores();
+    BookWebViewScrollHelper.cancelPendingRestoresOnUserScroll();
     final current = await BookWebViewScrollHelper.readPosition(_controller);
     if (BookWebViewScrollHelper.shouldSkipRestore(
       saved,
@@ -368,8 +383,8 @@ class _ZflBookFullScreenWebviewState extends State<ZflBookFullScreenWebview>
       scrollOffsetPx: scrollOffsetPx,
       useScrollRatio: useScrollRatio,
       retryDelaysMs: applyBookTabCompensation
-          ? const <int>[400, 900, 1500]
-          : const <int>[350, 700, 1200],
+          ? const <int>[500, 1100]
+          : const <int>[500],
     );
   }
 
@@ -381,7 +396,9 @@ class _ZflBookFullScreenWebviewState extends State<ZflBookFullScreenWebview>
   }
 
   Future<void> _persistReadingState() async {
-    final url = await _controller.currentUrl() ?? _currentUrl;
+    final url = await BookWebViewScrollHelper.readPageUrl(_controller) ??
+        await _controller.currentUrl() ??
+        _currentUrl;
     if (url != null && url.isNotEmpty) {
       _readingState = _readingState.withNavigation(
         url: url,
