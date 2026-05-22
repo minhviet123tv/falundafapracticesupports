@@ -139,7 +139,10 @@ class _AllBooksWebviewState extends State<AllBooksWebview> with WidgetsBindingOb
       if (position.scrollY <= 0 && position.scrollRatio <= 0) return;
 
       _currentUrl = url;
-      _readingState = _readingState.withScroll(url, position);
+      _readingState = _readingState.withScroll(
+        BookWebViewScrollHelper.normalizeUrlKey(url),
+        position,
+      );
       _schedulePersist();
     } catch (e) {
       debugPrint('Scroll report parse error: $e');
@@ -202,9 +205,14 @@ class _AllBooksWebviewState extends State<AllBooksWebview> with WidgetsBindingOb
 
     final resolvedUrl = await _controller.currentUrl() ?? url;
     _commitUrlToHistory(resolvedUrl);
-    await BookWebViewScrollHelper.installReporter(_controller);
-    await _restoreScrollForUrl(resolvedUrl);
-    await _persistReadingState();
+    _isRestoringScroll = true;
+    try {
+      await BookWebViewScrollHelper.installReporter(_controller);
+      await _restoreScrollForUrl(resolvedUrl);
+      await _persistReadingState();
+    } finally {
+      _isRestoringScroll = false;
+    }
 
     if (mounted) {
       setState(() {});
@@ -247,7 +255,10 @@ class _AllBooksWebviewState extends State<AllBooksWebview> with WidgetsBindingOb
     if (position == null) return;
     if (position.scrollY <= 0 && position.scrollRatio <= 0) return;
 
-    _readingState = _readingState.withScroll(url, position);
+    _readingState = _readingState.withScroll(
+      BookWebViewScrollHelper.normalizeUrlKey(url),
+      position,
+    );
   }
 
   Future<void> _captureScrollForCurrentPage() async {
@@ -257,27 +268,53 @@ class _AllBooksWebviewState extends State<AllBooksWebview> with WidgetsBindingOb
     _currentUrl = url;
   }
 
-  Future<void> _restoreScrollForUrl(String url) async {
-    final saved = _readingState.scrollForUrl(url);
+  Future<void> _restoreScrollForUrl(
+    String url, {
+    bool afterFullscreen = false,
+  }) async {
+    final saved = BookWebViewScrollHelper.scrollForUrl(
+      _readingState.scrollByUrl,
+      url,
+    );
     if (saved == null) return;
     if (saved.scrollY <= 0 && saved.scrollRatio <= 0) return;
 
+    final useScrollRatio = !afterFullscreen && saved.scrollRatio > 0.01;
+
     BookWebViewScrollHelper.cancelPendingRestores();
     final current = await BookWebViewScrollHelper.readPosition(_controller);
-    if (BookWebViewScrollHelper.shouldSkipRestore(saved, current)) {
+    if (BookWebViewScrollHelper.shouldSkipRestore(
+      saved,
+      current,
+      useScrollRatio: useScrollRatio,
+    )) {
       return;
     }
 
-    _isRestoringScroll = true;
-    try {
-      await BookWebViewScrollHelper.restorePosition(
-        _controller,
-        saved,
-        isMounted: () => mounted,
-      );
-    } finally {
-      _isRestoringScroll = false;
+    if (!_isRestoringScroll) {
+      _isRestoringScroll = true;
+      try {
+        await BookWebViewScrollHelper.restorePosition(
+          _controller,
+          saved,
+          isMounted: () => mounted,
+          useScrollRatio: useScrollRatio,
+        );
+      } finally {
+        _isRestoringScroll = false;
+      }
+      return;
     }
+
+    await BookWebViewScrollHelper.restorePosition(
+      _controller,
+      saved,
+      isMounted: () => mounted,
+      useScrollRatio: useScrollRatio,
+      retryDelaysMs: afterFullscreen
+          ? const <int>[350, 700, 1200]
+          : const <int>[350, 700, 1200],
+    );
   }
 
   /// Mở toàn màn hình tại đúng URL + vị trí cuộn hiện tại; khi quay lại đồng bộ tab.
@@ -286,8 +323,9 @@ class _AllBooksWebviewState extends State<AllBooksWebview> with WidgetsBindingOb
     if (url == null || url.isEmpty || !mounted) return;
 
     await _captureScrollForCurrentPage();
-    final scrollNow = _readingState.scrollForUrl(url) ??
-        await BookWebViewScrollHelper.readPosition(_controller);
+    final scrollNow =
+        await BookWebViewScrollHelper.readPosition(_controller) ??
+            BookWebViewScrollHelper.scrollForUrl(_readingState.scrollByUrl, url);
     await _persistReadingState();
 
     final returned = await Navigator.of(context).push<bool>(
@@ -316,13 +354,21 @@ class _AllBooksWebviewState extends State<AllBooksWebview> with WidgetsBindingOb
     final currentUrl = await _controller.currentUrl() ?? _currentUrl;
     _currentUrl = targetUrl;
 
-    if (currentUrl != targetUrl) {
+    final samePage = BookWebViewScrollHelper.normalizeUrlKey(currentUrl ?? '') ==
+        BookWebViewScrollHelper.normalizeUrlKey(targetUrl);
+
+    if (!samePage) {
       await _controller.loadRequest(Uri.parse(targetUrl));
       return;
     }
 
-    await BookWebViewScrollHelper.installReporter(_controller);
-    await _restoreScrollForUrl(targetUrl);
+    _isRestoringScroll = true;
+    try {
+      await BookWebViewScrollHelper.installReporter(_controller);
+      await _restoreScrollForUrl(targetUrl, afterFullscreen: true);
+    } finally {
+      _isRestoringScroll = false;
+    }
   }
 
   void _schedulePersist() {
@@ -525,7 +571,7 @@ class _AllBooksWebviewState extends State<AllBooksWebview> with WidgetsBindingOb
               ),
             ],
           ),
-          toolbarHeight: 40,
+          toolbarHeight: BookWebViewScrollHelper.bookAppBarHeightPx,
           actions: [
             FutureBuilder<bool>(
               future: _canGoBack(),

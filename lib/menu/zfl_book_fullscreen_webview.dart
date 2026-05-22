@@ -35,7 +35,7 @@ class ZflBookFullScreenWebview extends StatefulWidget {
 class _ZflBookFullScreenWebviewState extends State<ZflBookFullScreenWebview>
     with WidgetsBindingObserver {
   static const int _maxHistoryEntries = 80;
-  static const double _toolbarHeight = 44;
+  static const double _toolbarHeight = BookWebViewScrollHelper.bookAppBarHeightPx;
   /// Tổng px cuộn cùng chiều (cộng dồn) để ẩn/hiện — hoạt động cả cuộn chậm.
   static const double _scrollDirectionThreshold = 36;
   /// Chỉ ẩn AppBar khi trang cuộn được ít nhất bằng chiều cao toolbar + khoảng đệm.
@@ -140,7 +140,10 @@ class _ZflBookFullScreenWebviewState extends State<ZflBookFullScreenWebview>
 
     if (widget.initialScroll != null &&
         (widget.initialScroll!.scrollY > 0 || widget.initialScroll!.scrollRatio > 0)) {
-      _readingState = _readingState.withScroll(widget.initialUrl, widget.initialScroll!);
+      _readingState = _readingState.withScroll(
+        BookWebViewScrollHelper.normalizeUrlKey(widget.initialUrl),
+        widget.initialScroll!,
+      );
     }
 
     _commitUrlToHistory(widget.initialUrl);
@@ -171,7 +174,10 @@ class _ZflBookFullScreenWebviewState extends State<ZflBookFullScreenWebview>
       if (position.scrollY <= 0 && position.scrollRatio <= 0) return;
 
       _currentUrl = url;
-      _readingState = _readingState.withScroll(url, position);
+      _readingState = _readingState.withScroll(
+        BookWebViewScrollHelper.normalizeUrlKey(url),
+        position,
+      );
       _schedulePersist();
     } catch (_) {}
   }
@@ -241,9 +247,14 @@ class _ZflBookFullScreenWebviewState extends State<ZflBookFullScreenWebview>
 
     final resolvedUrl = await _controller.currentUrl() ?? url;
     _commitUrlToHistory(resolvedUrl);
-    await BookWebViewScrollHelper.installReporter(_controller);
-    await _restoreScrollForUrl(resolvedUrl);
-    await _persistReadingState();
+    _isRestoringScroll = true;
+    try {
+      await BookWebViewScrollHelper.installReporter(_controller);
+      await _restoreScrollForUrl(resolvedUrl);
+      await _persistReadingState();
+    } finally {
+      _isRestoringScroll = false;
+    }
     _lastScrollY = null;
     _directionalScrollAccum = 0;
     if (mounted) {
@@ -282,10 +293,16 @@ class _ZflBookFullScreenWebviewState extends State<ZflBookFullScreenWebview>
 
   Future<void> _captureScrollForUrl(String url) async {
     if (url.isEmpty || _isRestoringScroll) return;
-    final position = await BookWebViewScrollHelper.readPosition(_controller);
+    var position = await BookWebViewScrollHelper.readPosition(_controller);
     if (position == null) return;
+    if (widget.openedFromBookTab) {
+      position = BookWebViewScrollHelper.positionForBookTabFromFullscreen(position);
+    }
     if (position.scrollY <= 0 && position.scrollRatio <= 0) return;
-    _readingState = _readingState.withScroll(url, position);
+    _readingState = _readingState.withScroll(
+      BookWebViewScrollHelper.normalizeUrlKey(url),
+      position,
+    );
   }
 
   Future<void> _captureScrollForCurrentPage() async {
@@ -296,22 +313,35 @@ class _ZflBookFullScreenWebviewState extends State<ZflBookFullScreenWebview>
   }
 
   Future<void> _restoreScrollForUrl(String url) async {
-    var saved = _readingState.scrollForUrl(url);
-    if (saved == null && url == widget.initialUrl) {
-      saved = widget.initialScroll;
-    }
-    if (saved == null) return;
-
     final applyBookTabCompensation =
         _pendingBookTabScrollCompensation && widget.openedFromBookTab;
 
+    BookScrollPosition? saved;
+    if (applyBookTabCompensation && widget.initialScroll != null) {
+      saved = widget.initialScroll;
+    } else {
+      saved = BookWebViewScrollHelper.scrollForUrl(_readingState.scrollByUrl, url);
+      if (saved == null &&
+          widget.initialScroll != null &&
+          BookWebViewScrollHelper.normalizeUrlKey(url) ==
+              BookWebViewScrollHelper.normalizeUrlKey(widget.initialUrl)) {
+        saved = widget.initialScroll;
+      }
+    }
+
+    if (saved == null) return;
+
     var scrollOffsetPx = 0.0;
+    var useScrollRatio = true;
     if (applyBookTabCompensation && mounted) {
       _pendingBookTabScrollCompensation = false;
-      scrollOffsetPx = -_toolbarHeight;
+      scrollOffsetPx =
+          BookWebViewScrollHelper.scrollOffsetOpeningFullscreenFromBookTab();
+      useScrollRatio = false;
     } else if (_compensateAppBarOnNextRestore && mounted) {
       _compensateAppBarOnNextRestore = false;
-      scrollOffsetPx = -_toolbarHeight;
+      scrollOffsetPx =
+          BookWebViewScrollHelper.scrollOffsetOpeningFullscreenFromBookTab();
     }
 
     if (saved.scrollY <= 0 &&
@@ -326,52 +356,21 @@ class _ZflBookFullScreenWebviewState extends State<ZflBookFullScreenWebview>
       saved,
       current,
       scrollOffsetPx: scrollOffsetPx,
+      useScrollRatio: useScrollRatio,
     )) {
       return;
     }
 
-    _isRestoringScroll = true;
-    try {
-      await BookWebViewScrollHelper.restorePosition(
-        _controller,
-        saved,
-        isMounted: () => mounted,
-        scrollOffsetPx: scrollOffsetPx,
-      );
-      if (applyBookTabCompensation && scrollOffsetPx != 0) {
-        await _retryBookTabScrollCompensation(saved, scrollOffsetPx);
-      }
-    } finally {
-      _isRestoringScroll = false;
-    }
-  }
-
-  /// WebView layout xong sau vài frame — áp lại bù cuộn lên để không bị AppBar che đầu trang.
-  Future<void> _retryBookTabScrollCompensation(
-    BookScrollPosition saved,
-    double scrollOffsetPx,
-  ) async {
-    for (final delayMs in <int>[400, 900]) {
-      await Future<void>.delayed(Duration(milliseconds: delayMs));
-      if (!mounted) return;
-      BookWebViewScrollHelper.cancelPendingRestores();
-      final current = await BookWebViewScrollHelper.readPosition(_controller);
-      final targetY = saved.scrollY + scrollOffsetPx;
-      if (current != null && (current.scrollY - targetY).abs() <= 20) {
-        continue;
-      }
-      _isRestoringScroll = true;
-      try {
-        await BookWebViewScrollHelper.restorePosition(
-          _controller,
-          saved,
-          isMounted: () => mounted,
-          scrollOffsetPx: scrollOffsetPx,
-        );
-      } finally {
-        _isRestoringScroll = false;
-      }
-    }
+    await BookWebViewScrollHelper.restorePosition(
+      _controller,
+      saved,
+      isMounted: () => mounted,
+      scrollOffsetPx: scrollOffsetPx,
+      useScrollRatio: useScrollRatio,
+      retryDelaysMs: applyBookTabCompensation
+          ? const <int>[400, 900, 1500]
+          : const <int>[350, 700, 1200],
+    );
   }
 
   void _schedulePersist() {
@@ -479,8 +478,7 @@ class _ZflBookFullScreenWebviewState extends State<ZflBookFullScreenWebview>
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
     _scrollSaveDebounce?.cancel();
-    unawaited(_captureScrollForCurrentPage());
-    unawaited(_persistReadingState());
+    // Không lưu cuộn ở dispose — tránh ghi đè (race) sau _closeAndReturn đã persist về tab Book.
     super.dispose();
   }
 

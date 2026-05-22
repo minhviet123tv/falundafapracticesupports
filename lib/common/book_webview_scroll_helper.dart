@@ -6,11 +6,54 @@ import 'book_webview_state_store.dart';
 
 /// JavaScript + thao tác cuộn dùng chung cho tab ZFL Book và màn hình mở rộng.
 class BookWebViewScrollHelper {
+  /// Chiều cao AppBar/toolbar Book (tab + mở rộng phải trùng để bù ± đúng).
+  static const double bookAppBarHeightPx = 44;
+
   static int _restoreGeneration = 0;
+
+  /// Tab Book → Mở rộng: AppBar nổi đè WebView → cuộn **lên** (âm) bằng [bookAppBarHeightPx].
+  static double scrollOffsetOpeningFullscreenFromBookTab() {
+    return -bookAppBarHeightPx;
+  }
+
+  /// Mở rộng → tab Book: lưu scroll **xuống** (dương) để khớp tọa độ tab (layout không đè).
+  static BookScrollPosition positionForBookTabFromFullscreen(
+    BookScrollPosition fullscreenPosition,
+  ) {
+    return BookScrollPosition(
+      scrollY: fullscreenPosition.scrollY + bookAppBarHeightPx,
+      scrollRatio: 0,
+    );
+  }
+
+  /// Chuẩn hóa URL làm khóa lưu cuộn (tránh lệch http/https, slash cuối).
+  static String normalizeUrlKey(String url) {
+    final uri = Uri.tryParse(url);
+    if (uri == null || !uri.hasScheme) return url;
+    var path = uri.path;
+    if (path.length > 1 && path.endsWith('/')) {
+      path = path.substring(0, path.length - 1);
+    }
+    return uri.replace(path: path).toString();
+  }
 
   /// Hủy các lần `scrollTo` trễ (retry) — gọi khi người dùng cuộn tay.
   static void cancelPendingRestores() {
     _restoreGeneration++;
+  }
+
+  /// Tìm vị trí cuộn đã lưu theo URL gốc hoặc URL chuẩn hóa.
+  static BookScrollPosition? scrollForUrl(
+    Map<String, BookScrollPosition> scrollByUrl,
+    String url,
+  ) {
+    final direct = scrollByUrl[url];
+    if (direct != null) return direct;
+    final normalized = normalizeUrlKey(url);
+    if (normalized != url) {
+      return scrollByUrl[normalized];
+    }
+    return null;
   }
 
   static bool positionsClose(
@@ -30,9 +73,10 @@ class BookWebViewScrollHelper {
     BookScrollPosition saved,
     BookScrollPosition? current, {
     double scrollOffsetPx = 0,
+    bool useScrollRatio = true,
   }) {
     if (current == null) return false;
-    if (scrollOffsetPx != 0) {
+    if (scrollOffsetPx != 0 || !useScrollRatio) {
       final targetY = (saved.scrollY + scrollOffsetPx).clamp(0.0, double.infinity);
       return (current.scrollY - targetY).abs() <= 28;
     }
@@ -76,24 +120,26 @@ class BookWebViewScrollHelper {
     clearTimeout(persistTimer);
     persistTimer = setTimeout(report, 350);
   }, {passive: true});
-  report();
 })();
 ''';
 
   /// [scrollOffsetPx]: cộng vào scrollY sau khi tính (âm = cuộn lên, dương = cuộn xuống).
+  /// [useScrollRatio]: false = dùng pixel tab Book (ổn định khi đổi WebView / chiều cao viewport).
   static String restorePositionJs(
     BookScrollPosition position, {
     double scrollOffsetPx = 0,
+    bool useScrollRatio = true,
   }) {
     final ratio = position.scrollRatio;
     final targetY = position.scrollY.round();
     final offset = scrollOffsetPx.round();
+    final useRatio = useScrollRatio && ratio > 0.01;
     return '''
 (function() {
   var el = document.scrollingElement || document.documentElement;
   var viewH = window.innerHeight || document.documentElement.clientHeight || 0;
   var max = Math.max(0, (el.scrollHeight || 0) - viewH);
-  var y = $ratio > 0.01 ? Math.round(max * $ratio) : $targetY;
+  var y = ${useRatio ? 'Math.round(max * $ratio)' : '$targetY'};
   y = Math.min(Math.max(0, y + $offset), max);
   window.scrollTo(0, y);
 })();
@@ -147,10 +193,12 @@ class BookWebViewScrollHelper {
     BookScrollPosition position, {
     bool Function()? isMounted,
     double scrollOffsetPx = 0,
+    bool useScrollRatio = true,
+    List<int> retryDelaysMs = const <int>[350, 700, 1200],
   }) async {
     if (position.scrollY <= 0 &&
         position.scrollRatio <= 0 &&
-        scrollOffsetPx <= 0) {
+        scrollOffsetPx == 0) {
       return;
     }
 
@@ -159,23 +207,33 @@ class BookWebViewScrollHelper {
     Future<void> applyOnce() async {
       if (generation != _restoreGeneration) return;
       await controller.runJavaScript(
-        restorePositionJs(position, scrollOffsetPx: scrollOffsetPx),
+        restorePositionJs(
+          position,
+          scrollOffsetPx: scrollOffsetPx,
+          useScrollRatio: useScrollRatio,
+        ),
       );
     }
 
     await applyOnce();
 
-    // Một lần retry sau layout; hủy nếu người dùng đã cuộn (generation đổi).
-    await Future<void>.delayed(const Duration(milliseconds: 350));
-    if (generation != _restoreGeneration) return;
-    if (isMounted != null && !isMounted()) return;
+    for (final delayMs in retryDelaysMs) {
+      await Future<void>.delayed(Duration(milliseconds: delayMs));
+      if (generation != _restoreGeneration) return;
+      if (isMounted != null && !isMounted()) return;
 
-    final current = await readPosition(controller);
-    if (shouldSkipRestore(position, current, scrollOffsetPx: scrollOffsetPx)) {
-      return;
+      final current = await readPosition(controller);
+      if (shouldSkipRestore(
+        position,
+        current,
+        scrollOffsetPx: scrollOffsetPx,
+        useScrollRatio: useScrollRatio,
+      )) {
+        return;
+      }
+
+      await applyOnce();
     }
-
-    await applyOnce();
   }
 
   static Future<void> installReporter(WebViewController controller) async {
