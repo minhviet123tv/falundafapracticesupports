@@ -15,36 +15,37 @@ import '../common/book_webview_state_store.dart';
 import '../common/browser_helper.dart';
 import 'zfl_book_fullscreen_webview.dart';
 
-/*
-Lưu vị trí cuộn (pixel + tỷ lệ %) + URL đầy đủ (kể cả #mục) + lịch sử trang.
- */
+/// Tab Book: đọc Chuyển Pháp Luân online theo [LanguageNameOfChuyenPhapLuan].
+class ChuyenPhapLuanWebview extends StatefulWidget {
+  static const String routeName = 'ChuyenPhapLuanWebview_routeName';
 
-class AllBooksWebview extends StatefulWidget {
-  static const String routeName = "AllBooksWebview_routeName";
   @override
-  State<AllBooksWebview> createState() => _AllBooksWebviewState();
+  State<ChuyenPhapLuanWebview> createState() => _ChuyenPhapLuanWebviewState();
 }
 
-class _AllBooksWebviewState extends State<AllBooksWebview> with WidgetsBindingObserver {
+class _ChuyenPhapLuanWebviewState extends State<ChuyenPhapLuanWebview>
+    with WidgetsBindingObserver {
+  static const String _prefsLanguageKey = 'LanguageNameOfChuyenPhapLuan';
   static const int _maxHistoryEntries = 80;
 
   late final WebViewController _controller;
-  late LanguageAllPageFalundafa languageAllPageFalundafa;
-  double border10 = 10.0;
+  late LanguageNameOfChuyenPhapLuan _language;
+  final double _border10 = 10.0;
   int progressLoadWeb = 0;
 
   BookReadingState _readingState = BookReadingState.empty();
   String? _currentUrl;
   Timer? _scrollSaveDebounce;
   bool _isRestoringScroll = false;
-  /// Chỉ restore cuộn sau khi đóng Mở rộng — không restore khi user chọn link mới.
   bool _restoreScrollAfterFullscreen = false;
+
+  String get _languageCode => _language.name;
 
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
-    languageAllPageFalundafa = LanguageAllPageFalundafa.vietnamese;
+    _language = LanguageNameOfChuyenPhapLuan.vietnamese;
 
     late final PlatformWebViewControllerCreationParams params;
     if (WebViewPlatform.instance is WebKitWebViewPlatform) {
@@ -56,7 +57,8 @@ class _AllBooksWebviewState extends State<AllBooksWebview> with WidgetsBindingOb
       params = const PlatformWebViewControllerCreationParams();
     }
 
-    final WebViewController controller = WebViewController.fromPlatformCreationParams(params);
+    final WebViewController controller =
+        WebViewController.fromPlatformCreationParams(params);
     controller
       ..setJavaScriptMode(JavaScriptMode.unrestricted)
       ..setBackgroundColor(const Color(0x00000000))
@@ -72,7 +74,6 @@ class _AllBooksWebviewState extends State<AllBooksWebview> with WidgetsBindingOb
             if (leaving != null && leaving.isNotEmpty && leaving != url) {
               unawaited(_captureScrollForUrl(leaving));
             }
-            // Mở link (kể cả link từng xem): không khôi phục scroll cũ của URL đích.
             _readingState = _readingState.withoutScrollForUrl(
               BookWebViewScrollHelper.normalizeUrlKey(url),
             );
@@ -119,9 +120,8 @@ class _AllBooksWebviewState extends State<AllBooksWebview> with WidgetsBindingOb
     }
 
     _controller = controller;
-    // Trì hoãn load WebView sau frame đầu — giảm crash Chromium trên emulator 16KB.
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      unawaited(_getLanguageEnumBook());
+      unawaited(_loadSavedLanguageAndOpen());
     });
   }
 
@@ -164,11 +164,14 @@ class _AllBooksWebviewState extends State<AllBooksWebview> with WidgetsBindingOb
     }
   }
 
-  Future<void> _getLanguageEnumBook() async {
+  Future<void> _loadSavedLanguageAndOpen() async {
     final shared = await SharedPreferences.getInstance();
-    final languageEnumBook =
-        shared.getString("LanguageAllPageFalundafa") ?? "vietnamese";
-    languageAllPageFalundafa = LanguageAllPageFalundafa.values.byName(languageEnumBook);
+    final savedName = shared.getString(_prefsLanguageKey) ?? 'vietnamese';
+    try {
+      _language = LanguageNameOfChuyenPhapLuan.values.byName(savedName);
+    } catch (_) {
+      _language = LanguageNameOfChuyenPhapLuan.vietnamese;
+    }
     await _loadReadingStateAndOpenUrl();
     if (mounted) {
       setState(() {});
@@ -176,10 +179,9 @@ class _AllBooksWebviewState extends State<AllBooksWebview> with WidgetsBindingOb
   }
 
   Future<void> _loadReadingStateAndOpenUrl() async {
-    _readingState =
-        await BookWebViewStateStore.load(languageAllPageFalundafa.languageCode);
+    _readingState = await BookWebViewStateStore.load(_languageCode);
 
-    final defaultUrl = languageAllPageFalundafa.booksPage;
+    final defaultUrl = _language.urlChuyenPhapLuan;
     final urlToLoad = _readingState.lastUrl ?? defaultUrl;
 
     var history = List<String>.from(_readingState.history);
@@ -292,7 +294,6 @@ class _AllBooksWebviewState extends State<AllBooksWebview> with WidgetsBindingOb
     if (saved == null) return;
     if (saved.scrollY <= 0 && saved.scrollRatio <= 0) return;
 
-    // Luôn restore theo pixel — tránh nhảy khi % đổi do ảnh/layout tải muộn.
     const useScrollRatio = false;
 
     BookWebViewScrollHelper.cancelPendingRestoresOnUserScroll();
@@ -325,13 +326,10 @@ class _AllBooksWebviewState extends State<AllBooksWebview> with WidgetsBindingOb
       saved,
       isMounted: () => mounted,
       useScrollRatio: useScrollRatio,
-      retryDelaysMs: afterFullscreen
-          ? const <int>[500]
-          : const <int>[500],
+      retryDelaysMs: const <int>[500],
     );
   }
 
-  /// Mở toàn màn hình tại đúng URL + vị trí cuộn hiện tại; khi quay lại đồng bộ tab.
   Future<void> _openFullScreen() async {
     final url = await BookWebViewScrollHelper.readPageUrl(_controller) ??
         await _controller.currentUrl() ??
@@ -348,9 +346,9 @@ class _AllBooksWebviewState extends State<AllBooksWebview> with WidgetsBindingOb
     final returned = await Navigator.of(context).push<bool>(
       MaterialPageRoute<bool>(
         builder: (context) => ZflBookFullScreenWebview(
-          languageCode: languageAllPageFalundafa.languageCode,
+          languageCode: _languageCode,
           initialUrl: url,
-          homeUrl: languageAllPageFalundafa.booksPage,
+          homeUrl: _language.urlChuyenPhapLuan,
           initialScroll: scrollNow,
           openedFromBookTab: true,
         ),
@@ -363,10 +361,8 @@ class _AllBooksWebviewState extends State<AllBooksWebview> with WidgetsBindingOb
     if (mounted) setState(() {});
   }
 
-  /// Sau khi đóng màn hình mở rộng: load lại URL + cuộn từ kho lưu chung.
   Future<void> _syncFromStoreAfterFullScreen() async {
-    _readingState =
-        await BookWebViewStateStore.load(languageAllPageFalundafa.languageCode);
+    _readingState = await BookWebViewStateStore.load(_languageCode);
     final targetUrl = _readingState.lastUrl;
     if (targetUrl == null || targetUrl.isEmpty) return;
 
@@ -412,34 +408,31 @@ class _AllBooksWebviewState extends State<AllBooksWebview> with WidgetsBindingOb
         historyIndex: _readingState.historyIndex,
       );
     }
-    await BookWebViewStateStore.save(
-      languageAllPageFalundafa.languageCode,
-      _readingState,
-    );
+    await BookWebViewStateStore.save(_languageCode, _readingState);
   }
 
-  Future<void> _setLanguageEnumBook(LanguageAllPageFalundafa languageName) async {
+  Future<void> _saveLanguagePreference(LanguageNameOfChuyenPhapLuan value) async {
     final shared = await SharedPreferences.getInstance();
-    await shared.setString("LanguageAllPageFalundafa", languageName.name);
+    await shared.setString(_prefsLanguageKey, value.name);
   }
 
-  Future<void> _onLanguageChanged(LanguageAllPageFalundafa value) async {
+  Future<void> _onLanguageChanged(LanguageNameOfChuyenPhapLuan value) async {
     await _captureScrollForCurrentPage();
     await _persistReadingState();
 
     setState(() {
-      languageAllPageFalundafa = value;
+      _language = value;
     });
 
-    await _setLanguageEnumBook(value);
+    await _saveLanguagePreference(value);
     await _loadReadingStateAndOpenUrl();
   }
 
-  /// Về trang mục lục sách (`booksPage`) của ngôn ngữ đang chọn trong enum.
-  Future<void> _goToBooksHomePage() async {
+  /// Về đầu sách Chuyển Pháp Luân (`urlChuyenPhapLuan`) của ngôn ngữ hiện tại.
+  Future<void> _goToZflHomePage() async {
     await _captureScrollForCurrentPage();
 
-    final homeUrl = languageAllPageFalundafa.booksPage;
+    final homeUrl = _language.urlChuyenPhapLuan;
     _currentUrl = homeUrl;
     _readingState = _readingState.withOnlyCurrentScroll(
       BookWebViewScrollHelper.normalizeUrlKey(homeUrl),
@@ -505,7 +498,6 @@ class _AllBooksWebviewState extends State<AllBooksWebview> with WidgetsBindingOb
     return _readingState.historyIndex < _readingState.history.length - 1;
   }
 
-  /// Android nút Back hệ thống: lùi WebView / lịch sử app trước khi thoát tab.
   Future<void> _onSystemBack() async {
     if (await _canGoBack()) {
       await _goBack();
@@ -521,7 +513,7 @@ class _AllBooksWebviewState extends State<AllBooksWebview> with WidgetsBindingOb
   }
 
   @override
-  void setState(fn) {
+  void setState(VoidCallback fn) {
     if (mounted) {
       super.setState(fn);
     }
@@ -546,114 +538,122 @@ class _AllBooksWebviewState extends State<AllBooksWebview> with WidgetsBindingOb
         }
       },
       child: SafeArea(
-      child: Scaffold(
-        appBar: AppBar(
-          title: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              PopupMenuButton<LanguageAllPageFalundafa>(
-                tooltip: 'Select language',
-                position: PopupMenuPosition.under,
-                color: Colors.white,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(border10)),
-                onSelected: (LanguageAllPageFalundafa value) {
-                  unawaited(_onLanguageChanged(value));
-                },
-                itemBuilder: (context) {
-                  return LanguageAllPageFalundafa.values
-                      .map(
-                        (value) => PopupMenuItem<LanguageAllPageFalundafa>(
-                          value: value,
-                          height: 44,
-                          child: Text(value.languageName),
-                        ),
-                      )
-                      .toList();
-                },
-                child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.all(Radius.circular(border10)),
-                    border: Border.all(color: Colors.white70),
+        child: Scaffold(
+          appBar: AppBar(
+            title: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                PopupMenuButton<LanguageNameOfChuyenPhapLuan>(
+                  tooltip: 'Chọn ngôn ngữ',
+                  position: PopupMenuPosition.under,
+                  color: Colors.white,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(_border10),
                   ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Text(
-                        languageAllPageFalundafa.languageName,
-                        style: const TextStyle(fontWeight: FontWeight.w500, fontSize: 11),
-                      ),
-                      const SizedBox(width: 4),
-                      const Icon(Icons.arrow_drop_down, size: 18),
-                    ],
+                  onSelected: (LanguageNameOfChuyenPhapLuan value) {
+                    unawaited(_onLanguageChanged(value));
+                  },
+                  itemBuilder: (context) {
+                    return LanguageNameOfChuyenPhapLuan.values
+                        .map(
+                          (value) => PopupMenuItem<LanguageNameOfChuyenPhapLuan>(
+                            value: value,
+                            height: 44,
+                            child: Text(value.tengoc),
+                          ),
+                        )
+                        .toList();
+                  },
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 8,
+                    ),
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.all(Radius.circular(_border10)),
+                      border: Border.all(color: Colors.white70),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          _language.tengoc,
+                          style: const TextStyle(
+                            fontWeight: FontWeight.w500,
+                            fontSize: 11,
+                          ),
+                        ),
+                        const SizedBox(width: 4),
+                        const Icon(Icons.arrow_drop_down, size: 18),
+                      ],
+                    ),
                   ),
                 ),
+                IconButton(
+                  onPressed: () => unawaited(_goToZflHomePage()),
+                  icon: const Icon(Icons.menu_book, size: 20),
+                  tooltip: 'Về đầu sách',
+                ),
+              ],
+            ),
+            toolbarHeight: BookWebViewScrollHelper.bookAppBarHeightPx,
+            actions: [
+              FutureBuilder<bool>(
+                future: _canGoBack(),
+                builder: (context, snapshot) {
+                  final enabled = snapshot.data ?? false;
+                  return IconButton(
+                    onPressed: enabled ? () => unawaited(_goBack()) : null,
+                    icon: Icon(
+                      Icons.arrow_circle_left_outlined,
+                      color: enabled ? null : Colors.grey.shade400,
+                    ),
+                  );
+                },
+              ),
+              FutureBuilder<bool>(
+                future: _canGoForward(),
+                builder: (context, snapshot) {
+                  final enabled = snapshot.data ?? false;
+                  return IconButton(
+                    onPressed: enabled ? () => unawaited(_goForward()) : null,
+                    icon: Icon(
+                      Icons.arrow_circle_right_outlined,
+                      color: enabled ? null : Colors.grey.shade400,
+                    ),
+                  );
+                },
+              ),
+              FutureBuilder<dynamic>(
+                future: BrowserHelper.getCurrentUrl(_controller),
+                builder: (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
+                  if (snapshot.hasData) {
+                    return IconButton(
+                      onPressed: () {
+                        BrowserHelper.launchExternal(
+                          Uri.parse(snapshot.data.toString()),
+                        );
+                      },
+                      icon: const Icon(Icons.open_in_new, size: 20),
+                    );
+                  }
+                  return const SizedBox.shrink();
+                },
               ),
               IconButton(
-                onPressed: () => unawaited(_goToBooksHomePage()),
-                icon: const Icon(Icons.menu_book, size: 20),
-                tooltip: 'Trang mục lục sách',
+                onPressed: () => unawaited(_openFullScreen()),
+                icon: const Icon(Icons.zoom_out_map, size: 20),
+                tooltip: 'Mở rộng màn hình',
               ),
             ],
+            backgroundColor: Colors.white,
           ),
-          toolbarHeight: BookWebViewScrollHelper.bookAppBarHeightPx,
-          actions: [
-            FutureBuilder<bool>(
-              future: _canGoBack(),
-              builder: (context, snapshot) {
-                final enabled = snapshot.data ?? false;
-                return IconButton(
-                  onPressed: enabled ? () => unawaited(_goBack()) : null,
-                  icon: Icon(
-                    Icons.arrow_circle_left_outlined,
-                    size: 20,
-                    color: enabled ? null : Colors.grey.shade400,
-                  ),
-                );
-              },
-            ),
-            FutureBuilder<bool>(
-              future: _canGoForward(),
-              builder: (context, snapshot) {
-                final enabled = snapshot.data ?? false;
-                return IconButton(
-                  onPressed: enabled ? () => unawaited(_goForward()) : null,
-                  icon: Icon(
-                    Icons.arrow_circle_right_outlined,
-                    size: 20,
-                    color: enabled ? null : Colors.grey.shade400,
-                  ),
-                );
-              },
-            ),
-            FutureBuilder<dynamic>(
-              future: BrowserHelper.getCurrentUrl(_controller),
-              builder: (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
-                if (snapshot.hasData) {
-                  return IconButton(
-                    onPressed: () {
-                      BrowserHelper.launchExternal(Uri.parse(snapshot.data.toString()));
-                    },
-                    icon: const Icon(Icons.open_in_new, size: 20),
-                  );
-                }
-                return const SizedBox.shrink();
-              },
-            ),
-            IconButton(
-              onPressed: () => unawaited(_openFullScreen()),
-              icon: const Icon(Icons.zoom_out_map, size: 20),
-              tooltip: 'Mở rộng màn hình',
-            ),
-          ],
           backgroundColor: Colors.white,
+          body: (progressLoadWeb <= 20)
+              ? const Center(child: CircularProgressIndicator())
+              : WebViewWidget(controller: _controller),
         ),
-        backgroundColor: Colors.white,
-        body: (progressLoadWeb <= 20)
-            ? const Center(child: CircularProgressIndicator())
-            : WebViewWidget(controller: _controller),
       ),
-    ),
     );
   }
 }

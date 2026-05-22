@@ -8,7 +8,7 @@ import 'menu/introduction_screen.dart';
 import 'player_widget.dart';
 import 'player_widget_9baigiang.dart';
 
-import 'menu/all_books_webview.dart';
+import 'menu/chuyen_phap_luan_webview.dart';
 import 'menu_huongdan_page.dart';
 import 'common/memory_config.dart';
 import 'common/memory_monitor.dart';
@@ -210,7 +210,7 @@ class _FalunDafaExerciseHomePageState extends State<FalunDafaExerciseHomePage>
       case 0:
         return MenuHome();
       case 1:
-        return AllBooksWebview();
+        return ChuyenPhapLuanWebview();
       case 2:
         return PlayerWidget9Baigiang();
       case 3:
@@ -270,7 +270,7 @@ class _FalunDafaExerciseHomePageState extends State<FalunDafaExerciseHomePage>
           //2. Menu mở sách Chuyển Pháp Luân
           BottomNavigationBarItem(
             icon: Icon(Icons.menu_book, color: Color.fromARGB(255, 71, 71, 71)), // Sử dụng icon thay vì Image.asset để tiết kiệm bộ nhớ
-            label: "Book",
+            label: "ZFL Book",
             activeIcon: Icon(Icons.menu_book, color: Colors.orange,),
           ),
 
@@ -284,7 +284,7 @@ class _FalunDafaExerciseHomePageState extends State<FalunDafaExerciseHomePage>
           //4. Menu nhạc luyện công
           BottomNavigationBarItem(
             icon: Icon(Icons.self_improvement, color: Color.fromARGB(255, 71, 71, 71)), // Sử dụng icon thay vì Image.asset để tiết kiệm bộ nhớ
-            label: "Practice",
+            label: "5 Practice",
             activeIcon: Icon(Icons.self_improvement, color: Colors.orange,),
           ),
 

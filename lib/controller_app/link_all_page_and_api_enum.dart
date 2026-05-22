@@ -98,7 +98,7 @@ enum MinghuiEnum {
   slovencina("https://sk.minghui.org/", "Slovenčina", 'slovencina'),
   srpski("https://sr.minghui.org/", "Српски", 'srpski'),
   thai("https://th.minghui.org/", "ไทย", 'thai'),
-  vietnamese("https://daiphap.org/vn.minghui.org%2Fnews", "Tiếng Việt", 'vietnamese'), // https://vn.minghui.org/news
+  vietnamese("https://vi.minghui.org/", "Tiếng Việt", 'vietnamese'), // https://vn.minghui.org/news
   turkce("https://tr.minghui.org/", "Türkçe", 'turkce'),
   ukrainian("https://uk.minghui.org/", "Українська", 'ukrainian')
   ;

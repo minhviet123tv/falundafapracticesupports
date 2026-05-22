@@ -7,7 +7,6 @@ import 'package:webview_flutter/webview_flutter.dart';
 import 'package:webview_flutter_android/webview_flutter_android.dart';
 import 'package:webview_flutter_wkwebview/webview_flutter_wkwebview.dart';
 
-import '../controller_app/link_internet_sachchuyenphapluan_quocte.dart';
 import '../common/book_webview_scroll_helper.dart';
 import '../common/book_webview_state_store.dart';
 import '../common/browser_helper.dart';
@@ -16,6 +15,8 @@ import '../common/browser_helper.dart';
 class ZflBookFullScreenWebview extends StatefulWidget {
   final String languageCode;
   final String initialUrl;
+  /// URL đầu sách (mục lục ZFL / booksPage) — nút sách trên AppBar.
+  final String homeUrl;
   final BookScrollPosition? initialScroll;
   /// Mở từ tab Book: bù cuộn −44px (cuộn lên) vì AppBar nổi đè phần đầu WebView.
   final bool openedFromBookTab;
@@ -24,6 +25,7 @@ class ZflBookFullScreenWebview extends StatefulWidget {
     super.key,
     required this.languageCode,
     required this.initialUrl,
+    required this.homeUrl,
     this.initialScroll,
     this.openedFromBookTab = false,
   });
@@ -409,17 +411,10 @@ class _ZflBookFullScreenWebviewState extends State<ZflBookFullScreenWebview>
     await BookWebViewStateStore.save(widget.languageCode, _readingState);
   }
 
-  LanguageAllPageFalundafa get _languageEnum {
-    return LanguageAllPageFalundafa.values.firstWhere(
-      (e) => e.languageCode == widget.languageCode,
-      orElse: () => LanguageAllPageFalundafa.vietnamese,
-    );
-  }
-
   Future<void> _goToBooksHomePage() async {
     await _captureScrollForCurrentPage();
 
-    final homeUrl = _languageEnum.booksPage;
+    final homeUrl = widget.homeUrl;
     _currentUrl = homeUrl;
     _readingState = _readingState.withScroll(
       homeUrl,

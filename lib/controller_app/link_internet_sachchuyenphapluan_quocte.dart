@@ -90,7 +90,6 @@ enum LanguageNameOfChuyenPhapLuan {
   vietnamese("Tiếng Việt","https://vi.falundafa.org/book/zfl_html/index.html"), // all book: https://vi.falundafa.org/falun-dafa-books.html?v=bks04 || zfl: https://vi.falundafa.org/book/zfl_html/index.html
   turkce("Türkçe", "https://www.falundafatr.org/html/zflindex.html?v=bks04"),
   ukraina("Українська", "https://uk.falundafa.org/books/ZhuanFalun/zfl_cover.htm"),
-  more("More ...", "https://www.falundafa.org/"),
   ;
 
   final String tengoc;
