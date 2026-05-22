@@ -97,7 +97,7 @@ enum LanguageNameOfChuyenPhapLuan {
   final String urlChuyenPhapLuan;
   const LanguageNameOfChuyenPhapLuan(this.tengoc, this.urlChuyenPhapLuan);
 
-} // name("", ""),
+}
 
 
 
