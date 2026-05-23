@@ -71,6 +71,28 @@ mixin WebviewImmersiveMixin<T extends StatefulWidget> on State<T>, SingleTickerP
     resetScrollChromeTracking();
   }
 
+  Future<void> refreshImmersiveChromeHideAllowed(
+    WebViewController controller,
+  ) async {
+    if (pageMainFrameFailed) {
+      setOverlayChromeHideAllowed(false);
+      return;
+    }
+    final maxScroll =
+        await BookWebViewScrollHelper.readMaxScrollExtent(controller);
+    updateOverlayChromeHideFromPageMetrics(
+      maxScroll: maxScroll ?? 0,
+      chromeBarHeight: _scrollChromeBarHeight,
+    );
+  }
+
+  void _showChromeHideBlockedMessage() {
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text(WebviewScrollChromeMixin.chromeHideBlockedMessage)),
+    );
+  }
+
   Future<void> toggleImmersiveMode() async {
     if (inImmersiveMode || immersiveAnim.status == AnimationStatus.forward) {
       await exitImmersiveMode();
@@ -82,6 +104,10 @@ mixin WebviewImmersiveMixin<T extends StatefulWidget> on State<T>, SingleTickerP
   Future<void> enterImmersiveMode() async {
     if (immersiveAnim.status == AnimationStatus.forward) return;
     if (!mounted) return;
+    if (!overlayChromeHideAllowed) {
+      _showChromeHideBlockedMessage();
+      return;
+    }
     overlayChromeVisible = false;
     resetScrollChromeTracking();
     immersiveActive.value = true;
@@ -111,13 +137,19 @@ mixin WebviewImmersiveMixin<T extends StatefulWidget> on State<T>, SingleTickerP
     return ValueListenableBuilder<bool>(
       valueListenable: immersiveActive,
       builder: (context, immersive, _) {
+        final canExpand = overlayChromeHideAllowed || immersive;
         return IconButton(
-          onPressed: () => toggleImmersiveMode(),
+          onPressed: canExpand ? () => toggleImmersiveMode() : _showChromeHideBlockedMessage,
           icon: Icon(
             immersive ? Icons.fullscreen_exit : Icons.zoom_out_map,
             size: 20,
+            color: canExpand ? null : Colors.grey,
           ),
-          tooltip: immersive ? 'Thu gọn' : 'Mở rộng màn hình',
+          tooltip: immersive
+              ? 'Thu gọn'
+              : (canExpand
+                  ? 'Mở rộng màn hình'
+                  : WebviewScrollChromeMixin.chromeHideBlockedMessage),
         );
       },
     );
@@ -175,6 +207,7 @@ mixin WebviewImmersiveMixin<T extends StatefulWidget> on State<T>, SingleTickerP
                   chromeBarHeight: chromeHeight,
                   immersiveProgress: t,
                   scrollHideEnabled: _scrollHideEnabled,
+                  overlayChromeHideAllowed: overlayChromeHideAllowed,
                 ),
                 left: 0,
                 right: 0,
@@ -236,7 +269,7 @@ mixin WebviewImmersiveMixin<T extends StatefulWidget> on State<T>, SingleTickerP
       ),
     );
 
-    if (_scrollHideEnabled) {
+    if (_scrollHideEnabled && overlayChromeHideAllowed) {
       bar = wrapChromeBarForScrollHide(bar, enabled: true);
     }
 

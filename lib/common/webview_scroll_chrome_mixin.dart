@@ -4,21 +4,70 @@ import 'package:flutter/material.dart';
 
 /// Ẩn/hiện AppBar + thanh URL khi cuộn (chỉ trượt overlay — không đổi khung WebView).
 mixin WebviewScrollChromeMixin<T extends StatefulWidget> on State<T> {
-  static const double scrollHideThreshold = 56;
-  static const double scrollShowThreshold = 32;
+  static const String chromeHideBlockedMessage =
+      'Trang đang lỗi hoặc không cuộn được — không thể ẩn thanh công cụ.';
+
+  /// Cuộn nhanh: một báo cáo nhảy ≥ [scrollImpulsePx] → ẩn/hiện ngay.
+  static const double scrollImpulsePx = 3;
+
+  /// Cuộn chậm: scrollTop thường +0–1px/lần — cộng dồn cùng hướng rồi toggle.
+  static const double scrollAccumPx = 2;
+
   static const double minScrollableExtra = 40;
-  static const Duration chromeAnimDuration = Duration(milliseconds: 220);
+  static const Duration chromeAnimDuration = Duration(milliseconds: 200);
   static const Curve chromeAnimCurve = Curves.easeInOut;
 
   bool overlayChromeVisible = true;
+
+  /// false khi trang lỗi hoặc không đủ nội dung cuộn — không ẩn AppBar / không vào mở rộng.
+  bool overlayChromeHideAllowed = false;
+
+  bool _pageMainFrameFailed = false;
   double? _scrollChromeLastY;
   double _scrollChromeDirectionAccum = 0;
-  DateTime? _lastChromeVisibilityChange;
+
+  bool get pageMainFrameFailed => _pageMainFrameFailed;
+
+  void onWebViewPageLoadStarted() {
+    _pageMainFrameFailed = false;
+    setOverlayChromeHideAllowed(false);
+    resetScrollChromeTracking();
+  }
+
+  void onWebViewMainFrameError() {
+    _pageMainFrameFailed = true;
+    setOverlayChromeHideAllowed(false);
+  }
+
+  void setOverlayChromeHideAllowed(bool allowed) {
+    if (overlayChromeHideAllowed == allowed) {
+      if (!allowed && !overlayChromeVisible) {
+        _setOverlayChromeVisible(true);
+      }
+      return;
+    }
+    overlayChromeHideAllowed = allowed;
+    if (!allowed) {
+      _setOverlayChromeVisible(true);
+    }
+    if (mounted) setState(() {});
+  }
+
+  void updateOverlayChromeHideFromPageMetrics({
+    required double maxScroll,
+    required double chromeBarHeight,
+  }) {
+    if (_pageMainFrameFailed) {
+      setOverlayChromeHideAllowed(false);
+      return;
+    }
+    final minScrollable = chromeBarHeight + minScrollableExtra;
+    setOverlayChromeHideAllowed(maxScroll >= minScrollable);
+  }
 
   void resetScrollChromeTracking() {
     _scrollChromeLastY = null;
     _scrollChromeDirectionAccum = 0;
-    _lastChromeVisibilityChange = null;
   }
 
   void handleScrollChromeReport(String message, double chromeBarHeight) {
@@ -41,6 +90,23 @@ mixin WebviewScrollChromeMixin<T extends StatefulWidget> on State<T> {
   ) {
     if (!mounted) return;
 
+    if (!_pageMainFrameFailed) {
+      final minScrollable = chromeBarHeight + minScrollableExtra;
+      final shouldAllow = maxScroll >= minScrollable;
+      if (shouldAllow != overlayChromeHideAllowed) {
+        setOverlayChromeHideAllowed(shouldAllow);
+      }
+    }
+
+    if (!overlayChromeHideAllowed) {
+      _scrollChromeLastY = scrollY;
+      _scrollChromeDirectionAccum = 0;
+      if (!overlayChromeVisible) {
+        _setOverlayChromeVisible(true);
+      }
+      return;
+    }
+
     final minScrollable = chromeBarHeight + minScrollableExtra;
     if (maxScroll < minScrollable) {
       _scrollChromeLastY = scrollY;
@@ -49,7 +115,8 @@ mixin WebviewScrollChromeMixin<T extends StatefulWidget> on State<T> {
       return;
     }
 
-    if (scrollY <= 20) {
+    // Đầu trang: luôn hiện thanh (giống Chrome).
+    if (scrollY <= 8) {
       _scrollChromeLastY = scrollY;
       _scrollChromeDirectionAccum = 0;
       _setOverlayChromeVisible(true);
@@ -58,20 +125,25 @@ mixin WebviewScrollChromeMixin<T extends StatefulWidget> on State<T> {
 
     if (_scrollChromeLastY != null) {
       final delta = scrollY - _scrollChromeLastY!;
-      if (delta != 0) {
-        if (delta > 0 && _scrollChromeDirectionAccum < 0) {
-          _scrollChromeDirectionAccum = 0;
-        } else if (delta < 0 && _scrollChromeDirectionAccum > 0) {
+      if (delta > 0) {
+        if (_scrollChromeDirectionAccum < 0) {
           _scrollChromeDirectionAccum = 0;
         }
         _scrollChromeDirectionAccum += delta;
-
-        if (overlayChromeVisible) {
-          if (_scrollChromeDirectionAccum >= scrollHideThreshold) {
-            _setOverlayChromeVisible(false);
-            _scrollChromeDirectionAccum = 0;
-          }
-        } else if (_scrollChromeDirectionAccum <= -scrollShowThreshold) {
+        if (overlayChromeVisible &&
+            (delta >= scrollImpulsePx ||
+                _scrollChromeDirectionAccum >= scrollAccumPx)) {
+          _setOverlayChromeVisible(false);
+          _scrollChromeDirectionAccum = 0;
+        }
+      } else if (delta < 0) {
+        if (_scrollChromeDirectionAccum > 0) {
+          _scrollChromeDirectionAccum = 0;
+        }
+        _scrollChromeDirectionAccum += delta;
+        if (!overlayChromeVisible &&
+            (delta <= -scrollImpulsePx ||
+                _scrollChromeDirectionAccum <= -scrollAccumPx)) {
           _setOverlayChromeVisible(true);
           _scrollChromeDirectionAccum = 0;
         }
@@ -82,18 +154,11 @@ mixin WebviewScrollChromeMixin<T extends StatefulWidget> on State<T> {
 
   void _setOverlayChromeVisible(bool visible) {
     if (visible == overlayChromeVisible) return;
-
-    final now = DateTime.now();
-    if (_lastChromeVisibilityChange != null &&
-        now.difference(_lastChromeVisibilityChange!) < chromeAnimDuration) {
-      return;
-    }
-    _lastChromeVisibilityChange = now;
     setState(() => overlayChromeVisible = visible);
   }
 
   Widget wrapChromeBarForScrollHide(Widget bar, {required bool enabled}) {
-    if (!enabled) return bar;
+    if (!enabled || !overlayChromeHideAllowed) return bar;
     return AnimatedSlide(
       offset: overlayChromeVisible ? Offset.zero : const Offset(0, -1),
       duration: chromeAnimDuration,
@@ -107,13 +172,18 @@ mixin WebviewScrollChromeMixin<T extends StatefulWidget> on State<T> {
     );
   }
 
-  /// WebView chỉ đổi inset khi đang animate vào/ra chế độ mở rộng.
-  /// Khi cuộn ẩn chrome: chỉ trượt overlay, không nhảy layout WebView.
+  /// Vị trí `top` của WebView trong [Stack].
+  ///
+  /// - **Cuộn ẩn toolbar** ([overlayChromeHideAllowed]): WebView cố định dưới status bar,
+  ///   toolbar chỉ trượt overlay — tránh giật khi ẩn/hiện (không đổi layout WebView).
+  /// - **Toolbar luôn hiện** (trang lỗi / không đủ cuộn): WebView bắt đầu dưới toolbar + URL bar.
+  /// - **Đang animate mở rộng**: interpolate giữa hai vị trí.
   double webViewTopOffset({
     required double topInset,
     required double chromeBarHeight,
     required double immersiveProgress,
     required bool scrollHideEnabled,
+    bool overlayChromeHideAllowed = false,
   }) {
     final t = immersiveProgress.clamp(0.0, 1.0);
 
@@ -121,7 +191,7 @@ mixin WebviewScrollChromeMixin<T extends StatefulWidget> on State<T> {
       return topInset + (1 - t) * chromeBarHeight;
     }
 
-    if (scrollHideEnabled || t >= 1.0) {
+    if (scrollHideEnabled && overlayChromeHideAllowed) {
       return topInset;
     }
 

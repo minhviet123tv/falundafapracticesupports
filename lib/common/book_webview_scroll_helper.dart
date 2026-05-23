@@ -179,6 +179,26 @@ class BookWebViewScrollHelper {
     }
   }
 
+  /// Chiều cao vùng cuộn tối đa (px) — dùng quyết định có cho ẩn AppBar khi cuộn.
+  static Future<double?> readMaxScrollExtent(WebViewController controller) async {
+    try {
+      final result =
+          await controller.runJavaScriptReturningResult(readPositionJs);
+      dynamic decoded = result;
+      if (result is String) {
+        final trimmed = result.trim();
+        if (trimmed.isEmpty) return null;
+        decoded = jsonDecode(trimmed);
+      }
+      if (decoded is! Map) return null;
+      final max = decoded['max'];
+      if (max is! num) return null;
+      return max.toDouble();
+    } catch (_) {
+      return null;
+    }
+  }
+
   static Future<BookScrollPosition?> readPosition(WebViewController controller) async {
     try {
       final result = await controller.runJavaScriptReturningResult(readPositionJs);

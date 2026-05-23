@@ -78,6 +78,7 @@ class _ChuyenPhapLuanWebviewState extends State<ChuyenPhapLuanWebview>
             });
           },
           onPageStarted: (String url) {
+            onWebViewPageLoadStarted();
             final leaving = _currentUrl;
             if (leaving != null && leaving.isNotEmpty && leaving != url) {
               unawaited(_captureScrollForUrl(leaving));
@@ -91,6 +92,12 @@ class _ChuyenPhapLuanWebviewState extends State<ChuyenPhapLuanWebview>
           },
           onWebResourceError: (WebResourceError error) {
             debugPrint('WebView error: ${error.description}');
+            if (error.isForMainFrame == true) {
+              onWebViewMainFrameError();
+              if (_inImmersiveMode) {
+                unawaited(_exitImmersiveMode());
+              }
+            }
           },
           onNavigationRequest: (NavigationRequest request) {
             if (request.url.startsWith('https://www.youtube.com/')) {
@@ -244,6 +251,12 @@ class _ChuyenPhapLuanWebviewState extends State<ChuyenPhapLuanWebview>
     }
 
     resetScrollChromeTracking();
+    final maxScroll =
+        await BookWebViewScrollHelper.readMaxScrollExtent(_controller);
+    updateOverlayChromeHideFromPageMetrics(
+      maxScroll: maxScroll ?? 0,
+      chromeBarHeight: _chromeBarHeight,
+    );
     if (mounted) {
       setState(() {});
     }
@@ -310,6 +323,15 @@ class _ChuyenPhapLuanWebviewState extends State<ChuyenPhapLuanWebview>
 
   Future<void> _enterImmersiveMode() async {
     if (_immersiveAnim.status == AnimationStatus.forward) return;
+    if (!overlayChromeHideAllowed) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(WebviewScrollChromeMixin.chromeHideBlockedMessage),
+        ),
+      );
+      return;
+    }
     await _captureScrollForCurrentPage();
     await _persistReadingState();
     if (!mounted) return;
@@ -495,6 +517,7 @@ class _ChuyenPhapLuanWebviewState extends State<ChuyenPhapLuanWebview>
   }
 
   List<Widget> _navigationActions({required bool immersive}) {
+    final canExpand = overlayChromeHideAllowed || immersive;
     return [
       FutureBuilder<dynamic>(
         future: BrowserHelper.getCurrentUrl(_controller),
@@ -511,12 +534,27 @@ class _ChuyenPhapLuanWebviewState extends State<ChuyenPhapLuanWebview>
         },
       ),
       IconButton(
-        onPressed: () => unawaited(_toggleImmersiveMode()),
+        onPressed: canExpand
+            ? () => unawaited(_toggleImmersiveMode())
+            : () {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text(
+                      WebviewScrollChromeMixin.chromeHideBlockedMessage,
+                    ),
+                  ),
+                );
+              },
         icon: Icon(
           immersive ? Icons.fullscreen_exit : Icons.zoom_out_map,
           size: 20,
+          color: canExpand ? null : Colors.grey,
         ),
-        tooltip: immersive ? 'Thu gọn' : 'Mở rộng màn hình',
+        tooltip: immersive
+            ? 'Thu gọn'
+            : (canExpand
+                ? 'Mở rộng màn hình'
+                : WebviewScrollChromeMixin.chromeHideBlockedMessage),
       ),
     ];
   }
@@ -567,7 +605,7 @@ class _ChuyenPhapLuanWebviewState extends State<ChuyenPhapLuanWebview>
   Widget _buildBookToolbarLayer(double immersiveProgress) {
     var bar = wrapChromeBarForScrollHide(
       _buildBookChromeBar(),
-      enabled: true,
+      enabled: overlayChromeHideAllowed,
     );
 
     // Thu gọn: giữ AppBar tab Book hiện, chỉ animate WebView + menu bottom.
@@ -624,6 +662,7 @@ class _ChuyenPhapLuanWebviewState extends State<ChuyenPhapLuanWebview>
                   chromeBarHeight: _chromeBarHeight,
                   immersiveProgress: t,
                   scrollHideEnabled: true,
+                  overlayChromeHideAllowed: overlayChromeHideAllowed,
                 ),
                 left: 0,
                 right: 0,

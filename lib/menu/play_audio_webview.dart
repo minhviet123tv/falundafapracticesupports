@@ -63,6 +63,9 @@ class _WebViewBrowserAudioState extends State<WebViewBrowserAudio>
           },
           onPageStarted: (String url) {
             debugPrint('Page started loading: $url');
+            if (_showUrlBar) {
+              onWebViewPageLoadStarted();
+            }
           },
           onPageFinished: (String url) {
             debugPrint('Page finished loading: $url');
@@ -72,7 +75,7 @@ class _WebViewBrowserAudioState extends State<WebViewBrowserAudio>
             unawaited(_injectPlaybackTrackingScript());
             unawaited(AppWebViewConfig.onPageFinishedEnhancements(_controller));
             if (_showUrlBar) {
-              unawaited(_installScrollReporter());
+              unawaited(_onAudioPageFinished());
             }
           },
           onWebResourceError: (WebResourceError error) {
@@ -83,6 +86,9 @@ class _WebViewBrowserAudioState extends State<WebViewBrowserAudio>
             errorType: ${error.errorType}
             isForMainFrame: ${error.isForMainFrame}
                     ''');
+            if (_showUrlBar && error.isForMainFrame == true) {
+              onWebViewMainFrameError();
+            }
           },
           onNavigationRequest: (NavigationRequest request) {
             if (request.url.startsWith('https://www.youtube.com/')) {
@@ -156,6 +162,17 @@ class _WebViewBrowserAudioState extends State<WebViewBrowserAudio>
   Future<void> _installScrollReporter() async {
     await BookWebViewScrollHelper.installReporter(_controller);
     resetScrollChromeTracking();
+  }
+
+  Future<void> _onAudioPageFinished() async {
+    await _installScrollReporter();
+    final maxScroll =
+        await BookWebViewScrollHelper.readMaxScrollExtent(_controller);
+    updateOverlayChromeHideFromPageMetrics(
+      maxScroll: maxScroll ?? 0,
+      chromeBarHeight: _chromeBarHeight,
+    );
+    if (mounted) setState(() {});
   }
 
   @override
@@ -321,6 +338,7 @@ class _WebViewBrowserAudioState extends State<WebViewBrowserAudio>
               chromeBarHeight: _chromeBarHeight,
               immersiveProgress: 0,
               scrollHideEnabled: scrollHide,
+              overlayChromeHideAllowed: overlayChromeHideAllowed,
             ),
             left: 0,
             right: 0,

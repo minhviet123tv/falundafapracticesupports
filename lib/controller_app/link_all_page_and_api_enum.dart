@@ -98,7 +98,7 @@ enum MinghuiEnum {
   slovencina("https://sk.minghui.org/", "Slovenčina", 'slovencina'),
   srpski("https://sr.minghui.org/", "Српски", 'srpski'),
   thai("https://th.minghui.org/", "ไทย", 'thai'),
-  vietnamese("https://vi.minghui.org/", "Tiếng Việt", 'vietnamese'), // https://vn.minghui.org/news
+  vietnamese("https://daiphap.org/vn.minghui.org%2Fnews", "Tiếng Việt", 'vietnamese'), // https://vi.minghui.org/news
   turkce("https://tr.minghui.org/", "Türkçe", 'turkce'),
   ukrainian("https://uk.minghui.org/", "Українська", 'ukrainian')
   ;
@@ -139,7 +139,7 @@ enum VisaoconhanloaiEnum {
   slovencina("https://sk.minghui.org/2023/01/21/preco-existuje-ludstvo", "Slovenčina", 'slovencina'),
   srpski("https://sr.minghui.org/articles/6858", "Српски", 'srpski'),
   thai("https://th.minghui.org/html/articles/2023/1/31/3010.html", "ไทย", 'thai'),
-  vietnamese("https://vi.minghui.org/news/241240-vi-sao-co-nhan-loai.html", "Tiếng Việt", 'vietnamese'),
+  vietnamese("https://daiphap.org/vn.minghui.org/news/241240-vi-sao-co-nhan-loai.html", "Tiếng Việt", 'vietnamese'),
   turkce("https://tr.minghui.org/html/articles/2023/1/24/11239.html", "Türkçe", 'turkce'),
   ukrainian("https://uk.minghui.org/html/articles/2023/1/20/1155.html", "Українська", 'ukrainian')
   ;

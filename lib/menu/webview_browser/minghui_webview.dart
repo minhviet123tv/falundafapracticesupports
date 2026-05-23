@@ -45,9 +45,18 @@ class _MinghuiWebviewState extends State<MinghuiWebview>
           onProgress: (int progress) {
             setState(() => progressLoadWeb = progress);
           },
+          onPageStarted: (_) => onWebViewPageLoadStarted(),
           onPageFinished: (String url) {
             _currentUrl = url;
             unawaited(_onPageFinished());
+          },
+          onWebResourceError: (WebResourceError error) {
+            if (error.isForMainFrame == true) {
+              onWebViewMainFrameError();
+              if (inImmersiveMode) {
+                unawaited(exitImmersiveMode());
+              }
+            }
           },
           onUrlChange: (UrlChange change) {
             if (change.url != null) _currentUrl = change.url;
@@ -92,6 +101,7 @@ class _MinghuiWebviewState extends State<MinghuiWebview>
     );
     await installImmersiveScrollReporter(_controller);
     await onImmersivePageFinished();
+    await refreshImmersiveChromeHideAllowed(_controller);
     if (mounted) setState(() {});
   }
 
