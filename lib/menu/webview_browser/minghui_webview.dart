@@ -10,6 +10,7 @@ import '../../common/app_webview_config.dart';
 import '../../common/browser_helper.dart';
 import '../../common/compact_web_url_bar.dart';
 import '../../common/webview_immersive_mixin.dart';
+import '../../common/webview_scroll_chrome_mixin.dart';
 
 class MinghuiWebview extends StatefulWidget {
   static const String routeName = 'MinghuiWebview_routeName';
@@ -19,7 +20,10 @@ class MinghuiWebview extends StatefulWidget {
 }
 
 class _MinghuiWebviewState extends State<MinghuiWebview>
-    with SingleTickerProviderStateMixin, WebviewImmersiveMixin {
+    with
+        SingleTickerProviderStateMixin,
+        WebviewScrollChromeMixin,
+        WebviewImmersiveMixin {
   late final WebViewController _controller;
   late MinghuiEnum minghuiEnum;
   final double _border10 = 10.0;
@@ -105,6 +109,13 @@ class _MinghuiWebviewState extends State<MinghuiWebview>
     await shared.setString('languageCodeMinghui', languageCode);
   }
 
+  Future<void> _goToSiteHome() async {
+    final homeUrl = minghuiEnum.url;
+    _currentUrl = homeUrl;
+    await _controller.loadRequest(Uri.parse(homeUrl));
+    if (mounted) setState(() {});
+  }
+
   @override
   void dispose() {
     disposeImmersive();
@@ -168,6 +179,11 @@ class _MinghuiWebviewState extends State<MinghuiWebview>
               ],
             ),
           ),
+        ),
+        IconButton(
+          onPressed: () => unawaited(_goToSiteHome()),
+          icon: const Icon(Icons.home, size: 20),
+          tooltip: 'Về trang gốc',
         ),
         const Spacer(),
         IconButton(

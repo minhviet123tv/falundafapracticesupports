@@ -6,7 +6,9 @@ import 'package:wakelock_plus/wakelock_plus.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 import '../common/app_webview_config.dart';
 import '../common/browser_helper.dart';
+import '../common/book_webview_scroll_helper.dart';
 import '../common/compact_web_url_bar.dart';
+import '../common/webview_scroll_chrome_mixin.dart';
 
 /*
 webview_flutter: ^4.8.0
@@ -28,7 +30,9 @@ class WebViewBrowserAudio extends StatefulWidget {
   State<WebViewBrowserAudio> createState() => _WebViewBrowserAudioState();
 }
 
-class _WebViewBrowserAudioState extends State<WebViewBrowserAudio> {
+class _WebViewBrowserAudioState extends State<WebViewBrowserAudio>
+    with WebviewScrollChromeMixin {
+  static const double _audioToolbarHeight = kToolbarHeight;
 
   //A. Dữ liệu toàn cục
   late final WebViewController _controller; // Bộ điều khiển cho webview
@@ -67,6 +71,9 @@ class _WebViewBrowserAudioState extends State<WebViewBrowserAudio> {
             }
             unawaited(_injectPlaybackTrackingScript());
             unawaited(AppWebViewConfig.onPageFinishedEnhancements(_controller));
+            if (_showUrlBar) {
+              unawaited(_installScrollReporter());
+            }
           },
           onWebResourceError: (WebResourceError error) {
             debugPrint('''
@@ -111,6 +118,14 @@ class _WebViewBrowserAudioState extends State<WebViewBrowserAudio> {
         },
       )
       ..addJavaScriptChannel(
+        'ScrollReporter',
+        onMessageReceived: (JavaScriptMessage message) {
+          if (_showUrlBar) {
+            handleScrollChromeReport(message.message, _chromeBarHeight);
+          }
+        },
+      )
+      ..addJavaScriptChannel(
         'PlaybackState',
         onMessageReceived: (JavaScriptMessage message) {
           final state = message.message.toLowerCase();
@@ -132,6 +147,15 @@ class _WebViewBrowserAudioState extends State<WebViewBrowserAudio> {
       enableAndroidDebugging: kDebugMode,
     );
     await _loadInitialContent();
+  }
+
+  double get _chromeBarHeight => _showUrlBar
+      ? _audioToolbarHeight + CompactWebUrlBar.barHeight
+      : _audioToolbarHeight;
+
+  Future<void> _installScrollReporter() async {
+    await BookWebViewScrollHelper.installReporter(_controller);
+    resetScrollChromeTracking();
   }
 
   @override
@@ -240,52 +264,95 @@ class _WebViewBrowserAudioState extends State<WebViewBrowserAudio> {
     }
   }
 
+  Widget _buildAudioChromeBar() {
+    return Material(
+      color: Colors.green,
+      elevation: overlayChromeVisible ? 1 : 0,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          SizedBox(
+            height: _audioToolbarHeight,
+            child: AppBar(
+              backgroundColor: Colors.green,
+              title: Text(widget.title, style: textSize18),
+              actions: [
+                FutureBuilder<String?>(
+                  future: BrowserHelper.getCurrentUrl(_controller),
+                  builder: (context, snapshot) {
+                    if (!snapshot.hasData) return const SizedBox.shrink();
+                    return IconButton(
+                      onPressed: () {
+                        BrowserHelper.launchExternal(
+                          Uri.parse(snapshot.data!),
+                        );
+                      },
+                      icon: const Icon(Icons.open_in_new, size: 20),
+                    );
+                  },
+                ),
+              ],
+            ),
+          ),
+          if (_showUrlBar)
+            CompactWebUrlBar(
+              controller: _controller,
+              currentUrl: _currentUrl ?? widget.linkUrl,
+            ),
+        ],
+      ),
+    );
+  }
+
   //D. Trang
   @override
   Widget build(BuildContext context) {
-    return SafeArea(
-      child: Scaffold(
-        backgroundColor: Colors.green,
-        appBar: AppBar(
-          title: Text(widget.title, style: textSize18,),
-          actions: [
-            //IV. Icon open web (out app)
-            FutureBuilder<String?>(
-              future: BrowserHelper.getCurrentUrl(_controller),
-              builder: (BuildContext context, AsyncSnapshot<String?> snapshot) {
-                if(snapshot.hasData){
-                  return IconButton(
-                    onPressed: (){
-                      BrowserHelper.launchExternal(Uri.parse(snapshot.data!));
-                    },
-                    icon: Icon(Icons.open_in_new, size: 20,),
-                  );
-                } else {
-                  return SizedBox();
-                }
-              },),
-          ],
-        ),
-      
-        body: Column(
-          children: [
-            if (_showUrlBar)
-              CompactWebUrlBar(
-                controller: _controller,
-                currentUrl: _currentUrl ?? widget.linkUrl,
-              ),
-            Expanded(
-              child: Stack(
-                alignment: Alignment.center,
-                children: [
-                  const CircularProgressIndicator(),
-                  WebViewWidget(controller: _controller),
-                ],
-              ),
+    final topInset = MediaQuery.paddingOf(context).top;
+    final scrollHide = _showUrlBar;
+
+    return Scaffold(
+      backgroundColor: Colors.green,
+      body: Stack(
+        fit: StackFit.expand,
+        children: [
+          Positioned(
+            top: webViewTopOffset(
+              topInset: topInset,
+              chromeBarHeight: _chromeBarHeight,
+              immersiveProgress: 0,
+              scrollHideEnabled: scrollHide,
             ),
-          ],
-        ),
-      
+            left: 0,
+            right: 0,
+            bottom: 0,
+            child: scrollHide
+                ? DismissKeyboardWhenWebViewTapped(
+                    child: Stack(
+                      alignment: Alignment.center,
+                      children: [
+                        const CircularProgressIndicator(),
+                        WebViewWidget(controller: _controller),
+                      ],
+                    ),
+                  )
+                : Stack(
+                    alignment: Alignment.center,
+                    children: [
+                      const CircularProgressIndicator(),
+                      WebViewWidget(controller: _controller),
+                    ],
+                  ),
+          ),
+          Positioned(
+            top: topInset,
+            left: 0,
+            right: 0,
+            child: wrapChromeBarForScrollHide(
+              _buildAudioChromeBar(),
+              enabled: scrollHide,
+            ),
+          ),
+        ],
       ),
     );
   }

@@ -10,6 +10,7 @@ import '../../common/app_webview_config.dart';
 import '../../common/browser_helper.dart';
 import '../../common/compact_web_url_bar.dart';
 import '../../common/webview_immersive_mixin.dart';
+import '../../common/webview_scroll_chrome_mixin.dart';
 
 class VisaoconhanloaiWebview extends StatefulWidget {
   static const String routeName = 'VisaoconhanloaiWebview_routeName';
@@ -19,7 +20,10 @@ class VisaoconhanloaiWebview extends StatefulWidget {
 }
 
 class _VisaoconhanloaiWebviewState extends State<VisaoconhanloaiWebview>
-    with SingleTickerProviderStateMixin, WebviewImmersiveMixin {
+    with
+        SingleTickerProviderStateMixin,
+        WebviewScrollChromeMixin,
+        WebviewImmersiveMixin {
   late final WebViewController _controller;
   late VisaoconhanloaiEnum visaoconhanloaiEnum;
   final double _border10 = 10.0;
@@ -102,6 +106,13 @@ class _VisaoconhanloaiWebviewState extends State<VisaoconhanloaiWebview>
     await shared.setString('languageCodeVisaoconhanloai', languageCode);
   }
 
+  Future<void> _goToSiteHome() async {
+    final homeUrl = visaoconhanloaiEnum.url;
+    _currentUrl = homeUrl;
+    await _controller.loadRequest(Uri.parse(homeUrl));
+    if (mounted) setState(() {});
+  }
+
   @override
   void dispose() {
     disposeImmersive();
@@ -165,6 +176,11 @@ class _VisaoconhanloaiWebviewState extends State<VisaoconhanloaiWebview>
               ],
             ),
           ),
+        ),
+        IconButton(
+          onPressed: () => unawaited(_goToSiteHome()),
+          icon: const Icon(Icons.home, size: 20),
+          tooltip: 'Về trang gốc',
         ),
         const Spacer(),
         FutureBuilder<String?>(

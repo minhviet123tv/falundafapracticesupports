@@ -11,6 +11,7 @@ import '../controller_app/link_internet_sachchuyenphapluan_quocte.dart';
 import '../common/app_webview_config.dart';
 import '../common/book_tab_chrome.dart';
 import '../common/book_webview_scroll_helper.dart';
+import '../common/webview_scroll_chrome_mixin.dart';
 import '../common/book_webview_state_store.dart';
 import '../common/browser_helper.dart';
 import '../common/compact_web_url_bar.dart';
@@ -24,13 +25,11 @@ class ChuyenPhapLuanWebview extends StatefulWidget {
 }
 
 class _ChuyenPhapLuanWebviewState extends State<ChuyenPhapLuanWebview>
-    with WidgetsBindingObserver, SingleTickerProviderStateMixin {
+    with WidgetsBindingObserver, SingleTickerProviderStateMixin, WebviewScrollChromeMixin {
   static const String _prefsLanguageKey = 'LanguageNameOfChuyenPhapLuan';
   static const int _maxHistoryEntries = 80;
   static const double _toolbarHeight = BookWebViewScrollHelper.bookAppBarHeightPx;
   double get _chromeBarHeight => _toolbarHeight + CompactWebUrlBar.barHeight;
-  static const double _scrollDirectionThreshold = 36;
-  static const double _minScrollableExtra = 40;
   static const Color _statusBarBackground = Colors.black;
   static const SystemUiOverlayStyle _immersiveOverlayStyle = SystemUiOverlayStyle(
     statusBarColor: Colors.black,
@@ -39,7 +38,6 @@ class _ChuyenPhapLuanWebviewState extends State<ChuyenPhapLuanWebview>
     systemNavigationBarIconBrightness: Brightness.dark,
   );
   static const Duration _immersiveAnimDuration = Duration(milliseconds: 220);
-  static const Curve _immersiveAnimCurve = Curves.easeInOut;
   static const double _overlayToolbarHorizontalPadding = 10;
 
   late final WebViewController _controller;
@@ -52,9 +50,6 @@ class _ChuyenPhapLuanWebviewState extends State<ChuyenPhapLuanWebview>
   String? _currentUrl;
   Timer? _scrollSaveDebounce;
   bool _isRestoringScroll = false;
-  bool _overlayAppBarVisible = false;
-  double? _lastScrollY;
-  double _directionalScrollAccum = 0;
   VoidCallback? _chromeListener;
 
   String get _languageCode => _language.name;
@@ -154,10 +149,12 @@ class _ChuyenPhapLuanWebviewState extends State<ChuyenPhapLuanWebview>
       if (url is! String || url.isEmpty) return;
       if (y is! num) return;
 
-      if (_inImmersiveMode) {
-        final maxScrollPx = maxScroll is num ? maxScroll.toDouble() : 0.0;
-        _updateOverlayAppBarFromScroll(y.toDouble(), maxScrollPx);
-      }
+      final maxScrollPx = maxScroll is num ? maxScroll.toDouble() : 0.0;
+      updateOverlayChromeFromScroll(
+        y.toDouble(),
+        maxScrollPx,
+        _chromeBarHeight,
+      );
 
       final position = BookScrollPosition(
         scrollY: y.toDouble(),
@@ -174,54 +171,6 @@ class _ChuyenPhapLuanWebviewState extends State<ChuyenPhapLuanWebview>
     } catch (e) {
       debugPrint('Scroll report parse error: $e');
     }
-  }
-
-  void _updateOverlayAppBarFromScroll(double scrollY, double maxScroll) {
-    if (_isRestoringScroll || !mounted || !_inImmersiveMode) return;
-
-    final minScrollable = _chromeBarHeight + _minScrollableExtra;
-    if (maxScroll < minScrollable) {
-      _lastScrollY = scrollY;
-      _directionalScrollAccum = 0;
-      if (!_overlayAppBarVisible) {
-        setState(() => _overlayAppBarVisible = true);
-      }
-      return;
-    }
-
-    if (scrollY <= 20) {
-      _lastScrollY = scrollY;
-      _directionalScrollAccum = 0;
-      if (!_overlayAppBarVisible) {
-        setState(() => _overlayAppBarVisible = true);
-      }
-      return;
-    }
-
-    if (_lastScrollY != null) {
-      final delta = scrollY - _lastScrollY!;
-      if (delta != 0) {
-        if (delta > 0 && _directionalScrollAccum < 0) {
-          _directionalScrollAccum = 0;
-        } else if (delta < 0 && _directionalScrollAccum > 0) {
-          _directionalScrollAccum = 0;
-        }
-        _directionalScrollAccum += delta;
-
-        var nextVisible = _overlayAppBarVisible;
-        if (_directionalScrollAccum >= _scrollDirectionThreshold) {
-          nextVisible = false;
-          _directionalScrollAccum = 0;
-        } else if (_directionalScrollAccum <= -_scrollDirectionThreshold) {
-          nextVisible = true;
-          _directionalScrollAccum = 0;
-        }
-        if (nextVisible != _overlayAppBarVisible) {
-          setState(() => _overlayAppBarVisible = nextVisible);
-        }
-      }
-    }
-    _lastScrollY = scrollY;
   }
 
   @override
@@ -294,8 +243,7 @@ class _ChuyenPhapLuanWebviewState extends State<ChuyenPhapLuanWebview>
       _isRestoringScroll = false;
     }
 
-    _lastScrollY = null;
-    _directionalScrollAccum = 0;
+    resetScrollChromeTracking();
     if (mounted) {
       setState(() {});
     }
@@ -365,9 +313,8 @@ class _ChuyenPhapLuanWebviewState extends State<ChuyenPhapLuanWebview>
     await _captureScrollForCurrentPage();
     await _persistReadingState();
     if (!mounted) return;
-    _overlayAppBarVisible = false;
-    _lastScrollY = null;
-    _directionalScrollAccum = 0;
+    overlayChromeVisible = false;
+    resetScrollChromeTracking();
     BookTabChrome.immersive.value = true;
     await _immersiveAnim.forward();
   }
@@ -377,9 +324,8 @@ class _ChuyenPhapLuanWebviewState extends State<ChuyenPhapLuanWebview>
     await _captureScrollForCurrentPage();
     await _persistReadingState();
     if (!mounted) return;
-    _overlayAppBarVisible = true;
-    _lastScrollY = null;
-    _directionalScrollAccum = 0;
+    overlayChromeVisible = true;
+    resetScrollChromeTracking();
     BookTabChrome.immersive.value = false;
     await _immersiveAnim.reverse();
   }
@@ -631,24 +577,27 @@ class _ChuyenPhapLuanWebviewState extends State<ChuyenPhapLuanWebview>
   /// AppBar tab Book + thanh địa chỉ (một khối chrome).
   Widget _buildBookChromeBar() {
     final immersive = BookTabChrome.immersive.value;
-    final showElevation = !immersive || _overlayAppBarVisible;
-    return Material(
-      color: Colors.white,
-      elevation: showElevation ? 1 : 0,
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          SizedBox(
-            height: _toolbarHeight,
-            child: Padding(
-              padding: const EdgeInsets.symmetric(
-                horizontal: _overlayToolbarHorizontalPadding,
-              ),
-              child: Row(
-                children: [
-                  _languageMenuButton(),
-                  IconButton(
-                    onPressed: () => unawaited(_goToZflHomePage()),
+    final showElevation = !immersive || overlayChromeVisible;
+    return GestureDetector(
+      onTap: () => CompactWebUrlBar.dismissUrlFieldFocus(context),
+      behavior: HitTestBehavior.translucent,
+      child: Material(
+        color: Colors.white,
+        elevation: showElevation ? 1 : 0,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            SizedBox(
+              height: _toolbarHeight,
+              child: Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: _overlayToolbarHorizontalPadding,
+                ),
+                child: Row(
+                  children: [
+                    _languageMenuButton(),
+                    IconButton(
+                      onPressed: () => unawaited(_goToZflHomePage()),
                     icon: const Icon(Icons.menu_book, size: 20),
                     tooltip: 'Về đầu sách',
                   ),
@@ -658,47 +607,29 @@ class _ChuyenPhapLuanWebviewState extends State<ChuyenPhapLuanWebview>
               ),
             ),
           ),
-          CompactWebUrlBar(
-            controller: _controller,
-            currentUrl: _currentUrl ?? _language.urlChuyenPhapLuan,
-          ),
-        ],
+            CompactWebUrlBar(
+              controller: _controller,
+              currentUrl: _currentUrl ?? _language.urlChuyenPhapLuan,
+            ),
+          ],
+        ),
       ),
     );
   }
 
   Widget _buildBookToolbarLayer(double immersiveProgress) {
-    var bar = _buildBookChromeBar();
-    final useScrollHide = BookTabChrome.immersive.value;
-
-    if (useScrollHide) {
-      bar = AnimatedSlide(
-        offset: _overlayAppBarVisible
-            ? Offset.zero
-            : const Offset(0, -1),
-        duration: _immersiveAnimDuration,
-        curve: _immersiveAnimCurve,
-        child: bar,
-      );
-    }
+    var bar = wrapChromeBarForScrollHide(
+      _buildBookChromeBar(),
+      enabled: true,
+    );
 
     // Thu gọn: giữ AppBar tab Book hiện, chỉ animate WebView + menu bottom.
     if (_immersiveAnim.status == AnimationStatus.reverse) {
-      return ClipRect(
-        child: IgnorePointer(
-          ignoring: useScrollHide && !_overlayAppBarVisible,
-          child: bar,
-        ),
-      );
+      return ClipRect(child: bar);
     }
 
     if (immersiveProgress >= 1.0) {
-      return ClipRect(
-        child: IgnorePointer(
-          ignoring: useScrollHide && !_overlayAppBarVisible,
-          child: bar,
-        ),
-      );
+      return ClipRect(child: bar);
     }
 
     // Mở rộng: trượt AppBar tab Book lên rồi ẩn (cùng một widget).
@@ -718,9 +649,10 @@ class _ChuyenPhapLuanWebviewState extends State<ChuyenPhapLuanWebview>
   }
 
   Widget _webViewBody() {
-    return progressLoadWeb <= 20
+    final content = progressLoadWeb <= 20
         ? const Center(child: CircularProgressIndicator())
         : WebViewWidget(controller: _controller);
+    return DismissKeyboardWhenWebViewTapped(child: content);
   }
 
   Widget _buildUnifiedChrome(BuildContext context) {
@@ -740,7 +672,12 @@ class _ChuyenPhapLuanWebviewState extends State<ChuyenPhapLuanWebview>
             fit: StackFit.expand,
             children: [
               Positioned(
-                top: topInset + (1 - t) * _chromeBarHeight,
+                top: webViewTopOffset(
+                  topInset: topInset,
+                  chromeBarHeight: _chromeBarHeight,
+                  immersiveProgress: t,
+                  scrollHideEnabled: true,
+                ),
                 left: 0,
                 right: 0,
                 bottom: 0,
