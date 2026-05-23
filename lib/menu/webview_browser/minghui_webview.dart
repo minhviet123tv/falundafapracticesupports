@@ -9,6 +9,7 @@ import 'package:webview_flutter_wkwebview/webview_flutter_wkwebview.dart';
 
 import '../../controller_app/link_all_page_and_api_enum.dart';
 import '../../common/browser_helper.dart';
+import '../../common/compact_web_url_bar.dart';
 import '../../common/webview_immersive_mixin.dart';
 
 class MinghuiWebview extends StatefulWidget {
@@ -24,6 +25,7 @@ class _MinghuiWebviewState extends State<MinghuiWebview>
   late MinghuiEnum minghuiEnum;
   final double _border10 = 10.0;
   int progressLoadWeb = 0;
+  String? _currentUrl;
 
   @override
   void initState() {
@@ -52,7 +54,11 @@ class _MinghuiWebviewState extends State<MinghuiWebview>
             setState(() => progressLoadWeb = progress);
           },
           onPageFinished: (String url) {
+            _currentUrl = url;
             unawaited(_onPageFinished());
+          },
+          onUrlChange: (UrlChange change) {
+            if (change.url != null) _currentUrl = change.url;
           },
           onNavigationRequest: (NavigationRequest request) {
             if (request.url.startsWith('https://www.youtube.com/')) {
@@ -206,10 +212,18 @@ class _MinghuiWebviewState extends State<MinghuiWebview>
     );
   }
 
+  Widget _buildUrlBar() {
+    return CompactWebUrlBar(
+      controller: _controller,
+      currentUrl: _currentUrl ?? minghuiEnum.url,
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return buildImmersiveScaffold(
       toolbar: _buildToolbar(),
+      urlBar: _buildUrlBar(),
       onPop: () => Navigator.pop(context),
       body: progressLoadWeb <= 20
           ? const Center(child: CircularProgressIndicator())

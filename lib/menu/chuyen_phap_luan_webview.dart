@@ -14,6 +14,7 @@ import '../common/book_tab_chrome.dart';
 import '../common/book_webview_scroll_helper.dart';
 import '../common/book_webview_state_store.dart';
 import '../common/browser_helper.dart';
+import '../common/compact_web_url_bar.dart';
 
 /// Tab Book: đọc Chuyển Pháp Luân online theo [LanguageNameOfChuyenPhapLuan].
 class ChuyenPhapLuanWebview extends StatefulWidget {
@@ -28,6 +29,7 @@ class _ChuyenPhapLuanWebviewState extends State<ChuyenPhapLuanWebview>
   static const String _prefsLanguageKey = 'LanguageNameOfChuyenPhapLuan';
   static const int _maxHistoryEntries = 80;
   static const double _toolbarHeight = BookWebViewScrollHelper.bookAppBarHeightPx;
+  double get _chromeBarHeight => _toolbarHeight + CompactWebUrlBar.barHeight;
   static const double _scrollDirectionThreshold = 36;
   static const double _minScrollableExtra = 40;
   static const Color _statusBarBackground = Colors.black;
@@ -194,7 +196,7 @@ class _ChuyenPhapLuanWebviewState extends State<ChuyenPhapLuanWebview>
   void _updateOverlayAppBarFromScroll(double scrollY, double maxScroll) {
     if (_isRestoringScroll || !mounted || !_inImmersiveMode) return;
 
-    final minScrollable = _toolbarHeight + _minScrollableExtra;
+    final minScrollable = _chromeBarHeight + _minScrollableExtra;
     if (maxScroll < minScrollable) {
       _lastScrollY = scrollY;
       _directionalScrollAccum = 0;
@@ -642,38 +644,47 @@ class _ChuyenPhapLuanWebviewState extends State<ChuyenPhapLuanWebview>
     ];
   }
 
-  /// Một AppBar tab Book — chỉ đổi icon Mở rộng/Thu gọn khi immersive.
-  Widget _buildBookToolbar() {
+  /// AppBar tab Book + thanh địa chỉ (một khối chrome).
+  Widget _buildBookChromeBar() {
     final immersive = BookTabChrome.immersive.value;
     final showElevation = !immersive || _overlayAppBarVisible;
     return Material(
       color: Colors.white,
       elevation: showElevation ? 1 : 0,
-      child: SizedBox(
-        height: _toolbarHeight,
-        child: Padding(
-          padding: const EdgeInsets.symmetric(
-            horizontal: _overlayToolbarHorizontalPadding,
-          ),
-          child: Row(
-            children: [
-              _languageMenuButton(),
-              IconButton(
-                onPressed: () => unawaited(_goToZflHomePage()),
-                icon: const Icon(Icons.menu_book, size: 20),
-                tooltip: 'Về đầu sách',
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          SizedBox(
+            height: _toolbarHeight,
+            child: Padding(
+              padding: const EdgeInsets.symmetric(
+                horizontal: _overlayToolbarHorizontalPadding,
               ),
-              const Spacer(),
-              ..._navigationActions(immersive: immersive),
-            ],
+              child: Row(
+                children: [
+                  _languageMenuButton(),
+                  IconButton(
+                    onPressed: () => unawaited(_goToZflHomePage()),
+                    icon: const Icon(Icons.menu_book, size: 20),
+                    tooltip: 'Về đầu sách',
+                  ),
+                  const Spacer(),
+                  ..._navigationActions(immersive: immersive),
+                ],
+              ),
+            ),
           ),
-        ),
+          CompactWebUrlBar(
+            controller: _controller,
+            currentUrl: _currentUrl ?? _language.urlChuyenPhapLuan,
+          ),
+        ],
       ),
     );
   }
 
   Widget _buildBookToolbarLayer(double immersiveProgress) {
-    var bar = _buildBookToolbar();
+    var bar = _buildBookChromeBar();
     final useScrollHide = BookTabChrome.immersive.value;
 
     if (useScrollHide) {
@@ -710,7 +721,7 @@ class _ChuyenPhapLuanWebviewState extends State<ChuyenPhapLuanWebview>
     final curved = Curves.easeInOut.transform(immersiveProgress);
     return ClipRect(
       child: Transform.translate(
-        offset: Offset(0, -curved * _toolbarHeight),
+        offset: Offset(0, -curved * _chromeBarHeight),
         child: Opacity(
           opacity: (1 - curved).clamp(0.0, 1.0),
           child: IgnorePointer(
@@ -745,7 +756,7 @@ class _ChuyenPhapLuanWebviewState extends State<ChuyenPhapLuanWebview>
             fit: StackFit.expand,
             children: [
               Positioned(
-                top: topInset + (1 - t) * _toolbarHeight,
+                top: topInset + (1 - t) * _chromeBarHeight,
                 left: 0,
                 right: 0,
                 bottom: 0,

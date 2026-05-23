@@ -6,6 +6,7 @@ import 'package:webview_flutter/webview_flutter.dart';
 import 'package:webview_flutter_android/webview_flutter_android.dart'; // Import for Android features. | #docregion platform_imports
 import 'package:webview_flutter_wkwebview/webview_flutter_wkwebview.dart'; // Import for iOS features.
 import '../common/browser_helper.dart';
+import '../common/compact_web_url_bar.dart';
 
 /*
 webview_flutter: ^4.8.0
@@ -34,11 +35,16 @@ class _WebViewBrowserAudioState extends State<WebViewBrowserAudio> {
   var textSize16 = TextStyle(fontSize: 16);
   var textSize18 = TextStyle(fontSize: 18, fontWeight: FontWeight.w600);
   bool _isWakelockActive = false;
+  String? _currentUrl;
+  late final bool _showUrlBar;
 
   //B. Khởi tạo khi mới mở
   @override
   void initState() {
     super.initState();
+    final uri = Uri.tryParse(widget.linkUrl.trim());
+    _showUrlBar = uri == null || uri.scheme != 'file';
+    _currentUrl = _showUrlBar ? widget.linkUrl.trim() : null;
     // Keep screen awake while this audio webview is open.
     unawaited(_setWakelock(true));
 
@@ -72,6 +78,9 @@ class _WebViewBrowserAudioState extends State<WebViewBrowserAudio> {
           },
           onPageFinished: (String url) {
             debugPrint('Page finished loading: $url');
+            if (_showUrlBar) {
+              setState(() => _currentUrl = url);
+            }
             unawaited(_injectPlaybackTrackingScript());
           },
           onWebResourceError: (WebResourceError error) {
@@ -96,6 +105,9 @@ class _WebViewBrowserAudioState extends State<WebViewBrowserAudio> {
           },
           onUrlChange: (UrlChange change) {
             debugPrint('url change to ${change.url}');
+            if (_showUrlBar && change.url != null) {
+              setState(() => _currentUrl = change.url);
+            }
           },
 
           // Hàm Future openDialog | Có thể là dùng đối với trang web cần login
@@ -270,11 +282,22 @@ class _WebViewBrowserAudioState extends State<WebViewBrowserAudio> {
           ],
         ),
       
-        body: Stack(
-          alignment: Alignment.center,
+        body: Column(
           children: [
-            CircularProgressIndicator(),
-            WebViewWidget(controller: _controller),
+            if (_showUrlBar)
+              CompactWebUrlBar(
+                controller: _controller,
+                currentUrl: _currentUrl ?? widget.linkUrl,
+              ),
+            Expanded(
+              child: Stack(
+                alignment: Alignment.center,
+                children: [
+                  const CircularProgressIndicator(),
+                  WebViewWidget(controller: _controller),
+                ],
+              ),
+            ),
           ],
         ),
       

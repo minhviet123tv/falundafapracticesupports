@@ -1,0 +1,138 @@
+---
+description: Chế độ Mở rộng đọc WebView — immersive trong tab/push, một AppBar, ẩn menu bottom, cuộn ẩn/hiện thanh
+globs: lib/**/*webview*.dart,lib/common/webview_immersive*.dart,lib/common/book_tab_chrome.dart
+alwaysApply: false
+---
+
+# Mở rộng màn hình để đọc (WebView immersive)
+
+Pattern đọc full màn hình **không** mở `Navigator.push` sang trang fullscreen riêng. Dùng **một WebView**, **một thanh công cụ**, animate ẩn/hiện.
+
+## Kiến trúc
+
+```
+┌─────────────────────────────────────┐
+│ Status bar (đen khi immersive)      │
+├─────────────────────────────────────┤
+│ AppBar duy nhất (ẩn/hiện khi cuộn)  │  ← CÙNG widget, chỉ đổi icon Mở rộng ↔ Thu gọn
+├─────────────────────────────────────┤
+│ WebView (mở rộng theo animation)    │
+├─────────────────────────────────────┤
+│ Bottom nav (chỉ tab nội bộ app)     │  ← Ẩn bằng overlay + extendBody, KHÔNG set null đột ngột
+└─────────────────────────────────────┘
+```
+
+| Thành phần | Tab nội bộ (vd. Book) | Trang push từ Home |
+|------------|----------------------|-------------------|
+| Ẩn menu bottom | `BookTabChrome.immersive` + `extendBody` + `AnimatedSlide` | Không cần (route đã che menu) |
+| `bottomNavReserve` trong mixin | `kBottomNavigationBarHeight + safeBottom` | `0` |
+| Thoát mở rộng | Nút Thu gọn / Back hệ thống | Back hệ thống rồi `Navigator.pop` |
+
+## File mẫu (dự án này)
+
+| File | Vai trò |
+|------|---------|
+| `lib/common/webview_immersive_mixin.dart` | Logic dùng chung: animation, toolbar layer, scroll ẩn/hiện |
+| `lib/common/book_tab_chrome.dart` | `ValueNotifier<bool> immersive` — báo `main.dart` ẩn bottom nav |
+| `lib/common/book_webview_scroll_helper.dart` | `installReporter`, `bookAppBarHeightPx` (= 44) |
+| `lib/menu/chuyen_phap_luan_webview.dart` | Tab Book (immersive + lưu cuộn + offline) |
+| `lib/menu/webview_browser/minghui_webview.dart` | Push từ Home — Minghui |
+| `lib/menu/webview_browser/visaoconhanloai_webview.dart` | Push từ Home — Humankind |
+
+**Đã bỏ:** `ZflBookFullScreenWebview` + `Navigator.push` fullscreen (không dùng nữa).
+
+## Tích hợp màn WebView mới (checklist)
+
+### 1. State + mixin
+
+```dart
+class _MyWebviewState extends State<MyWebview>
+    with SingleTickerProviderStateMixin, WebviewImmersiveMixin {
+  @override
+  void initState() {
+    super.initState();
+    initImmersive();
+    // WebViewController + ScrollReporter channel → handleImmersiveScrollReport
+  }
+
+  @override
+  void dispose() {
+    disposeImmersive();
+    super.dispose();
+  }
+}
+```
+
+### 2. ScrollReporter (bắt buộc cho ẩn/hiện khi cuộn)
+
+Trên `WebViewController`:
+
+- Channel `ScrollReporter` → `handleImmersiveScrollReport(message.message)`
+- `onPageFinished` → `await installImmersiveScrollReporter(_controller)`
+
+### 3. Một toolbar — `Widget _buildToolbar()`
+
+- Ngôn ngữ, điều hướng web, mở ngoài (tùy màn)
+- **`buildImmersiveToggleButton()`** — icon `zoom_out_map` / `fullscreen_exit`
+- **Không** tạo `_buildOverlayToolbar()` riêng
+- **Không** viền quanh dropdown ngôn ngữ (padding đủ là được)
+
+### 4. Build
+
+```dart
+@override
+Widget build(BuildContext context) {
+  return buildImmersiveScaffold(
+    toolbar: _buildToolbar(),
+    onPop: () => Navigator.pop(context), // hoặc logic back tab
+    body: loading ? CircularProgressIndicator() : WebViewWidget(controller: _controller),
+  );
+}
+```
+
+Tab Book: override `externalImmersiveNotifier` → `BookTabChrome.immersive` và `bottomNavReserve` (xem `chuyen_phap_luan_webview` — logic tương tự mixin, có thể gộp mixin sau).
+
+### 5. Tab Book — `main.dart`
+
+Khi `indexMenu == book` và `BookTabChrome.immersive`:
+
+- `Scaffold(extendBody: true)` + body `Stack`: WebView full + bottom nav **overlay**
+- `AnimatedSlide(offset: immersive ? (0,1) : zero)` — **không** `bottomNavigationBar: null` (để lại vùng trắng)
+- WebView padding dưới: `(1 - t) * bottomNavReserve` đồng bộ animation
+
+## Animation (220ms, `Curves.easeInOut`)
+
+- **Vào mở rộng:** AppBar trượt lên + mờ (`Transform` + `Opacity` theo `t`), WebView `top` từ `topInset + toolbarHeight` → `topInset`
+- **Đang immersive:** AppBar ẩn; cuộn lên → `AnimatedSlide` hiện **cùng** toolbar
+- **Ra mở rộng:** AppBar **giữ hiện** trong lúc `reverse` (không nháy), chỉ WebView + bottom nav animate
+- **Không** `scrollOffset ±44px` khi đổi layout (gây “chớp”)
+
+## AppBar ẩn/hiện khi cuộn (trong immersive)
+
+- `scrollY <= 20` → luôn hiện
+- `maxScroll < toolbarHeight + 40` → luôn hiện (trang ngắn)
+- Cộng dồn `delta` cùng chiều ≥ **36px** mới toggle
+- Chỉ xử lý khi `inImmersiveMode` (`immersiveAnim.value >= 1.0`)
+
+## Sai lầm cần tránh
+
+| Sai | Đúng |
+|-----|------|
+| Push `FullScreenWebview` mới | Immersive trên cùng controller |
+| Hai AppBar (normal + overlay) | Một `_buildToolbar()` |
+| `bottomNavigationBar: null` khi ẩn | `extendBody` + slide nav xuống |
+| `AnimatedSlide` nav nhưng Scaffold vẫn giữ chỗ | Nav trong `Stack` overlay |
+| Bù scroll ±toolbar khi mở rộng | Chỉ animate layout Flutter |
+
+## Copy sang app khác
+
+1. Copy `webview_immersive_mixin.dart` + `book_webview_scroll_helper.dart` (phần `installReporterJs` / `readPositionJs`)
+2. Copy hoặc tạo `*TabChrome` `ValueNotifier<bool>` nếu có bottom nav cố định
+3. Gắn mixin vào từng màn WebView đọc dài
+4. Đồng bộ `toolbarHeight` (44px) giữa tab và mixin
+5. Test: mở rộng → cuộn ẩn/hiện → thu gọn → đổi tab → back hệ thống
+
+## Liên quan
+
+- Lưu/khôi phục cuộn, tránh nhảy: rule `webview-reading-scroll.mdc`
+- Offline pack tab Book: tách feature, không bắt buộc cho immersive

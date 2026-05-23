@@ -5,6 +5,7 @@ import 'package:flutter/services.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 
 import 'book_webview_scroll_helper.dart';
+import 'compact_web_url_bar.dart';
 
 /// Chế độ mở rộng trong tab (ẩn AppBar, cuộn để hiện lại) — tab Book hoặc trang push từ Home.
 mixin WebviewImmersiveMixin<T extends StatefulWidget> on State<T>, SingleTickerProviderStateMixin<T> {
@@ -188,6 +189,7 @@ mixin WebviewImmersiveMixin<T extends StatefulWidget> on State<T>, SingleTickerP
 
   Widget buildImmersiveScaffold({
     required Widget toolbar,
+    Widget? urlBar,
     required Widget body,
     VoidCallback? onPop,
   }) {
@@ -200,18 +202,24 @@ mixin WebviewImmersiveMixin<T extends StatefulWidget> on State<T>, SingleTickerP
       },
       child: AnimatedBuilder(
         animation: immersiveAnim,
-        builder: (context, _) => _buildImmersiveChrome(toolbar: toolbar, body: body),
+        builder: (context, _) =>
+            _buildImmersiveChrome(toolbar: toolbar, urlBar: urlBar, body: body),
       ),
     );
   }
 
+  double _chromeBarHeight(Widget? urlBar) =>
+      toolbarHeight + (urlBar != null ? CompactWebUrlBar.barHeight : 0);
+
   Widget _buildImmersiveChrome({
     required Widget toolbar,
+    Widget? urlBar,
     required Widget body,
   }) {
     final topInset = MediaQuery.paddingOf(context).top;
     final t = Curves.easeInOut.transform(immersiveAnim.value);
     final bottomPad = (1 - t) * bottomNavReserve;
+    final chromeHeight = _chromeBarHeight(urlBar);
 
     return AnnotatedRegion<SystemUiOverlayStyle>(
       value: t >= 0.5 ? _immersiveOverlayStyle : SystemUiOverlayStyle.dark,
@@ -223,7 +231,7 @@ mixin WebviewImmersiveMixin<T extends StatefulWidget> on State<T>, SingleTickerP
             fit: StackFit.expand,
             children: [
               Positioned(
-                top: topInset + (1 - t) * toolbarHeight,
+                top: topInset + (1 - t) * chromeHeight,
                 left: 0,
                 right: 0,
                 bottom: 0,
@@ -245,7 +253,7 @@ mixin WebviewImmersiveMixin<T extends StatefulWidget> on State<T>, SingleTickerP
                 top: topInset,
                 left: 0,
                 right: 0,
-                child: _buildToolbarLayer(toolbar),
+                child: _buildToolbarLayer(toolbar: toolbar, urlBar: urlBar),
               ),
             ],
           ),
@@ -254,21 +262,28 @@ mixin WebviewImmersiveMixin<T extends StatefulWidget> on State<T>, SingleTickerP
     );
   }
 
-  Widget _buildToolbarLayer(Widget toolbar) {
+  Widget _buildToolbarLayer({required Widget toolbar, Widget? urlBar}) {
     final t = Curves.easeInOut.transform(immersiveAnim.value);
     final useScrollHide = immersiveActive.value;
+    final chromeHeight = _chromeBarHeight(urlBar);
 
     Widget bar = Material(
       color: Colors.white,
       elevation: (!immersiveActive.value || _overlayAppBarVisible) ? 1 : 0,
-      child: SizedBox(
-        height: toolbarHeight,
-        child: Padding(
-          padding: const EdgeInsets.symmetric(
-            horizontal: _toolbarHorizontalPadding,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          SizedBox(
+            height: toolbarHeight,
+            child: Padding(
+              padding: const EdgeInsets.symmetric(
+                horizontal: _toolbarHorizontalPadding,
+              ),
+              child: toolbar,
+            ),
           ),
-          child: toolbar,
-        ),
+          if (urlBar != null) urlBar,
+        ],
       ),
     );
 
@@ -304,7 +319,7 @@ mixin WebviewImmersiveMixin<T extends StatefulWidget> on State<T>, SingleTickerP
     final curved = Curves.easeInOut.transform(t);
     return ClipRect(
       child: Transform.translate(
-        offset: Offset(0, -curved * toolbarHeight),
+        offset: Offset(0, -curved * chromeHeight),
         child: Opacity(
           opacity: (1 - curved).clamp(0.0, 1.0),
           child: IgnorePointer(

@@ -1,12 +1,12 @@
 ---
-description: WebView đọc sách — lưu/khôi phục cuộn, AppBar ẩn/hiện, tránh nhảy vị trí
-globs: lib/**/*webview*.dart,lib/common/book_webview*.dart
+description: WebView đọc sách — lưu/khôi phục cuộn, tránh nhảy vị trí (kèm immersive xem webview-immersive-read.mdc)
+globs: lib/**/*webview*.dart,lib/common/book_webview*.dart,lib/common/webview_immersive*.dart
 alwaysApply: false
 ---
 
-# WebView reading scroll (tab Book immersive + All Books)
+# WebView reading scroll
 
-Áp dụng khi WebView đọc sách dùng chung store/JS helper.
+Áp dụng khi WebView đọc sách dùng chung store/JS helper. **Chế độ Mở rộng đọc full màn:** xem rule `webview-immersive-read.mdc`.
 
 ## Lưu vị trí đọc
 
@@ -29,20 +29,10 @@ BookWebViewScrollHelper.cancelPendingRestores();
 if (BookWebViewScrollHelper.shouldSkipRestore(saved, current, scrollOffsetPx: offset)) return;
 ```
 
-## AppBar ẩn/hiện (overlay — tab Book immersive)
-
-- Ẩn khi cuộn xuống, hiện khi cuộn lên / gần đầu trang (`scrollY <= ~20`).
-- Chỉ toggle khi **đủ chiều cao cuộn**: `maxScroll >= toolbarHeight + ~40`.
-- Dùng **cộng dồn** `delta` cùng chiều (`~36px`), không chỉ delta một frame — cuộn chậm vẫn ẩn/hiện.
-- Đổi chiều cuộn → reset accum; đã ẩn/hiện rồi thì không `setState` lại cùng chiều.
-- Tab Book **mở rộng**: immersive trong tab (`BookTabChrome`), không push trang mới.
-
 ## File mẫu (dự án này)
 
 - `lib/common/book_webview_scroll_helper.dart` — JS + restore/cancel
-- `lib/common/book_webview_state_store.dart` — persist
-- `lib/common/book_tab_chrome.dart` — ẩn menu bottom khi immersive
-- `lib/menu/chuyen_phap_luan_webview.dart` — tab Book + immersive
-- `lib/menu/all_books_webview.dart` — All Books (enum đa ngôn ngữ)
+- `lib/common/book_webview_state_store.dart` — persist (tab Book)
+- `lib/menu/all_books_webview.dart` — All Books (chưa immersive)
 
-Copy rule + helper/store pattern sang dự án khác; đổi tên channel/store key cho phù hợp.
+Copy helper/store pattern sang dự án khác; đổi tên channel/store key cho phù hợp.
