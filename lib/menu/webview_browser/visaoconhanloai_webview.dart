@@ -4,10 +4,9 @@ import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:webview_flutter/webview_flutter.dart';
-import 'package:webview_flutter_android/webview_flutter_android.dart';
-import 'package:webview_flutter_wkwebview/webview_flutter_wkwebview.dart';
 
 import '../../controller_app/link_all_page_and_api_enum.dart';
+import '../../common/app_webview_config.dart';
 import '../../common/browser_helper.dart';
 import '../../common/compact_web_url_bar.dart';
 import '../../common/webview_immersive_mixin.dart';
@@ -33,18 +32,7 @@ class _VisaoconhanloaiWebviewState extends State<VisaoconhanloaiWebview>
     initImmersive();
     visaoconhanloaiEnum = VisaoconhanloaiEnum.vietnamese;
 
-    late final PlatformWebViewControllerCreationParams params;
-    if (WebViewPlatform.instance is WebKitWebViewPlatform) {
-      params = WebKitWebViewControllerCreationParams(
-        allowsInlineMediaPlayback: true,
-        mediaTypesRequiringUserAction: const <PlaybackMediaTypes>{},
-      );
-    } else {
-      params = const PlatformWebViewControllerCreationParams();
-    }
-
-    final WebViewController controller =
-        WebViewController.fromPlatformCreationParams(params);
+    final WebViewController controller = AppWebViewConfig.createController();
     controller
       ..setJavaScriptMode(JavaScriptMode.unrestricted)
       ..setBackgroundColor(const Color(0x00000000))
@@ -82,19 +70,19 @@ class _VisaoconhanloaiWebviewState extends State<VisaoconhanloaiWebview>
             SnackBar(content: Text(message.message)),
           );
         },
-      )
-      ..loadRequest(Uri.parse(visaoconhanloaiEnum.url));
-
-    if (controller.platform is AndroidWebViewController) {
-      (controller.platform as AndroidWebViewController)
-          .setMediaPlaybackRequiresUserGesture(false);
-    }
+      );
 
     _controller = controller;
-    unawaited(_getLanguageLink());
+    unawaited(_bootstrapWebView());
+  }
+
+  Future<void> _bootstrapWebView() async {
+    await AppWebViewConfig.applyPlatformSettings(_controller);
+    await _getLanguageLink();
   }
 
   Future<void> _onPageFinished() async {
+    await AppWebViewConfig.onPageFinishedEnhancements(_controller);
     await installImmersiveScrollReporter(_controller);
     await onImmersivePageFinished();
     if (mounted) setState(() {});

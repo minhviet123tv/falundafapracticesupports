@@ -33,6 +33,11 @@ class _CompactWebUrlBarState extends State<CompactWebUrlBar> {
     _textController = TextEditingController(
       text: WebUrlResolver.displayForUrl(widget.currentUrl),
     );
+    _textController.addListener(_onTextChanged);
+  }
+
+  void _onTextChanged() {
+    if (mounted) setState(() {});
   }
 
   @override
@@ -47,9 +52,16 @@ class _CompactWebUrlBarState extends State<CompactWebUrlBar> {
 
   @override
   void dispose() {
+    _textController.removeListener(_onTextChanged);
     _textController.dispose();
     _focusNode.dispose();
     super.dispose();
+  }
+
+  void _clearAddress() {
+    _textController.clear();
+    setState(() => _editing = true);
+    _focusNode.requestFocus();
   }
 
   Future<void> _go() async {
@@ -126,9 +138,23 @@ class _CompactWebUrlBarState extends State<CompactWebUrlBar> {
                       borderRadius: BorderRadius.circular(6),
                       borderSide: const BorderSide(color: Colors.green),
                     ),
+                    suffixIcon: _textController.text.isEmpty
+                        ? null
+                        : IconButton(
+                            onPressed: _clearAddress,
+                            icon: const Icon(Icons.close, size: 16),
+                            padding: EdgeInsets.zero,
+                            constraints: const BoxConstraints(
+                              minWidth: 28,
+                              minHeight: 28,
+                            ),
+                            tooltip: 'Xóa',
+                            visualDensity: VisualDensity.compact,
+                          ),
                   ),
                   textInputAction: TextInputAction.go,
                   onTap: () => setState(() => _editing = true),
+                  onChanged: (_) => setState(() => _editing = true),
                   onSubmitted: (_) => _go(),
                 ),
               ),

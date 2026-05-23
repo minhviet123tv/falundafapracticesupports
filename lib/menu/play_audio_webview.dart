@@ -1,10 +1,10 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'dart:async';
 
 import 'package:wakelock_plus/wakelock_plus.dart';
 import 'package:webview_flutter/webview_flutter.dart';
-import 'package:webview_flutter_android/webview_flutter_android.dart'; // Import for Android features. | #docregion platform_imports
-import 'package:webview_flutter_wkwebview/webview_flutter_wkwebview.dart'; // Import for iOS features.
+import '../common/app_webview_config.dart';
 import '../common/browser_helper.dart';
 import '../common/compact_web_url_bar.dart';
 
@@ -48,23 +48,7 @@ class _WebViewBrowserAudioState extends State<WebViewBrowserAudio> {
     // Keep screen awake while this audio webview is open.
     unawaited(_setWakelock(true));
 
-    // #docregion platform_features
-    late final PlatformWebViewControllerCreationParams params;
-
-    if (WebViewPlatform.instance is WebKitWebViewPlatform) {
-      params = WebKitWebViewControllerCreationParams(
-        allowsInlineMediaPlayback: true,
-        mediaTypesRequiringUserAction: const <PlaybackMediaTypes>{},
-      );
-    } else {
-      params = const PlatformWebViewControllerCreationParams();
-    }
-
-    //I. Tạo một controller của webview
-    final WebViewController controller = WebViewController.fromPlatformCreationParams(params);
-    // #enddocregion platform_features
-
-    // Cài đặt các thuộc tính, thông số cần có để mở được web cho controller
+    final WebViewController controller = AppWebViewConfig.createController();
     controller
       ..setJavaScriptMode(JavaScriptMode.unrestricted)
       ..setBackgroundColor(const Color(0x00000000))
@@ -82,6 +66,7 @@ class _WebViewBrowserAudioState extends State<WebViewBrowserAudio> {
               setState(() => _currentUrl = url);
             }
             unawaited(_injectPlaybackTrackingScript());
+            unawaited(AppWebViewConfig.onPageFinishedEnhancements(_controller));
           },
           onWebResourceError: (WebResourceError error) {
             debugPrint('''
@@ -137,16 +122,16 @@ class _WebViewBrowserAudioState extends State<WebViewBrowserAudio> {
         },
       );
 
-    // Cài đặt cho thiết bị | #docregion platform_features
-    if (controller.platform is AndroidWebViewController) {
-      AndroidWebViewController.enableDebugging(true);
-      (controller.platform as AndroidWebViewController)
-          .setMediaPlaybackRequiresUserGesture(false);
-    }
-
-    //II. Khai báo chính thức cho controller toàn cục
     _controller = controller;
-    _loadInitialContent();
+    unawaited(_bootstrapWebView());
+  }
+
+  Future<void> _bootstrapWebView() async {
+    await AppWebViewConfig.applyPlatformSettings(
+      _controller,
+      enableAndroidDebugging: kDebugMode,
+    );
+    await _loadInitialContent();
   }
 
   @override

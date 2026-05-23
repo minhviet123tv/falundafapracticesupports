@@ -1,11 +1,14 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'package:flutter/foundation.dart';
 import 'package:webview_flutter/webview_flutter.dart';
-import 'package:webview_flutter_android/webview_flutter_android.dart'; // Import for Android features. | #docregion platform_imports
-import 'package:webview_flutter_wkwebview/webview_flutter_wkwebview.dart'; // Import for iOS features.
 import 'package:url_launcher/url_launcher.dart';
+
+import '../common/app_webview_config.dart';
 
 /*
 webview_flutter: ^4.8.0
@@ -46,23 +49,7 @@ class _WebViewBrowserState extends State<WebViewBrowser> {
   void initState() {
     super.initState();
 
-    // #docregion platform_features
-    late final PlatformWebViewControllerCreationParams params;
-
-    if (WebViewPlatform.instance is WebKitWebViewPlatform) {
-      params = WebKitWebViewControllerCreationParams(
-        allowsInlineMediaPlayback: true,
-        mediaTypesRequiringUserAction: const <PlaybackMediaTypes>{},
-      );
-    } else {
-      params = const PlatformWebViewControllerCreationParams();
-    }
-
-    //I. Tạo một controller của webview
-    final WebViewController controller = WebViewController.fromPlatformCreationParams(params);
-    // #enddocregion platform_features
-
-    // Cài đặt các thuộc tính, thông số cần có để mở được web cho controller
+    final WebViewController controller = AppWebViewConfig.createController();
     controller
       ..setJavaScriptMode(JavaScriptMode.unrestricted)
       ..setBackgroundColor(const Color(0x00000000))
@@ -118,23 +105,19 @@ class _WebViewBrowserState extends State<WebViewBrowser> {
             SnackBar(content: Text(message.message)),
           );
         },
-      )
+      );
 
-      // Trang web đầu tiên khi mới mở trang
-      ..loadRequest(Uri.parse('${widget.linkUrl}')); // https://www.ganjingworld.com/embed/1fdmph5i6al3ExcRdoWQUzS541l51c
-
-    // Cài đặt cho thiết bị | #docregion platform_features
-    if (controller.platform is AndroidWebViewController) {
-      AndroidWebViewController.enableDebugging(true);
-      (controller.platform as AndroidWebViewController)
-          .setMediaPlaybackRequiresUserGesture(false);
-    }
-
-    //II. Khai báo chính thức cho controller toàn cục
     _controller = controller;
-
-    //III. Lấy tình trạng nút gợi ý
+    unawaited(_bootstrapWebView());
     _getHideSussgest();
+  }
+
+  Future<void> _bootstrapWebView() async {
+    await AppWebViewConfig.applyPlatformSettings(
+      _controller,
+      enableAndroidDebugging: kDebugMode,
+    );
+    await _controller.loadRequest(Uri.parse(widget.linkUrl));
   }
 
   //B.1 Lấy số lần login hiện tại

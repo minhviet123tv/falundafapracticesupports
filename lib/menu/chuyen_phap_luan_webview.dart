@@ -6,10 +6,9 @@ import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:webview_flutter/webview_flutter.dart';
-import 'package:webview_flutter_android/webview_flutter_android.dart';
-import 'package:webview_flutter_wkwebview/webview_flutter_wkwebview.dart';
 
 import '../controller_app/link_internet_sachchuyenphapluan_quocte.dart';
+import '../common/app_webview_config.dart';
 import '../common/book_tab_chrome.dart';
 import '../common/book_webview_scroll_helper.dart';
 import '../common/book_webview_state_store.dart';
@@ -72,18 +71,7 @@ class _ChuyenPhapLuanWebviewState extends State<ChuyenPhapLuanWebview>
     );
     _language = LanguageNameOfChuyenPhapLuan.vietnamese;
 
-    late final PlatformWebViewControllerCreationParams params;
-    if (WebViewPlatform.instance is WebKitWebViewPlatform) {
-      params = WebKitWebViewControllerCreationParams(
-        allowsInlineMediaPlayback: true,
-        mediaTypesRequiringUserAction: const <PlaybackMediaTypes>{},
-      );
-    } else {
-      params = const PlatformWebViewControllerCreationParams();
-    }
-
-    final WebViewController controller =
-        WebViewController.fromPlatformCreationParams(params);
+    final WebViewController controller = AppWebViewConfig.createController();
     controller
       ..setJavaScriptMode(JavaScriptMode.unrestricted)
       ..setBackgroundColor(const Color(0x00000000))
@@ -138,11 +126,6 @@ class _ChuyenPhapLuanWebviewState extends State<ChuyenPhapLuanWebview>
           );
         },
       );
-
-    if (controller.platform is AndroidWebViewController) {
-      (controller.platform as AndroidWebViewController)
-          .setMediaPlaybackRequiresUserGesture(false);
-    }
 
     _controller = controller;
     _chromeListener = () {
@@ -252,6 +235,7 @@ class _ChuyenPhapLuanWebviewState extends State<ChuyenPhapLuanWebview>
   }
 
   Future<void> _loadSavedLanguageAndOpen() async {
+    await AppWebViewConfig.applyPlatformSettings(_controller);
     final shared = await SharedPreferences.getInstance();
     final savedName = shared.getString(_prefsLanguageKey) ?? 'vietnamese';
     try {

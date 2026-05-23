@@ -118,3 +118,7 @@ flutter:
   #
   # For details regarding fonts from package dependencies,
   # see https://flutter.dev/custom-fonts/#from-packages
+
+# Mixed-content images (https page + http assets) need webview_flutter_android 4.8+.
+dependency_overrides:
+  webview_flutter_android: ^4.12.0
