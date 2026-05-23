@@ -406,36 +406,9 @@ class _ChuyenPhapLuanWebviewState extends State<ChuyenPhapLuanWebview>
     }
   }
 
-  Future<void> _goForward() async {
-    await _captureScrollForCurrentPage();
-    await _persistReadingState();
-
-    if (await _controller.canGoForward()) {
-      await _controller.goForward();
-      return;
-    }
-
-    if (_readingState.historyIndex < _readingState.history.length - 1) {
-      final newIndex = _readingState.historyIndex + 1;
-      final url = _readingState.history[newIndex];
-      _readingState = _readingState.withNavigation(
-        url: url,
-        history: _readingState.history,
-        historyIndex: newIndex,
-      );
-      _currentUrl = url;
-      await _controller.loadRequest(Uri.parse(url));
-    }
-  }
-
   Future<bool> _canGoBack() async {
     if (await _controller.canGoBack()) return true;
     return _readingState.historyIndex > 0;
-  }
-
-  Future<bool> _canGoForward() async {
-    if (await _controller.canGoForward()) return true;
-    return _readingState.historyIndex < _readingState.history.length - 1;
   }
 
   Future<void> _onSystemBack() async {
@@ -523,32 +496,6 @@ class _ChuyenPhapLuanWebviewState extends State<ChuyenPhapLuanWebview>
 
   List<Widget> _navigationActions({required bool immersive}) {
     return [
-      FutureBuilder<bool>(
-        future: _canGoBack(),
-        builder: (context, snapshot) {
-          final enabled = snapshot.data ?? false;
-          return IconButton(
-            onPressed: enabled ? () => unawaited(_goBack()) : null,
-            icon: Icon(
-              Icons.arrow_circle_left_outlined,
-              color: enabled ? null : Colors.grey.shade400,
-            ),
-          );
-        },
-      ),
-      FutureBuilder<bool>(
-        future: _canGoForward(),
-        builder: (context, snapshot) {
-          final enabled = snapshot.data ?? false;
-          return IconButton(
-            onPressed: enabled ? () => unawaited(_goForward()) : null,
-            icon: Icon(
-              Icons.arrow_circle_right_outlined,
-              color: enabled ? null : Colors.grey.shade400,
-            ),
-          );
-        },
-      ),
       FutureBuilder<dynamic>(
         future: BrowserHelper.getCurrentUrl(_controller),
         builder: (context, snapshot) {
