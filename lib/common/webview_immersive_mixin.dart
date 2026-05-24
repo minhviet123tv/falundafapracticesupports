@@ -8,7 +8,7 @@ import 'package:webview_flutter/webview_flutter.dart';
 import 'book_webview_scroll_helper.dart';
 import 'compact_web_url_bar.dart';
 
-/// Chrome (AppBar + URL): WebView luôn full dưới status bar; ẩn/hiện chỉ [AnimatedSlide].
+/// Chrome (AppBar + URL) trên, WebView [Expanded] ngay dưới; ẩn chrome = thu chiều cao, WebView mở rộng theo.
 mixin WebviewImmersiveMixin<T extends StatefulWidget> on State<T>, SingleTickerProviderStateMixin<T> {
   static const double toolbarHeight = BookWebViewScrollHelper.bookAppBarHeightPx;
   static const double _scrollDirectionThreshold = 36;
@@ -17,6 +17,7 @@ mixin WebviewImmersiveMixin<T extends StatefulWidget> on State<T>, SingleTickerP
   static const double _minScrollableExtra = 40;
   static const Duration _immersiveToggleCooldown = Duration(milliseconds: 400);
   static const Duration _scrollHandleThrottle = Duration(milliseconds: 80);
+  static const Duration _postHideRevealSuppress = Duration(milliseconds: 500);
   static const double _scrollImpulsePx = 12;
   static const Color _statusBarBackground = Colors.black;
   static const SystemUiOverlayStyle _immersiveOverlayStyle = SystemUiOverlayStyle(
@@ -25,19 +26,20 @@ mixin WebviewImmersiveMixin<T extends StatefulWidget> on State<T>, SingleTickerP
     systemNavigationBarColor: Colors.white,
     systemNavigationBarIconBrightness: Brightness.dark,
   );
-  static const Duration _chromeSlideDuration = Duration(milliseconds: 220);
-  static const Curve _chromeSlideCurve = Curves.easeInOut;
+  static const Duration _chromeAnimDuration = Duration(milliseconds: 220);
+  static const Curve _chromeAnimCurve = Curves.easeInOut;
   static const double _toolbarHorizontalPadding = 10;
 
+  /// 0 = chrome hiện đủ; 1 = chrome ẩn (WebView đã mở rộng lên).
   late final AnimationController immersiveAnim;
   final ValueNotifier<bool> immersiveActive = ValueNotifier<bool>(false);
 
-  /// Chrome overlay đang trượt xuống (hiện). false = đã trượt lên (ẩn).
   bool _overlayChromeVisible = true;
   double? _lastScrollY;
   double _directionalScrollAccum = 0;
   DateTime? _lastImmersiveToggleAt;
   DateTime? _lastScrollHandleAt;
+  DateTime? _suppressChromeRevealUntil;
 
   bool get immersiveHasUrlBar => true;
 
@@ -51,10 +53,13 @@ mixin WebviewImmersiveMixin<T extends StatefulWidget> on State<T>, SingleTickerP
 
   bool get inImmersiveMode => immersiveActive.value;
 
+  bool get _chromeFullyHidden =>
+      immersiveActive.value && immersiveAnim.value >= 1.0;
+
   void initImmersive() {
     immersiveAnim = AnimationController(
       vsync: this,
-      duration: _chromeSlideDuration,
+      duration: _chromeAnimDuration,
       value: 0,
     );
     externalImmersiveNotifier?.addListener(_onExternalImmersiveChanged);
@@ -83,8 +88,17 @@ mixin WebviewImmersiveMixin<T extends StatefulWidget> on State<T>, SingleTickerP
     return DateTime.now().difference(last) < _immersiveToggleCooldown;
   }
 
+  bool _chromeRevealSuppressActive() {
+    final until = _suppressChromeRevealUntil;
+    if (until == null) return false;
+    return DateTime.now().isBefore(until);
+  }
+
+  double _chromeRevealFactor() =>
+      (1.0 - _chromeAnimCurve.transform(immersiveAnim.value)).clamp(0.0, 1.0);
+
   void handleImmersiveScrollReport(String message) {
-    if (!mounted) return;
+    if (!mounted || immersiveAnim.isAnimating) return;
     try {
       final decoded = jsonDecode(message);
       if (decoded is! Map) return;
@@ -111,14 +125,19 @@ mixin WebviewImmersiveMixin<T extends StatefulWidget> on State<T>, SingleTickerP
     if (maxScroll < minScrollable) {
       _lastScrollY = scrollY;
       _directionalScrollAccum = 0;
-      _setOverlayChromeVisible(true, bypassCooldown: true);
+      if (!_chromeFullyHidden) {
+        unawaited(_showChromeLayout(bypassCooldown: true));
+      }
       return;
     }
 
     if (scrollY <= _revealChromeAtTopScrollPx) {
       _lastScrollY = scrollY;
       _directionalScrollAccum = 0;
-      _setOverlayChromeVisible(true, bypassCooldown: true);
+      if (_overlayChromeVisible || _chromeRevealSuppressActive()) {
+        return;
+      }
+      unawaited(_showChromeLayout(bypassCooldown: true));
       return;
     }
 
@@ -128,50 +147,111 @@ mixin WebviewImmersiveMixin<T extends StatefulWidget> on State<T>, SingleTickerP
       return;
     }
 
+    if (immersiveActive.value && _chromeRevealSuppressActive()) {
+      return;
+    }
+
     if (_immersiveToggleCooldownActive()) {
-      _lastScrollY = scrollY;
+      if (_overlayChromeVisible) {
+        _lastScrollY = scrollY;
+      }
       return;
     }
 
     if (_lastScrollY != null) {
       final delta = scrollY - _lastScrollY!;
       if (delta != 0) {
-        if (delta > 0 && _directionalScrollAccum < 0) {
-          _directionalScrollAccum = 0;
-        } else if (delta < 0 && _directionalScrollAccum > 0) {
-          _directionalScrollAccum = 0;
+        if (_overlayChromeVisible) {
+          _applyScrollWhileChromeVisible(delta, scrollY);
+        } else if (immersiveActive.value) {
+          _applyScrollWhileChromeHidden(delta);
         }
-        _directionalScrollAccum += delta;
-
-        var nextVisible = _overlayChromeVisible;
-        if (_directionalScrollAccum >= _scrollDirectionThreshold ||
-            delta >= _scrollImpulsePx) {
-          nextVisible = false;
-          _directionalScrollAccum = 0;
-        } else if (_directionalScrollAccum <= -_scrollDirectionThreshold ||
-            delta <= -_scrollImpulsePx) {
-          nextVisible = true;
-          _directionalScrollAccum = 0;
-        }
-        _setOverlayChromeVisible(nextVisible);
       }
     }
     _lastScrollY = scrollY;
   }
 
-  void _setOverlayChromeVisible(
-    bool visible, {
-    bool bypassCooldown = false,
-  }) {
-    if (visible == _overlayChromeVisible) return;
+  void _applyScrollWhileChromeVisible(double delta, double scrollY) {
+    if (scrollY < _hideChromeBelowScrollPx) {
+      _directionalScrollAccum = 0;
+      return;
+    }
+    if (delta <= 0) {
+      _directionalScrollAccum = 0;
+      return;
+    }
+    if (_directionalScrollAccum < 0) {
+      _directionalScrollAccum = 0;
+    }
+    _directionalScrollAccum += delta;
+    if (_directionalScrollAccum >= _scrollDirectionThreshold ||
+        delta >= _scrollImpulsePx) {
+      _directionalScrollAccum = 0;
+      unawaited(_hideChromeLayout());
+    }
+  }
+
+  void _applyScrollWhileChromeHidden(double delta) {
+    if (_chromeRevealSuppressActive() || immersiveAnim.isAnimating) {
+      return;
+    }
+    if (delta >= 0) {
+      _directionalScrollAccum = 0;
+      return;
+    }
+    if (_directionalScrollAccum > 0) {
+      _directionalScrollAccum = 0;
+    }
+    _directionalScrollAccum += delta;
+    if (_directionalScrollAccum <= -_scrollDirectionThreshold ||
+        delta <= -_scrollImpulsePx) {
+      _directionalScrollAccum = 0;
+      unawaited(_showChromeLayout());
+    }
+  }
+
+  Future<void> _hideChromeLayout() async {
+    if (!mounted ||
+        immersiveAnim.isAnimating ||
+        _chromeFullyHidden ||
+        !_overlayChromeVisible) {
+      return;
+    }
+    if (_immersiveToggleCooldownActive()) return;
+
+    _lastImmersiveToggleAt = DateTime.now();
+    _overlayChromeVisible = false;
+    immersiveActive.value = true;
+    externalImmersiveNotifier?.value = true;
+    if (mounted) setState(() {});
+
+    await immersiveAnim.forward();
+    if (!mounted) return;
+
+    _lastScrollY = null;
+    _directionalScrollAccum = 0;
+    _suppressChromeRevealUntil =
+        DateTime.now().add(_postHideRevealSuppress);
+    if (mounted) setState(() {});
+  }
+
+  Future<void> _showChromeLayout({bool bypassCooldown = false}) async {
+    if (!mounted || immersiveAnim.isAnimating) return;
+    if (_overlayChromeVisible && immersiveAnim.value <= 0) return;
     if (!bypassCooldown && _immersiveToggleCooldownActive()) return;
 
     _lastImmersiveToggleAt = DateTime.now();
-    _overlayChromeVisible = visible;
-    final readingMode = !visible;
-    immersiveActive.value = readingMode;
-    externalImmersiveNotifier?.value = readingMode;
-    immersiveAnim.value = readingMode ? 1.0 : 0.0;
+    _suppressChromeRevealUntil = null;
+    _lastScrollY = null;
+    _directionalScrollAccum = 0;
+    immersiveActive.value = false;
+    externalImmersiveNotifier?.value = false;
+    if (mounted) setState(() {});
+
+    await immersiveAnim.reverse();
+    if (!mounted) return;
+
+    _overlayChromeVisible = true;
     if (mounted) setState(() {});
   }
 
@@ -201,16 +281,12 @@ mixin WebviewImmersiveMixin<T extends StatefulWidget> on State<T>, SingleTickerP
 
   Future<void> enterImmersiveMode() async {
     if (!mounted || inImmersiveMode) return;
-    _lastScrollY = null;
-    _directionalScrollAccum = 0;
-    _setOverlayChromeVisible(false);
+    await _hideChromeLayout();
   }
 
   Future<void> exitImmersiveMode() async {
     if (!mounted) return;
-    _lastScrollY = null;
-    _directionalScrollAccum = 0;
-    _setOverlayChromeVisible(true, bypassCooldown: true);
+    await _showChromeLayout(bypassCooldown: true);
   }
 
   Future<bool> handleImmersiveSystemBack() async {
@@ -258,60 +334,10 @@ mixin WebviewImmersiveMixin<T extends StatefulWidget> on State<T>, SingleTickerP
     );
   }
 
-  Widget _buildImmersiveChrome({
-    required Widget toolbar,
-    Widget? urlBar,
-    required Widget body,
-  }) {
-    final topInset = MediaQuery.paddingOf(context).top;
-    final readingMode = immersiveActive.value;
-    final bottomPad = readingMode ? 0.0 : bottomNavReserve;
-
-    return AnnotatedRegion<SystemUiOverlayStyle>(
-      value: readingMode ? _immersiveOverlayStyle : SystemUiOverlayStyle.dark,
-      child: Scaffold(
-        backgroundColor: Colors.white,
-        body: Padding(
-          padding: EdgeInsets.only(bottom: bottomPad),
-          child: Stack(
-            fit: StackFit.expand,
-            children: [
-              Positioned(
-                top: topInset,
-                left: 0,
-                right: 0,
-                bottom: 0,
-                child: body,
-              ),
-              Positioned(
-                top: 0,
-                left: 0,
-                right: 0,
-                child: Opacity(
-                  opacity: readingMode ? 1.0 : 0.0,
-                  child: ColoredBox(
-                    color: _statusBarBackground,
-                    child: SizedBox(height: topInset),
-                  ),
-                ),
-              ),
-              Positioned(
-                top: topInset,
-                left: 0,
-                right: 0,
-                child: _buildToolbarLayer(toolbar: toolbar, urlBar: urlBar),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildToolbarLayer({required Widget toolbar, Widget? urlBar}) {
-    final bar = Material(
+  Widget _buildChromeBar({required Widget toolbar, Widget? urlBar}) {
+    return Material(
       color: Colors.white,
-      elevation: _overlayChromeVisible ? 1 : 0,
+      elevation: _chromeRevealFactor() > 0.05 ? 1 : 0,
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
@@ -328,17 +354,46 @@ mixin WebviewImmersiveMixin<T extends StatefulWidget> on State<T>, SingleTickerP
         ],
       ),
     );
+  }
 
-    return ClipRect(
-      child: IgnorePointer(
-        ignoring: !_overlayChromeVisible,
-        child: AnimatedSlide(
-          offset: _overlayChromeVisible
-              ? Offset.zero
-              : const Offset(0, -1),
-          duration: _chromeSlideDuration,
-          curve: _chromeSlideCurve,
-          child: bar,
+  Widget _buildImmersiveChrome({
+    required Widget toolbar,
+    Widget? urlBar,
+    required Widget body,
+  }) {
+    final topInset = MediaQuery.paddingOf(context).top;
+    final readingMode = immersiveActive.value;
+    final bottomPad = readingMode ? 0.0 : bottomNavReserve;
+    final chromeReveal = _chromeRevealFactor();
+    final statusBarOpaque = readingMode || immersiveAnim.value > 0;
+
+    return AnnotatedRegion<SystemUiOverlayStyle>(
+      value: readingMode ? _immersiveOverlayStyle : SystemUiOverlayStyle.dark,
+      child: Scaffold(
+        backgroundColor: Colors.white,
+        body: Padding(
+          padding: EdgeInsets.only(bottom: bottomPad),
+          child: Column(
+            children: [
+              ColoredBox(
+                color: statusBarOpaque
+                    ? _statusBarBackground
+                    : Colors.white,
+                child: SizedBox(height: topInset),
+              ),
+              ClipRect(
+                child: Align(
+                  alignment: Alignment.topCenter,
+                  heightFactor: chromeReveal,
+                  child: IgnorePointer(
+                    ignoring: chromeReveal < 0.05,
+                    child: _buildChromeBar(toolbar: toolbar, urlBar: urlBar),
+                  ),
+                ),
+              ),
+              Expanded(child: body),
+            ],
+          ),
         ),
       ),
     );
