@@ -41,6 +41,9 @@ class _MinghuiWebviewState extends State<MinghuiWebview>
           onProgress: (int progress) {
             setState(() => progressLoadWeb = progress);
           },
+          onPageStarted: (String url) {
+            onImmersivePageStarted();
+          },
           onPageFinished: (String url) {
             _currentUrl = url;
             unawaited(_onPageFinished());

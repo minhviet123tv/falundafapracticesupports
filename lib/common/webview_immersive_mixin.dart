@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
@@ -7,11 +8,16 @@ import 'package:webview_flutter/webview_flutter.dart';
 import 'book_webview_scroll_helper.dart';
 import 'compact_web_url_bar.dart';
 
-/// Chế độ mở rộng trong tab (ẩn AppBar, cuộn để hiện lại) — tab Book hoặc trang push từ Home.
+/// Chrome (AppBar + URL): WebView luôn full dưới status bar; ẩn/hiện chỉ [AnimatedSlide].
 mixin WebviewImmersiveMixin<T extends StatefulWidget> on State<T>, SingleTickerProviderStateMixin<T> {
   static const double toolbarHeight = BookWebViewScrollHelper.bookAppBarHeightPx;
   static const double _scrollDirectionThreshold = 36;
+  static const double _hideChromeBelowScrollPx = 36;
+  static const double _revealChromeAtTopScrollPx = 20;
   static const double _minScrollableExtra = 40;
+  static const Duration _immersiveToggleCooldown = Duration(milliseconds: 400);
+  static const Duration _scrollHandleThrottle = Duration(milliseconds: 80);
+  static const double _scrollImpulsePx = 12;
   static const Color _statusBarBackground = Colors.black;
   static const SystemUiOverlayStyle _immersiveOverlayStyle = SystemUiOverlayStyle(
     statusBarColor: Colors.black,
@@ -19,29 +25,37 @@ mixin WebviewImmersiveMixin<T extends StatefulWidget> on State<T>, SingleTickerP
     systemNavigationBarColor: Colors.white,
     systemNavigationBarIconBrightness: Brightness.dark,
   );
-  static const Duration _immersiveAnimDuration = Duration(milliseconds: 220);
-  static const Curve _immersiveAnimCurve = Curves.easeInOut;
+  static const Duration _chromeSlideDuration = Duration(milliseconds: 220);
+  static const Curve _chromeSlideCurve = Curves.easeInOut;
   static const double _toolbarHorizontalPadding = 10;
 
   late final AnimationController immersiveAnim;
   final ValueNotifier<bool> immersiveActive = ValueNotifier<bool>(false);
 
-  bool _overlayAppBarVisible = false;
+  /// Chrome overlay đang trượt xuống (hiện). false = đã trượt lên (ẩn).
+  bool _overlayChromeVisible = true;
   double? _lastScrollY;
   double _directionalScrollAccum = 0;
+  DateTime? _lastImmersiveToggleAt;
+  DateTime? _lastScrollHandleAt;
 
-  /// Tab Book: [BookTabChrome.immersive]. Trang push từ Home: để null.
+  bool get immersiveHasUrlBar => true;
+
+  double get immersiveChromeBarHeight =>
+      toolbarHeight +
+      (immersiveHasUrlBar ? CompactWebUrlBar.barHeight : 0);
+
   ValueNotifier<bool>? get externalImmersiveNotifier => null;
 
-  /// Tab Book: chiều cao menu bottom. Trang push: 0.
   double get bottomNavReserve => 0;
 
-  bool get inImmersiveMode => immersiveAnim.value >= 1.0;
+  bool get inImmersiveMode => immersiveActive.value;
 
   void initImmersive() {
     immersiveAnim = AnimationController(
       vsync: this,
-      duration: _immersiveAnimDuration,
+      duration: _chromeSlideDuration,
+      value: 0,
     );
     externalImmersiveNotifier?.addListener(_onExternalImmersiveChanged);
   }
@@ -57,44 +71,65 @@ mixin WebviewImmersiveMixin<T extends StatefulWidget> on State<T>, SingleTickerP
 
   void _onExternalImmersiveChanged() {
     if (externalImmersiveNotifier?.value != true &&
-        immersiveAnim.value > 0 &&
+        immersiveActive.value &&
         mounted) {
-      exitImmersiveMode();
+      unawaited(exitImmersiveMode());
     }
   }
 
+  bool _immersiveToggleCooldownActive() {
+    final last = _lastImmersiveToggleAt;
+    if (last == null) return false;
+    return DateTime.now().difference(last) < _immersiveToggleCooldown;
+  }
+
   void handleImmersiveScrollReport(String message) {
-    if (!mounted || !inImmersiveMode) return;
+    if (!mounted) return;
     try {
       final decoded = jsonDecode(message);
       if (decoded is! Map) return;
       final y = decoded['y'];
       final maxScroll = decoded['max'];
       if (y is! num) return;
+      final scrollY = y.toDouble();
       final maxScrollPx = maxScroll is num ? maxScroll.toDouble() : 0.0;
-      _updateOverlayAppBarFromScroll(y.toDouble(), maxScrollPx);
+
+      if (scrollY > _revealChromeAtTopScrollPx && _lastScrollHandleAt != null) {
+        final elapsed = DateTime.now().difference(_lastScrollHandleAt!);
+        if (elapsed < _scrollHandleThrottle) return;
+      }
+      _lastScrollHandleAt = DateTime.now();
+
+      _updateChromeVisibilityFromScroll(scrollY, maxScrollPx);
     } catch (_) {}
   }
 
-  void _updateOverlayAppBarFromScroll(double scrollY, double maxScroll) {
-    if (!mounted || !inImmersiveMode) return;
+  void _updateChromeVisibilityFromScroll(double scrollY, double maxScroll) {
+    if (!mounted) return;
 
-    final minScrollable = toolbarHeight + _minScrollableExtra;
+    final minScrollable = immersiveChromeBarHeight + _minScrollableExtra;
     if (maxScroll < minScrollable) {
       _lastScrollY = scrollY;
       _directionalScrollAccum = 0;
-      if (!_overlayAppBarVisible) {
-        setState(() => _overlayAppBarVisible = true);
-      }
+      _setOverlayChromeVisible(true, bypassCooldown: true);
       return;
     }
 
-    if (scrollY <= 20) {
+    if (scrollY <= _revealChromeAtTopScrollPx) {
       _lastScrollY = scrollY;
       _directionalScrollAccum = 0;
-      if (!_overlayAppBarVisible) {
-        setState(() => _overlayAppBarVisible = true);
-      }
+      _setOverlayChromeVisible(true, bypassCooldown: true);
+      return;
+    }
+
+    if (_overlayChromeVisible && scrollY < _hideChromeBelowScrollPx) {
+      _lastScrollY = scrollY;
+      _directionalScrollAccum = 0;
+      return;
+    }
+
+    if (_immersiveToggleCooldownActive()) {
+      _lastScrollY = scrollY;
       return;
     }
 
@@ -108,20 +143,36 @@ mixin WebviewImmersiveMixin<T extends StatefulWidget> on State<T>, SingleTickerP
         }
         _directionalScrollAccum += delta;
 
-        var nextVisible = _overlayAppBarVisible;
-        if (_directionalScrollAccum >= _scrollDirectionThreshold) {
+        var nextVisible = _overlayChromeVisible;
+        if (_directionalScrollAccum >= _scrollDirectionThreshold ||
+            delta >= _scrollImpulsePx) {
           nextVisible = false;
           _directionalScrollAccum = 0;
-        } else if (_directionalScrollAccum <= -_scrollDirectionThreshold) {
+        } else if (_directionalScrollAccum <= -_scrollDirectionThreshold ||
+            delta <= -_scrollImpulsePx) {
           nextVisible = true;
           _directionalScrollAccum = 0;
         }
-        if (nextVisible != _overlayAppBarVisible) {
-          setState(() => _overlayAppBarVisible = nextVisible);
-        }
+        _setOverlayChromeVisible(nextVisible);
       }
     }
     _lastScrollY = scrollY;
+  }
+
+  void _setOverlayChromeVisible(
+    bool visible, {
+    bool bypassCooldown = false,
+  }) {
+    if (visible == _overlayChromeVisible) return;
+    if (!bypassCooldown && _immersiveToggleCooldownActive()) return;
+
+    _lastImmersiveToggleAt = DateTime.now();
+    _overlayChromeVisible = visible;
+    final readingMode = !visible;
+    immersiveActive.value = readingMode;
+    externalImmersiveNotifier?.value = readingMode;
+    immersiveAnim.value = readingMode ? 1.0 : 0.0;
+    if (mounted) setState(() {});
   }
 
   Future<void> installImmersiveScrollReporter(WebViewController controller) async {
@@ -131,10 +182,17 @@ mixin WebviewImmersiveMixin<T extends StatefulWidget> on State<T>, SingleTickerP
   Future<void> onImmersivePageFinished() async {
     _lastScrollY = null;
     _directionalScrollAccum = 0;
+    _lastScrollHandleAt = null;
+  }
+
+  void onImmersivePageStarted() {
+    _lastScrollY = null;
+    _directionalScrollAccum = 0;
+    _lastScrollHandleAt = null;
   }
 
   Future<void> toggleImmersiveMode() async {
-    if (inImmersiveMode || immersiveAnim.status == AnimationStatus.forward) {
+    if (inImmersiveMode) {
       await exitImmersiveMode();
     } else {
       await enterImmersiveMode();
@@ -142,29 +200,21 @@ mixin WebviewImmersiveMixin<T extends StatefulWidget> on State<T>, SingleTickerP
   }
 
   Future<void> enterImmersiveMode() async {
-    if (immersiveAnim.status == AnimationStatus.forward) return;
-    if (!mounted) return;
-    _overlayAppBarVisible = false;
+    if (!mounted || inImmersiveMode) return;
     _lastScrollY = null;
     _directionalScrollAccum = 0;
-    immersiveActive.value = true;
-    externalImmersiveNotifier?.value = true;
-    await immersiveAnim.forward();
+    _setOverlayChromeVisible(false);
   }
 
   Future<void> exitImmersiveMode() async {
-    if (immersiveAnim.status == AnimationStatus.reverse) return;
     if (!mounted) return;
-    _overlayAppBarVisible = true;
     _lastScrollY = null;
     _directionalScrollAccum = 0;
-    immersiveActive.value = false;
-    externalImmersiveNotifier?.value = false;
-    await immersiveAnim.reverse();
+    _setOverlayChromeVisible(true, bypassCooldown: true);
   }
 
   Future<bool> handleImmersiveSystemBack() async {
-    if (immersiveAnim.value > 0) {
+    if (immersiveActive.value) {
       await exitImmersiveMode();
       return true;
     }
@@ -200,16 +250,13 @@ mixin WebviewImmersiveMixin<T extends StatefulWidget> on State<T>, SingleTickerP
         if (await handleImmersiveSystemBack()) return;
         onPop?.call();
       },
-      child: AnimatedBuilder(
-        animation: immersiveAnim,
+      child: ListenableBuilder(
+        listenable: Listenable.merge([immersiveAnim, immersiveActive]),
         builder: (context, _) =>
             _buildImmersiveChrome(toolbar: toolbar, urlBar: urlBar, body: body),
       ),
     );
   }
-
-  double _chromeBarHeight(Widget? urlBar) =>
-      toolbarHeight + (urlBar != null ? CompactWebUrlBar.barHeight : 0);
 
   Widget _buildImmersiveChrome({
     required Widget toolbar,
@@ -217,12 +264,11 @@ mixin WebviewImmersiveMixin<T extends StatefulWidget> on State<T>, SingleTickerP
     required Widget body,
   }) {
     final topInset = MediaQuery.paddingOf(context).top;
-    final t = Curves.easeInOut.transform(immersiveAnim.value);
-    final bottomPad = (1 - t) * bottomNavReserve;
-    final chromeHeight = _chromeBarHeight(urlBar);
+    final readingMode = immersiveActive.value;
+    final bottomPad = readingMode ? 0.0 : bottomNavReserve;
 
     return AnnotatedRegion<SystemUiOverlayStyle>(
-      value: t >= 0.5 ? _immersiveOverlayStyle : SystemUiOverlayStyle.dark,
+      value: readingMode ? _immersiveOverlayStyle : SystemUiOverlayStyle.dark,
       child: Scaffold(
         backgroundColor: Colors.white,
         body: Padding(
@@ -231,7 +277,7 @@ mixin WebviewImmersiveMixin<T extends StatefulWidget> on State<T>, SingleTickerP
             fit: StackFit.expand,
             children: [
               Positioned(
-                top: topInset + (1 - t) * chromeHeight,
+                top: topInset,
                 left: 0,
                 right: 0,
                 bottom: 0,
@@ -242,7 +288,7 @@ mixin WebviewImmersiveMixin<T extends StatefulWidget> on State<T>, SingleTickerP
                 left: 0,
                 right: 0,
                 child: Opacity(
-                  opacity: t,
+                  opacity: readingMode ? 1.0 : 0.0,
                   child: ColoredBox(
                     color: _statusBarBackground,
                     child: SizedBox(height: topInset),
@@ -263,13 +309,9 @@ mixin WebviewImmersiveMixin<T extends StatefulWidget> on State<T>, SingleTickerP
   }
 
   Widget _buildToolbarLayer({required Widget toolbar, Widget? urlBar}) {
-    final t = Curves.easeInOut.transform(immersiveAnim.value);
-    final useScrollHide = immersiveActive.value;
-    final chromeHeight = _chromeBarHeight(urlBar);
-
-    Widget bar = Material(
+    final bar = Material(
       color: Colors.white,
-      elevation: (!immersiveActive.value || _overlayAppBarVisible) ? 1 : 0,
+      elevation: _overlayChromeVisible ? 1 : 0,
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
@@ -287,45 +329,16 @@ mixin WebviewImmersiveMixin<T extends StatefulWidget> on State<T>, SingleTickerP
       ),
     );
 
-    if (useScrollHide) {
-      bar = AnimatedSlide(
-        offset: _overlayAppBarVisible
-            ? Offset.zero
-            : const Offset(0, -1),
-        duration: _immersiveAnimDuration,
-        curve: _immersiveAnimCurve,
-        child: bar,
-      );
-    }
-
-    if (immersiveAnim.status == AnimationStatus.reverse) {
-      return ClipRect(
-        child: IgnorePointer(
-          ignoring: useScrollHide && !_overlayAppBarVisible,
-          child: bar,
-        ),
-      );
-    }
-
-    if (t >= 1.0) {
-      return ClipRect(
-        child: IgnorePointer(
-          ignoring: useScrollHide && !_overlayAppBarVisible,
-          child: bar,
-        ),
-      );
-    }
-
-    final curved = Curves.easeInOut.transform(t);
     return ClipRect(
-      child: Transform.translate(
-        offset: Offset(0, -curved * chromeHeight),
-        child: Opacity(
-          opacity: (1 - curved).clamp(0.0, 1.0),
-          child: IgnorePointer(
-            ignoring: curved > 0.5,
-            child: bar,
-          ),
+      child: IgnorePointer(
+        ignoring: !_overlayChromeVisible,
+        child: AnimatedSlide(
+          offset: _overlayChromeVisible
+              ? Offset.zero
+              : const Offset(0, -1),
+          duration: _chromeSlideDuration,
+          curve: _chromeSlideCurve,
+          child: bar,
         ),
       ),
     );

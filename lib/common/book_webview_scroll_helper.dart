@@ -82,18 +82,25 @@ class BookWebViewScrollHelper {
 })()
 ''';
 
+  static const int scrollReporterMinIntervalMs = 150;
+
   static const String installReporterJs = '''
 (function() {
   if (window.__zflScrollHooked) return;
   window.__zflScrollHooked = true;
   var persistTimer = null;
   var rafPending = false;
-  function report() {
+  var lastPostMs = 0;
+  var minInterval = $scrollReporterMinIntervalMs;
+  function report(force) {
     var el = document.scrollingElement || document.documentElement;
     var y = window.pageYOffset || el.scrollTop || 0;
     var viewH = window.innerHeight || document.documentElement.clientHeight || 0;
     var max = Math.max(0, (el.scrollHeight || 0) - viewH);
     var ratio = max > 0 ? y / max : 0;
+    var now = Date.now();
+    if (!force && now - lastPostMs < minInterval) return;
+    lastPostMs = now;
     if (window.ScrollReporter) {
       ScrollReporter.postMessage(JSON.stringify({y: y, ratio: ratio, max: max, url: location.href}));
     }
@@ -103,11 +110,11 @@ class BookWebViewScrollHelper {
       rafPending = true;
       requestAnimationFrame(function() {
         rafPending = false;
-        report();
+        report(false);
       });
     }
     clearTimeout(persistTimer);
-    persistTimer = setTimeout(report, 350);
+    persistTimer = setTimeout(function() { report(true); }, 350);
   }, {passive: true});
 })();
 ''';

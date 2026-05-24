@@ -41,6 +41,9 @@ class _VisaoconhanloaiWebviewState extends State<VisaoconhanloaiWebview>
           onProgress: (int progress) {
             setState(() => progressLoadWeb = progress);
           },
+          onPageStarted: (String url) {
+            onImmersivePageStarted();
+          },
           onPageFinished: (String url) {
             _currentUrl = url;
             unawaited(_onPageFinished());
