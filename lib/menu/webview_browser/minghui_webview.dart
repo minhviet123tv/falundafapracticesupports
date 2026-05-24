@@ -10,6 +10,7 @@ import '../../common/app_webview_config.dart';
 import '../../common/browser_helper.dart';
 import '../../common/compact_web_url_bar.dart';
 import '../../common/webview_immersive_mixin.dart';
+import '../../common/webview_js_safe.dart';
 import '../../common/webview_scroll_chrome_mixin.dart';
 
 class MinghuiWebview extends StatefulWidget {
@@ -21,9 +22,10 @@ class MinghuiWebview extends StatefulWidget {
 
 class _MinghuiWebviewState extends State<MinghuiWebview>
     with
-        SingleTickerProviderStateMixin,
+        TickerProviderStateMixin,
         WebviewScrollChromeMixin,
-        WebviewImmersiveMixin {
+        WebviewImmersiveMixin,
+        WebViewJsHost {
   late final WebViewController _controller;
   late MinghuiEnum minghuiEnum;
   final double _border10 = 10.0;
@@ -98,10 +100,17 @@ class _MinghuiWebviewState extends State<MinghuiWebview>
     await AppWebViewConfig.onPageFinishedEnhancements(
       _controller,
       nudgeLazyImages: true,
+      canRun: () => canRunWebViewJs,
     );
-    await installImmersiveScrollReporter(_controller);
+    await installImmersiveScrollReporter(
+      _controller,
+      canRun: () => canRunWebViewJs,
+    );
     await onImmersivePageFinished();
-    await refreshImmersiveChromeHideAllowed(_controller);
+    await refreshImmersiveChromeHideAllowed(
+      _controller,
+      canRun: () => canRunWebViewJs,
+    );
     if (mounted) setState(() {});
   }
 

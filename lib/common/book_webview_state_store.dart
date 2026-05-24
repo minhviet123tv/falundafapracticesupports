@@ -2,6 +2,8 @@ import 'dart:convert';
 
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'book_webview_scroll_helper.dart';
+
 /// Lưu trạng thái đọc sách ZFL theo từng ngôn ngữ: URL cuối, lịch sử trang, vị trí cuộn.
 class BookWebViewStateStore {
   static const String _keyPrefix = 'zfl_book_reading_state_v2_';
@@ -130,7 +132,8 @@ class BookReadingState {
         ),
       };
 
-  BookScrollPosition? scrollForUrl(String url) => scrollByUrl[url];
+  BookScrollPosition? scrollForUrl(String url) =>
+      BookWebViewScrollHelper.scrollForUrl(scrollByUrl, url);
 
   BookReadingState withScroll(String url, BookScrollPosition position) {
     if (position.scrollY <= 0 && position.scrollRatio <= 0) {
@@ -165,9 +168,12 @@ class BookReadingState {
 
   /// Xóa vị trí đã lưu — dùng khi người dùng mở lại link (xem từ đầu).
   BookReadingState withoutScrollForUrl(String urlKey) {
-    if (!scrollByUrl.containsKey(urlKey)) return this;
+    final targetKey = BookWebViewScrollHelper.normalizeUrlKey(urlKey);
     final nextScroll = Map<String, BookScrollPosition>.from(scrollByUrl);
-    nextScroll.remove(urlKey);
+    nextScroll.removeWhere(
+      (key, _) => BookWebViewScrollHelper.normalizeUrlKey(key) == targetKey,
+    );
+    if (nextScroll.length == scrollByUrl.length) return this;
     return BookReadingState(
       lastUrl: lastUrl,
       history: history,

@@ -7,7 +7,9 @@ import 'compact_web_url_bar.dart';
 import 'webview_scroll_chrome_mixin.dart';
 
 /// Chế độ mở rộng trong tab (ẩn AppBar, cuộn để hiện lại) — tab Book hoặc trang push từ Home.
-mixin WebviewImmersiveMixin<T extends StatefulWidget> on State<T>, SingleTickerProviderStateMixin<T>, WebviewScrollChromeMixin<T> {
+mixin WebviewImmersiveMixin<T extends StatefulWidget> on State<T>, TickerProviderStateMixin<T>, WebviewScrollChromeMixin<T> {
+  WebviewScrollChromeMixin<T> get _scrollChrome => this as WebviewScrollChromeMixin<T>;
+
   static const double toolbarHeight = BookWebViewScrollHelper.bookAppBarHeightPx;
   static const Color _statusBarBackground = Colors.black;
   static const SystemUiOverlayStyle _immersiveOverlayStyle = SystemUiOverlayStyle(
@@ -16,7 +18,8 @@ mixin WebviewImmersiveMixin<T extends StatefulWidget> on State<T>, SingleTickerP
     systemNavigationBarColor: Colors.white,
     systemNavigationBarIconBrightness: Brightness.dark,
   );
-  static const Duration _immersiveAnimDuration = Duration(milliseconds: 220);
+  static const Duration _immersiveAnimDuration =
+      WebviewScrollChromeMixin.chromeAnimDuration;
   static const double _toolbarHorizontalPadding = 10;
 
   late final AnimationController immersiveAnim;
@@ -38,10 +41,12 @@ mixin WebviewImmersiveMixin<T extends StatefulWidget> on State<T>, SingleTickerP
       vsync: this,
       duration: _immersiveAnimDuration,
     );
+    _scrollChrome.initScrollChromeReveal(this);
     externalImmersiveNotifier?.addListener(_onExternalImmersiveChanged);
   }
 
   void disposeImmersive() {
+    _scrollChrome.disposeScrollChromeReveal();
     externalImmersiveNotifier?.removeListener(_onExternalImmersiveChanged);
     if (externalImmersiveNotifier?.value == true) {
       externalImmersiveNotifier!.value = false;
@@ -60,11 +65,21 @@ mixin WebviewImmersiveMixin<T extends StatefulWidget> on State<T>, SingleTickerP
 
   void handleImmersiveScrollReport(String message) {
     if (!mounted || !_scrollHideEnabled) return;
-    handleScrollChromeReport(message, _scrollChromeBarHeight);
+    handleScrollChromeReport(
+      message,
+      _scrollChromeBarHeight,
+      scrollHideEnabled: _scrollHideEnabled,
+    );
   }
 
-  Future<void> installImmersiveScrollReporter(WebViewController controller) async {
-    await BookWebViewScrollHelper.installReporter(controller);
+  Future<void> installImmersiveScrollReporter(
+    WebViewController controller, {
+    bool Function()? canRun,
+  }) async {
+    await BookWebViewScrollHelper.installReporter(
+      controller,
+      canRun: canRun,
+    );
   }
 
   Future<void> onImmersivePageFinished() async {
@@ -72,14 +87,17 @@ mixin WebviewImmersiveMixin<T extends StatefulWidget> on State<T>, SingleTickerP
   }
 
   Future<void> refreshImmersiveChromeHideAllowed(
-    WebViewController controller,
-  ) async {
+    WebViewController controller, {
+    bool Function()? canRun,
+  }) async {
     if (pageMainFrameFailed) {
       setOverlayChromeHideAllowed(false);
       return;
     }
-    final maxScroll =
-        await BookWebViewScrollHelper.readMaxScrollExtent(controller);
+    final maxScroll = await BookWebViewScrollHelper.readMaxScrollExtent(
+      controller,
+      canRun: canRun,
+    );
     updateOverlayChromeHideFromPageMetrics(
       maxScroll: maxScroll ?? 0,
       chromeBarHeight: _scrollChromeBarHeight,
@@ -108,7 +126,6 @@ mixin WebviewImmersiveMixin<T extends StatefulWidget> on State<T>, SingleTickerP
       _showChromeHideBlockedMessage();
       return;
     }
-    overlayChromeVisible = false;
     resetScrollChromeTracking();
     immersiveActive.value = true;
     externalImmersiveNotifier?.value = true;
@@ -118,7 +135,7 @@ mixin WebviewImmersiveMixin<T extends StatefulWidget> on State<T>, SingleTickerP
   Future<void> exitImmersiveMode() async {
     if (immersiveAnim.status == AnimationStatus.reverse) return;
     if (!mounted) return;
-    overlayChromeVisible = true;
+    _scrollChrome.applyOverlayChromeVisible(true);
     resetScrollChromeTracking();
     immersiveActive.value = false;
     externalImmersiveNotifier?.value = false;
@@ -189,8 +206,20 @@ mixin WebviewImmersiveMixin<T extends StatefulWidget> on State<T>, SingleTickerP
   }) {
     final topInset = MediaQuery.paddingOf(context).top;
     final t = Curves.easeInOut.transform(immersiveAnim.value);
-    final bottomPad = (1 - t) * bottomNavReserve;
+    final reveal = _scrollChrome.webViewChromeRevealFactor(
+      immersiveProgress: t,
+      scrollHideEnabled: _scrollHideEnabled,
+      overlayChromeHideAllowed: overlayChromeHideAllowed,
+    );
+    final bottomPad = bottomNavReserve * reveal;
     final chromeHeight = _scrollChromeBarHeight;
+    final webTop = webViewTopOffset(
+      topInset: topInset,
+      chromeBarHeight: chromeHeight,
+      immersiveProgress: t,
+      scrollHideEnabled: _scrollHideEnabled,
+      overlayChromeHideAllowed: overlayChromeHideAllowed,
+    );
 
     return AnnotatedRegion<SystemUiOverlayStyle>(
       value: t >= 0.5 ? _immersiveOverlayStyle : SystemUiOverlayStyle.dark,
@@ -201,17 +230,8 @@ mixin WebviewImmersiveMixin<T extends StatefulWidget> on State<T>, SingleTickerP
           child: Stack(
             fit: StackFit.expand,
             children: [
-              Positioned(
-                top: webViewTopOffset(
-                  topInset: topInset,
-                  chromeBarHeight: chromeHeight,
-                  immersiveProgress: t,
-                  scrollHideEnabled: _scrollHideEnabled,
-                  overlayChromeHideAllowed: overlayChromeHideAllowed,
-                ),
-                left: 0,
-                right: 0,
-                bottom: 0,
+              _scrollChrome.buildWebViewPositioned(
+                top: webTop,
                 child: urlBar != null
                     ? DismissKeyboardWhenWebViewTapped(child: body)
                     : body,

@@ -12,6 +12,7 @@ import '../common/app_webview_config.dart';
 import '../common/book_tab_chrome.dart';
 import '../common/book_webview_scroll_helper.dart';
 import '../common/webview_scroll_chrome_mixin.dart';
+import '../common/webview_js_safe.dart';
 import '../common/book_webview_state_store.dart';
 import '../common/browser_helper.dart';
 import '../common/compact_web_url_bar.dart';
@@ -25,7 +26,11 @@ class ChuyenPhapLuanWebview extends StatefulWidget {
 }
 
 class _ChuyenPhapLuanWebviewState extends State<ChuyenPhapLuanWebview>
-    with WidgetsBindingObserver, SingleTickerProviderStateMixin, WebviewScrollChromeMixin {
+    with
+        WidgetsBindingObserver,
+        TickerProviderStateMixin,
+        WebviewScrollChromeMixin,
+        WebViewJsHost {
   static const String _prefsLanguageKey = 'LanguageNameOfChuyenPhapLuan';
   static const int _maxHistoryEntries = 80;
   static const double _toolbarHeight = BookWebViewScrollHelper.bookAppBarHeightPx;
@@ -50,6 +55,10 @@ class _ChuyenPhapLuanWebviewState extends State<ChuyenPhapLuanWebview>
   String? _currentUrl;
   Timer? _scrollSaveDebounce;
   bool _isRestoringScroll = false;
+  bool _stripScrollOnNextPageStart = false;
+  bool _skipScrollRestoreOnFinish = false;
+  int _suppressStripNavigationCount = 0;
+  int _pageFinishGeneration = 0;
   VoidCallback? _chromeListener;
 
   String get _languageCode => _language.name;
@@ -64,6 +73,7 @@ class _ChuyenPhapLuanWebviewState extends State<ChuyenPhapLuanWebview>
       vsync: this,
       duration: _immersiveAnimDuration,
     );
+    initScrollChromeReveal(this);
     _language = LanguageNameOfChuyenPhapLuan.vietnamese;
 
     final WebViewController controller = AppWebViewConfig.createController();
@@ -79,13 +89,6 @@ class _ChuyenPhapLuanWebviewState extends State<ChuyenPhapLuanWebview>
           },
           onPageStarted: (String url) {
             onWebViewPageLoadStarted();
-            final leaving = _currentUrl;
-            if (leaving != null && leaving.isNotEmpty && leaving != url) {
-              unawaited(_captureScrollForUrl(leaving));
-            }
-            _readingState = _readingState.withoutScrollForUrl(
-              BookWebViewScrollHelper.normalizeUrlKey(url),
-            );
           },
           onPageFinished: (String url) {
             unawaited(_onPageFinished(url));
@@ -102,6 +105,20 @@ class _ChuyenPhapLuanWebviewState extends State<ChuyenPhapLuanWebview>
           onNavigationRequest: (NavigationRequest request) {
             if (request.url.startsWith('https://www.youtube.com/')) {
               return NavigationDecision.prevent;
+            }
+            if (request.isMainFrame) {
+              if (_suppressStripNavigationCount > 0) {
+                _suppressStripNavigationCount--;
+              } else if (BookWebViewScrollHelper.isHashOnlyNavigation(
+                _currentUrl,
+                request.url,
+              )) {
+                _skipScrollRestoreOnFinish = true;
+                _stripScrollOnNextPageStart = false;
+              } else {
+                _stripScrollOnNextPageStart = true;
+                _skipScrollRestoreOnFinish = false;
+              }
             }
             return NavigationDecision.navigate;
           },
@@ -161,6 +178,7 @@ class _ChuyenPhapLuanWebviewState extends State<ChuyenPhapLuanWebview>
         y.toDouble(),
         maxScrollPx,
         _chromeBarHeight,
+        scrollHideEnabled: true,
       );
 
       final position = BookScrollPosition(
@@ -211,48 +229,79 @@ class _ChuyenPhapLuanWebviewState extends State<ChuyenPhapLuanWebview>
     final defaultUrl = _language.urlChuyenPhapLuan;
     final urlToLoad = _readingState.lastUrl ?? defaultUrl;
 
-    var history = List<String>.from(_readingState.history);
-    var historyIndex = _readingState.historyIndex;
-
-    if (history.isEmpty) {
-      history = <String>[urlToLoad];
-      historyIndex = 0;
-    } else if (!history.contains(urlToLoad)) {
-      history.add(urlToLoad);
-      historyIndex = history.length - 1;
-    } else {
-      historyIndex = history.indexOf(urlToLoad);
-    }
+    final aligned = BookWebViewScrollHelper.alignHistoryForResume(
+      _readingState.history,
+      _readingState.historyIndex,
+      urlToLoad,
+    );
 
     _readingState = _readingState.withNavigation(
       url: urlToLoad,
-      history: history,
-      historyIndex: historyIndex,
+      history: aligned.history,
+      historyIndex: aligned.historyIndex,
     );
     _currentUrl = urlToLoad;
+    _stripScrollOnNextPageStart = false;
+    _suppressStripNavigationCount = 3;
 
     await _controller.loadRequest(Uri.parse(urlToLoad));
   }
 
   Future<void> _onPageFinished(String url) async {
     if (!mounted || url.isEmpty) return;
+    final finishGeneration = ++_pageFinishGeneration;
 
-    final resolvedUrl =
-        await BookWebViewScrollHelper.readPageUrl(_controller) ??
-            await _controller.currentUrl() ??
-            url;
-    _commitUrlToHistory(resolvedUrl);
+    final resolvedUrl = await BookWebViewScrollHelper.readPageUrl(
+          _controller,
+          canRun: () => canRunWebViewJs,
+        ) ??
+        await _controller.currentUrl() ??
+        url;
+    if (!mounted || finishGeneration != _pageFinishGeneration) return;
+
+    if (_stripScrollOnNextPageStart) {
+      _readingState = _readingState.withoutScrollForUrl(
+        BookWebViewScrollHelper.normalizeUrlKey(resolvedUrl),
+      );
+      _stripScrollOnNextPageStart = false;
+    }
+
+    _readingState = BookWebViewScrollHelper.commitUrlToHistory(
+      _readingState,
+      resolvedUrl,
+      maxEntries: _maxHistoryEntries,
+    );
+    _currentUrl = resolvedUrl;
+
+    final skipRestore = _skipScrollRestoreOnFinish;
+    _skipScrollRestoreOnFinish = false;
+
     _isRestoringScroll = true;
     try {
-      await BookWebViewScrollHelper.installReporter(_controller);
+      await BookWebViewScrollHelper.installReporter(
+        _controller,
+        canRun: () => canRunWebViewJs,
+      );
+      if (!skipRestore) {
+        await BookWebViewScrollHelper.restoreScrollIfSaved(
+          _controller,
+          _readingState,
+          resolvedUrl,
+          isMounted: () => mounted,
+          setRestoring: (restoring) => _isRestoringScroll = restoring,
+        );
+      }
+      if (!mounted || finishGeneration != _pageFinishGeneration) return;
       await _persistReadingState();
     } finally {
       _isRestoringScroll = false;
     }
 
     resetScrollChromeTracking();
-    final maxScroll =
-        await BookWebViewScrollHelper.readMaxScrollExtent(_controller);
+    final maxScroll = await BookWebViewScrollHelper.readMaxScrollExtent(
+      _controller,
+      canRun: () => canRunWebViewJs,
+    );
     updateOverlayChromeHideFromPageMetrics(
       maxScroll: maxScroll ?? 0,
       chromeBarHeight: _chromeBarHeight,
@@ -262,39 +311,13 @@ class _ChuyenPhapLuanWebviewState extends State<ChuyenPhapLuanWebview>
     }
   }
 
-  void _commitUrlToHistory(String url) {
-    var history = List<String>.from(_readingState.history);
-    var index = _readingState.historyIndex;
-
-    final existingIndex = history.indexOf(url);
-    if (existingIndex >= 0) {
-      index = existingIndex;
-    } else {
-      if (index < history.length - 1) {
-        history = history.sublist(0, index + 1);
-      }
-      history.add(url);
-      if (history.length > _maxHistoryEntries) {
-        final overflow = history.length - _maxHistoryEntries;
-        history = history.sublist(overflow);
-        index = history.length - 1;
-      } else {
-        index = history.length - 1;
-      }
-    }
-
-    _currentUrl = url;
-    _readingState = _readingState.withNavigation(
-      url: url,
-      history: history,
-      historyIndex: index,
-    );
-  }
-
   Future<void> _captureScrollForUrl(String url) async {
     if (url.isEmpty || _isRestoringScroll) return;
 
-    final position = await BookWebViewScrollHelper.readPosition(_controller);
+    final position = await BookWebViewScrollHelper.readPosition(
+      _controller,
+      canRun: () => canRunWebViewJs,
+    );
     if (position == null) return;
     if (position.scrollY <= 0 && position.scrollRatio <= 0) return;
 
@@ -305,7 +328,11 @@ class _ChuyenPhapLuanWebviewState extends State<ChuyenPhapLuanWebview>
   }
 
   Future<void> _captureScrollForCurrentPage() async {
-    final url = await BookWebViewScrollHelper.readPageUrl(_controller) ??
+    if (!canRunWebViewJs) return;
+    final url = await BookWebViewScrollHelper.readPageUrl(
+          _controller,
+          canRun: () => canRunWebViewJs,
+        ) ??
         await _controller.currentUrl() ??
         _currentUrl;
     if (url == null || url.isEmpty) return;
@@ -335,7 +362,7 @@ class _ChuyenPhapLuanWebviewState extends State<ChuyenPhapLuanWebview>
     await _captureScrollForCurrentPage();
     await _persistReadingState();
     if (!mounted) return;
-    overlayChromeVisible = false;
+    applyOverlayChromeVisible(false);
     resetScrollChromeTracking();
     BookTabChrome.immersive.value = true;
     await _immersiveAnim.forward();
@@ -346,7 +373,7 @@ class _ChuyenPhapLuanWebviewState extends State<ChuyenPhapLuanWebview>
     await _captureScrollForCurrentPage();
     await _persistReadingState();
     if (!mounted) return;
-    overlayChromeVisible = true;
+    applyOverlayChromeVisible(true);
     resetScrollChromeTracking();
     BookTabChrome.immersive.value = false;
     await _immersiveAnim.reverse();
@@ -360,7 +387,14 @@ class _ChuyenPhapLuanWebviewState extends State<ChuyenPhapLuanWebview>
   }
 
   Future<void> _persistReadingState() async {
-    final url = await BookWebViewScrollHelper.readPageUrl(_controller) ??
+    if (!canRunWebViewJs) {
+      await BookWebViewStateStore.save(_languageCode, _readingState);
+      return;
+    }
+    final url = await BookWebViewScrollHelper.readPageUrl(
+          _controller,
+          canRun: () => canRunWebViewJs,
+        ) ??
         await _controller.currentUrl() ??
         _currentUrl;
     if (url != null && url.isNotEmpty) {
@@ -396,6 +430,7 @@ class _ChuyenPhapLuanWebviewState extends State<ChuyenPhapLuanWebview>
 
     final homeUrl = _language.urlChuyenPhapLuan;
     _currentUrl = homeUrl;
+    _stripScrollOnNextPageStart = true;
     _readingState = _readingState.withOnlyCurrentScroll(
       BookWebViewScrollHelper.normalizeUrlKey(homeUrl),
       const BookScrollPosition(scrollY: 0, scrollRatio: 0),
@@ -405,12 +440,55 @@ class _ChuyenPhapLuanWebviewState extends State<ChuyenPhapLuanWebview>
     await _persistReadingState();
     if (mounted) setState(() {});
   }
+  Future<void> _goForward() async {
+    await _captureScrollForCurrentPage();
+    await _persistReadingState();
+
+    if (await _controller.canGoForward()) {
+      _stripScrollOnNextPageStart = false;
+      _suppressStripNavigationCount = 3;
+      await _controller.goForward();
+      return;
+    }
+
+    if (_readingState.historyIndex < _readingState.history.length - 1) {
+      final newIndex = _readingState.historyIndex + 1;
+      final url = _readingState.history[newIndex];
+      _readingState = _readingState.withNavigation(
+        url: url,
+        history: _readingState.history,
+        historyIndex: newIndex,
+      );
+      _currentUrl = url;
+      _stripScrollOnNextPageStart = false;
+      _suppressStripNavigationCount = 3;
+      await _controller.loadRequest(Uri.parse(url));
+    }
+  }
+
+  Future<void> _navigateToUrl(Uri uri) async {
+    await _captureScrollForCurrentPage();
+    _stripScrollOnNextPageStart = true;
+    _skipScrollRestoreOnFinish = false;
+    await _controller.loadRequest(uri);
+  }
+
+  Future<void> _reloadCurrentPage() async {
+    await _captureScrollForCurrentPage();
+    await _persistReadingState();
+    _stripScrollOnNextPageStart = false;
+    _skipScrollRestoreOnFinish = false;
+    _suppressStripNavigationCount = 3;
+    await _controller.reload();
+  }
 
   Future<void> _goBack() async {
     await _captureScrollForCurrentPage();
     await _persistReadingState();
 
     if (await _controller.canGoBack()) {
+      _stripScrollOnNextPageStart = false;
+      _suppressStripNavigationCount = 3;
       await _controller.goBack();
       return;
     }
@@ -424,6 +502,8 @@ class _ChuyenPhapLuanWebviewState extends State<ChuyenPhapLuanWebview>
         historyIndex: newIndex,
       );
       _currentUrl = url;
+      _stripScrollOnNextPageStart = false;
+      _suppressStripNavigationCount = 3;
       await _controller.loadRequest(Uri.parse(url));
     }
   }
@@ -467,10 +547,18 @@ class _ChuyenPhapLuanWebviewState extends State<ChuyenPhapLuanWebview>
       BookTabChrome.immersive.value = false;
     }
     _immersiveAnim.dispose();
+    disposeScrollChromeReveal();
     WidgetsBinding.instance.removeObserver(this);
     _scrollSaveDebounce?.cancel();
-    unawaited(_captureScrollForCurrentPage());
-    unawaited(_persistReadingState());
+    if (canRunWebViewJs) {
+      unawaited(
+        _captureScrollForCurrentPage().whenComplete(() {
+          unawaited(BookWebViewStateStore.save(_languageCode, _readingState));
+        }),
+      );
+    } else {
+      unawaited(BookWebViewStateStore.save(_languageCode, _readingState));
+    }
     super.dispose();
   }
 
@@ -595,6 +683,10 @@ class _ChuyenPhapLuanWebviewState extends State<ChuyenPhapLuanWebview>
             CompactWebUrlBar(
               controller: _controller,
               currentUrl: _currentUrl ?? _language.urlChuyenPhapLuan,
+              onNavigateBack: _goBack,
+              onNavigateForward: _goForward,
+              onNavigateToUrl: _navigateToUrl,
+              onReload: _reloadCurrentPage,
             ),
           ],
         ),
@@ -645,7 +737,12 @@ class _ChuyenPhapLuanWebviewState extends State<ChuyenPhapLuanWebview>
     final bottomInset = MediaQuery.paddingOf(context).bottom;
     final bottomNavReserve = kBottomNavigationBarHeight + bottomInset;
     final t = Curves.easeInOut.transform(_immersiveAnim.value);
-    final bottomPad = (1 - t) * bottomNavReserve;
+    final reveal = webViewChromeRevealFactor(
+      immersiveProgress: t,
+      scrollHideEnabled: true,
+      overlayChromeHideAllowed: overlayChromeHideAllowed,
+    );
+    final bottomPad = bottomNavReserve * reveal;
 
     return AnnotatedRegion<SystemUiOverlayStyle>(
       value: t >= 0.5 ? _immersiveOverlayStyle : SystemUiOverlayStyle.dark,
@@ -656,7 +753,7 @@ class _ChuyenPhapLuanWebviewState extends State<ChuyenPhapLuanWebview>
           child: Stack(
             fit: StackFit.expand,
             children: [
-              Positioned(
+              buildWebViewPositioned(
                 top: webViewTopOffset(
                   topInset: topInset,
                   chromeBarHeight: _chromeBarHeight,
@@ -664,9 +761,6 @@ class _ChuyenPhapLuanWebviewState extends State<ChuyenPhapLuanWebview>
                   scrollHideEnabled: true,
                   overlayChromeHideAllowed: overlayChromeHideAllowed,
                 ),
-                left: 0,
-                right: 0,
-                bottom: 0,
                 child: _webViewBody(),
               ),
               Positioned(

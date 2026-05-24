@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:webview_flutter/webview_flutter.dart';
 
 import 'book_webview_state_store.dart';
+import 'webview_js_safe.dart';
 
 /// JavaScript + thao tác cuộn dùng chung cho WebView đọc sách (tab Book, All Books).
 class BookWebViewScrollHelper {
@@ -16,11 +17,98 @@ class BookWebViewScrollHelper {
   static String normalizeUrlKey(String url) {
     final uri = Uri.tryParse(url);
     if (uri == null || !uri.hasScheme) return url;
+    var scheme = uri.scheme.toLowerCase();
+    if (scheme == 'http') {
+      scheme = 'https';
+    }
     var path = uri.path;
     if (path.length > 1 && path.endsWith('/')) {
       path = path.substring(0, path.length - 1);
     }
-    return uri.replace(path: path).toString();
+    return uri.replace(scheme: scheme, path: path).toString();
+  }
+
+  static bool navigationUrlsEqual(String a, String b) =>
+      normalizeUrlKey(a) == normalizeUrlKey(b);
+
+  /// Khóa trang không gồm `#fragment` — so khớp anchor cùng document.
+  static String documentBaseKey(String url) {
+    final uri = Uri.tryParse(url);
+    if (uri == null || !uri.hasScheme) return url;
+    var scheme = uri.scheme.toLowerCase();
+    if (scheme == 'http') {
+      scheme = 'https';
+    }
+    var path = uri.path;
+    if (path.length > 1 && path.endsWith('/')) {
+      path = path.substring(0, path.length - 1);
+    }
+    return uri.replace(scheme: scheme, path: path, fragment: null).toString();
+  }
+
+  /// Chỉ đổi hash trên cùng trang (mục lục nội bộ) — không xóa/khôi phục cuộn.
+  static bool isHashOnlyNavigation(String? fromUrl, String toUrl) {
+    if (fromUrl == null || fromUrl.isEmpty) return false;
+    final toUri = Uri.tryParse(toUrl);
+    if (toUri == null || toUri.fragment.isEmpty) return false;
+    return documentBaseKey(fromUrl) == documentBaseKey(toUrl);
+  }
+
+  /// Vị trí gần nhất trong lịch sử (so khóa chuẩn hóa).
+  static int findInHistory(List<String> history, String url) {
+    final key = normalizeUrlKey(url);
+    for (var i = history.length - 1; i >= 0; i--) {
+      if (normalizeUrlKey(history[i]) == key) return i;
+    }
+    return -1;
+  }
+
+  /// Cập nhật lịch sử in-app — không nhảy về lần xuất hiện đầu của cùng URL.
+  static BookReadingState commitUrlToHistory(
+    BookReadingState state,
+    String url, {
+    int maxEntries = 80,
+  }) {
+    var history = List<String>.from(state.history);
+    var index = state.historyIndex;
+
+    if (history.isNotEmpty &&
+        navigationUrlsEqual(history[history.length - 1], url)) {
+      index = history.length - 1;
+    } else {
+      if (index < history.length - 1) {
+        history = history.sublist(0, index + 1);
+      }
+      history.add(url);
+      if (history.length > maxEntries) {
+        final overflow = history.length - maxEntries;
+        history = history.sublist(overflow);
+      }
+      index = history.length - 1;
+    }
+
+    return state.withNavigation(
+      url: url,
+      history: history,
+      historyIndex: index,
+    );
+  }
+
+  static ({List<String> history, int historyIndex}) alignHistoryForResume(
+    List<String> history,
+    int historyIndex,
+    String urlToLoad,
+  ) {
+    final nextHistory = List<String>.from(history);
+    if (nextHistory.isEmpty) {
+      return (history: <String>[urlToLoad], historyIndex: 0);
+    }
+    final idx = findInHistory(nextHistory, urlToLoad);
+    if (idx >= 0) {
+      return (history: nextHistory, historyIndex: idx);
+    }
+    nextHistory.add(urlToLoad);
+    return (history: nextHistory, historyIndex: nextHistory.length - 1);
   }
 
   /// Hủy retry `scrollTo` đang chờ — chỉ khi người dùng cuộn tay trong lúc restore.
@@ -38,9 +126,11 @@ class BookWebViewScrollHelper {
   ) {
     final direct = scrollByUrl[url];
     if (direct != null) return direct;
-    final normalized = normalizeUrlKey(url);
-    if (normalized != url) {
-      return scrollByUrl[normalized];
+    final key = normalizeUrlKey(url);
+    final byKey = scrollByUrl[key];
+    if (byKey != null) return byKey;
+    for (final entry in scrollByUrl.entries) {
+      if (normalizeUrlKey(entry.key) == key) return entry.value;
     }
     return null;
   }
@@ -82,18 +172,26 @@ class BookWebViewScrollHelper {
 })()
 ''';
 
+  /// Giới hạn tần suất postMessage — giảm tải bridge Flutter ↔ Chromium khi cuộn.
+  static const int scrollReporterMinIntervalMs = 100;
+
   static const String installReporterJs = '''
 (function() {
   if (window.__zflScrollHooked) return;
   window.__zflScrollHooked = true;
   var persistTimer = null;
   var rafPending = false;
-  function report() {
+  var lastPostMs = 0;
+  var minInterval = $scrollReporterMinIntervalMs;
+  function report(force) {
     var el = document.scrollingElement || document.documentElement;
     var y = window.pageYOffset || el.scrollTop || 0;
     var viewH = window.innerHeight || document.documentElement.clientHeight || 0;
     var max = Math.max(0, (el.scrollHeight || 0) - viewH);
     var ratio = max > 0 ? y / max : 0;
+    var now = Date.now();
+    if (!force && now - lastPostMs < minInterval) return;
+    lastPostMs = now;
     if (window.ScrollReporter) {
       ScrollReporter.postMessage(JSON.stringify({y: y, ratio: ratio, max: max, url: location.href}));
     }
@@ -103,11 +201,11 @@ class BookWebViewScrollHelper {
       rafPending = true;
       requestAnimationFrame(function() {
         rafPending = false;
-        report();
+        report(false);
       });
     }
     clearTimeout(persistTimer);
-    persistTimer = setTimeout(report, 350);
+    persistTimer = setTimeout(function() { report(true); }, 350);
   }, {passive: true});
 })();
 ''';
@@ -156,10 +254,17 @@ class BookWebViewScrollHelper {
   }
 
   /// URL thật trên trang (gồm hash) — ổn định hơn `WebViewController.currentUrl()` trên SPA.
-  static Future<String?> readPageUrl(WebViewController controller) async {
+  static Future<String?> readPageUrl(
+    WebViewController controller, {
+    bool Function()? canRun,
+  }) async {
     try {
-      final result =
-          await controller.runJavaScriptReturningResult('location.href');
+      final result = await WebViewJsSafe.returningResult(
+        controller,
+        'location.href',
+        canRun: canRun ?? () => true,
+      );
+      if (result == null) return null;
       dynamic href = result;
       if (result is String) {
         final trimmed = result.trim();
@@ -180,10 +285,17 @@ class BookWebViewScrollHelper {
   }
 
   /// Chiều cao vùng cuộn tối đa (px) — dùng quyết định có cho ẩn AppBar khi cuộn.
-  static Future<double?> readMaxScrollExtent(WebViewController controller) async {
+  static Future<double?> readMaxScrollExtent(
+    WebViewController controller, {
+    bool Function()? canRun,
+  }) async {
     try {
-      final result =
-          await controller.runJavaScriptReturningResult(readPositionJs);
+      final result = await WebViewJsSafe.returningResult(
+        controller,
+        readPositionJs,
+        canRun: canRun ?? () => true,
+      );
+      if (result == null) return null;
       dynamic decoded = result;
       if (result is String) {
         final trimmed = result.trim();
@@ -199,9 +311,17 @@ class BookWebViewScrollHelper {
     }
   }
 
-  static Future<BookScrollPosition?> readPosition(WebViewController controller) async {
+  static Future<BookScrollPosition?> readPosition(
+    WebViewController controller, {
+    bool Function()? canRun,
+  }) async {
     try {
-      final result = await controller.runJavaScriptReturningResult(readPositionJs);
+      final result = await WebViewJsSafe.returningResult(
+        controller,
+        readPositionJs,
+        canRun: canRun ?? () => true,
+      );
+      if (result == null) return null;
       dynamic decoded = result;
       if (result is String) {
         final trimmed = result.trim();
@@ -240,12 +360,15 @@ class BookWebViewScrollHelper {
 
     Future<void> applyOnce() async {
       if (generation != _restoreGeneration) return;
-      await controller.runJavaScript(
+      if (isMounted != null && !isMounted()) return;
+      await WebViewJsSafe.run(
+        controller,
         restorePositionJs(
           position,
           scrollOffsetPx: scrollOffsetPx,
           useScrollRatio: useScrollRatio,
         ),
+        canRun: isMounted ?? () => true,
       );
     }
 
@@ -257,7 +380,7 @@ class BookWebViewScrollHelper {
         if (generation != _restoreGeneration) return;
         if (isMounted != null && !isMounted()) return;
 
-        final current = await readPosition(controller);
+        final current = await readPosition(controller, canRun: isMounted);
         if (shouldSkipRestore(
           position,
           current,
@@ -276,9 +399,42 @@ class BookWebViewScrollHelper {
     }
   }
 
-  static Future<void> installReporter(WebViewController controller) async {
+  static Future<void> installReporter(
+    WebViewController controller, {
+    bool Function()? canRun,
+  }) async {
+    await WebViewJsSafe.run(
+      controller,
+      installReporterJs,
+      canRun: canRun ?? () => true,
+    );
+  }
+
+  /// Khôi phục cuộn đã lưu cho [resolvedUrl] sau khi trang load xong.
+  static Future<void> restoreScrollIfSaved(
+    WebViewController controller,
+    BookReadingState state,
+    String resolvedUrl, {
+    required bool Function() isMounted,
+    required void Function(bool restoring) setRestoring,
+  }) async {
+    final saved = scrollForUrl(state.scrollByUrl, resolvedUrl);
+    if (saved == null) return;
+    if (saved.scrollY <= 0 && saved.scrollRatio <= 0) return;
+
+    final current = await readPosition(controller);
+    if (shouldSkipRestore(saved, current, useScrollRatio: false)) return;
+
+    setRestoring(true);
     try {
-      await controller.runJavaScript(installReporterJs);
-    } catch (_) {}
+      await restorePosition(
+        controller,
+        saved,
+        isMounted: isMounted,
+        useScrollRatio: false,
+      );
+    } finally {
+      setRestoring(false);
+    }
   }
 }

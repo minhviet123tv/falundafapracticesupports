@@ -1,7 +1,8 @@
-import 'package:flutter/foundation.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 import 'package:webview_flutter_android/webview_flutter_android.dart';
 import 'package:webview_flutter_wkwebview/webview_flutter_wkwebview.dart';
+
+import 'webview_js_safe.dart';
 
 /// Cấu hình WebView dùng chung — UA giống Chrome, mixed content (Android), lazy images.
 class AppWebViewConfig {
@@ -46,9 +47,13 @@ class AppWebViewConfig {
   }
 
   /// Hỗ trợ menu/ảnh lazy-load (ưu tiên minghui.org).
-  static Future<void> refreshLazyImages(WebViewController controller) async {
-    try {
-      await controller.runJavaScript('''
+  static Future<void> refreshLazyImages(
+    WebViewController controller, {
+    bool Function()? canRun,
+  }) async {
+    await WebViewJsSafe.run(
+      controller,
+      '''
         (() => {
           const imgs = document.querySelectorAll('img');
           imgs.forEach((img) => {
@@ -62,19 +67,19 @@ class AppWebViewConfig {
             }
           });
         })();
-      ''');
-    } catch (e, st) {
-      debugPrint('AppWebViewConfig.refreshLazyImages: $e\n$st');
-    }
+      ''',
+      canRun: canRun ?? () => true,
+    );
   }
 
   /// Gọi từ [NavigationDelegate.onPageFinished] khi cần.
   static Future<void> onPageFinishedEnhancements(
     WebViewController controller, {
     bool nudgeLazyImages = false,
+    bool Function()? canRun,
   }) async {
     if (nudgeLazyImages) {
-      await refreshLazyImages(controller);
+      await refreshLazyImages(controller, canRun: canRun);
     }
   }
 }

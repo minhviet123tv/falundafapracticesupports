@@ -9,6 +9,7 @@ import '../common/browser_helper.dart';
 import '../common/book_webview_scroll_helper.dart';
 import '../common/compact_web_url_bar.dart';
 import '../common/webview_scroll_chrome_mixin.dart';
+import '../common/webview_js_safe.dart';
 
 /*
 webview_flutter: ^4.8.0
@@ -31,7 +32,7 @@ class WebViewBrowserAudio extends StatefulWidget {
 }
 
 class _WebViewBrowserAudioState extends State<WebViewBrowserAudio>
-    with WebviewScrollChromeMixin {
+    with TickerProviderStateMixin, WebviewScrollChromeMixin, WebViewJsHost {
   static const double _audioToolbarHeight = kToolbarHeight;
 
   //A. Dữ liệu toàn cục
@@ -46,6 +47,7 @@ class _WebViewBrowserAudioState extends State<WebViewBrowserAudio>
   @override
   void initState() {
     super.initState();
+    initScrollChromeReveal(this);
     final uri = Uri.tryParse(widget.linkUrl.trim());
     _showUrlBar = uri == null || uri.scheme != 'file';
     _currentUrl = _showUrlBar ? widget.linkUrl.trim() : null;
@@ -127,7 +129,11 @@ class _WebViewBrowserAudioState extends State<WebViewBrowserAudio>
         'ScrollReporter',
         onMessageReceived: (JavaScriptMessage message) {
           if (_showUrlBar) {
-            handleScrollChromeReport(message.message, _chromeBarHeight);
+            handleScrollChromeReport(
+              message.message,
+              _chromeBarHeight,
+              scrollHideEnabled: true,
+            );
           }
         },
       )
@@ -160,14 +166,20 @@ class _WebViewBrowserAudioState extends State<WebViewBrowserAudio>
       : _audioToolbarHeight;
 
   Future<void> _installScrollReporter() async {
-    await BookWebViewScrollHelper.installReporter(_controller);
+    await BookWebViewScrollHelper.installReporter(
+      _controller,
+      canRun: () => canRunWebViewJs,
+    );
     resetScrollChromeTracking();
   }
 
   Future<void> _onAudioPageFinished() async {
     await _installScrollReporter();
     final maxScroll =
-        await BookWebViewScrollHelper.readMaxScrollExtent(_controller);
+        await BookWebViewScrollHelper.readMaxScrollExtent(
+      _controller,
+      canRun: () => canRunWebViewJs,
+    );
     updateOverlayChromeHideFromPageMetrics(
       maxScroll: maxScroll ?? 0,
       chromeBarHeight: _chromeBarHeight,
@@ -177,6 +189,8 @@ class _WebViewBrowserAudioState extends State<WebViewBrowserAudio>
 
   @override
   void dispose() {
+    disposeScrollChromeReveal();
+    webViewJsAllowed = false;
     unawaited(_pauseAllMedia());
     unawaited(_setWakelock(false));
     super.dispose();
@@ -193,7 +207,9 @@ class _WebViewBrowserAudioState extends State<WebViewBrowserAudio>
   }
 
   Future<void> _injectPlaybackTrackingScript() async {
-    await _controller.runJavaScript('''
+    await WebViewJsSafe.run(
+      _controller,
+      '''
       (() => {
         if (window.__fdPlaybackTrackingInstalled) return;
         window.__fdPlaybackTrackingInstalled = true;
@@ -221,7 +237,9 @@ class _WebViewBrowserAudioState extends State<WebViewBrowserAudio>
         const observer = new MutationObserver(() => bindAll());
         observer.observe(document.documentElement, { childList: true, subtree: true });
       })();
-    ''');
+    ''',
+      canRun: () => canRunWebViewJs,
+    );
   }
 
   Future<void> _loadInitialContent() async {
@@ -267,7 +285,9 @@ class _WebViewBrowserAudioState extends State<WebViewBrowserAudio>
 
   Future<void> _pauseAllMedia() async {
     try {
-      await _controller.runJavaScript('''
+      await WebViewJsSafe.run(
+        _controller,
+        '''
         (() => {
           document.querySelectorAll('audio, video').forEach((media) => {
             if (!media.paused) {
@@ -275,7 +295,9 @@ class _WebViewBrowserAudioState extends State<WebViewBrowserAudio>
             }
           });
         })();
-      ''');
+      ''',
+        canRun: () => webViewJsAllowed,
+      );
     } catch (_) {
       // Ignore errors while page is tearing down.
     }
@@ -332,7 +354,7 @@ class _WebViewBrowserAudioState extends State<WebViewBrowserAudio>
       body: Stack(
         fit: StackFit.expand,
         children: [
-          Positioned(
+          buildWebViewPositioned(
             top: webViewTopOffset(
               topInset: topInset,
               chromeBarHeight: _chromeBarHeight,
@@ -340,9 +362,6 @@ class _WebViewBrowserAudioState extends State<WebViewBrowserAudio>
               scrollHideEnabled: scrollHide,
               overlayChromeHideAllowed: overlayChromeHideAllowed,
             ),
-            left: 0,
-            right: 0,
-            bottom: 0,
             child: scrollHide
                 ? DismissKeyboardWhenWebViewTapped(
                     child: Stack(

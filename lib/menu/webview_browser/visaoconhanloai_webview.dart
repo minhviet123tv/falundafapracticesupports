@@ -10,6 +10,7 @@ import '../../common/app_webview_config.dart';
 import '../../common/browser_helper.dart';
 import '../../common/compact_web_url_bar.dart';
 import '../../common/webview_immersive_mixin.dart';
+import '../../common/webview_js_safe.dart';
 import '../../common/webview_scroll_chrome_mixin.dart';
 
 class VisaoconhanloaiWebview extends StatefulWidget {
@@ -21,9 +22,10 @@ class VisaoconhanloaiWebview extends StatefulWidget {
 
 class _VisaoconhanloaiWebviewState extends State<VisaoconhanloaiWebview>
     with
-        SingleTickerProviderStateMixin,
+        TickerProviderStateMixin,
         WebviewScrollChromeMixin,
-        WebviewImmersiveMixin {
+        WebviewImmersiveMixin,
+        WebViewJsHost {
   late final WebViewController _controller;
   late VisaoconhanloaiEnum visaoconhanloaiEnum;
   final double _border10 = 10.0;
@@ -95,10 +97,19 @@ class _VisaoconhanloaiWebviewState extends State<VisaoconhanloaiWebview>
   }
 
   Future<void> _onPageFinished() async {
-    await AppWebViewConfig.onPageFinishedEnhancements(_controller);
-    await installImmersiveScrollReporter(_controller);
+    await AppWebViewConfig.onPageFinishedEnhancements(
+      _controller,
+      canRun: () => canRunWebViewJs,
+    );
+    await installImmersiveScrollReporter(
+      _controller,
+      canRun: () => canRunWebViewJs,
+    );
     await onImmersivePageFinished();
-    await refreshImmersiveChromeHideAllowed(_controller);
+    await refreshImmersiveChromeHideAllowed(
+      _controller,
+      canRun: () => canRunWebViewJs,
+    );
     if (mounted) setState(() {});
   }
 

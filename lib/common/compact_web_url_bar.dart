@@ -13,12 +13,20 @@ class CompactWebUrlBar extends StatefulWidget {
   final WebViewController controller;
   final String? currentUrl;
   final EdgeInsetsGeometry? padding;
+  final Future<void> Function()? onNavigateBack;
+  final Future<void> Function()? onNavigateForward;
+  final Future<void> Function(Uri uri)? onNavigateToUrl;
+  final Future<void> Function()? onReload;
 
   const CompactWebUrlBar({
     super.key,
     required this.controller,
     this.currentUrl,
     this.padding,
+    this.onNavigateBack,
+    this.onNavigateForward,
+    this.onNavigateToUrl,
+    this.onReload,
   });
 
   @override
@@ -104,7 +112,11 @@ class _CompactWebUrlBarState extends State<CompactWebUrlBar> {
     _dismissKeyboard();
     try {
       final uri = WebUrlResolver.resolve(raw);
-      await widget.controller.loadRequest(uri);
+      if (widget.onNavigateToUrl != null) {
+        await widget.onNavigateToUrl!(uri);
+      } else {
+        await widget.controller.loadRequest(uri);
+      }
     } catch (_) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
@@ -184,9 +196,13 @@ class _CompactWebUrlBarState extends State<CompactWebUrlBar> {
                   onSubmitted: (_) => _go(),
                 ),
                 ),
-                _icon(Icons.refresh, () {
+                _icon(Icons.refresh, () async {
                   _dismissKeyboard();
-                  widget.controller.reload();
+                  if (widget.onReload != null) {
+                    await widget.onReload!();
+                  } else {
+                    widget.controller.reload();
+                  }
                 }),
                 _icon(Icons.arrow_forward, _go, tooltip: 'Đi'),
               ],
@@ -212,9 +228,17 @@ class _CompactWebUrlBarState extends State<CompactWebUrlBar> {
                 ? () async {
                     _dismissKeyboard();
                     if (isBack) {
-                      await widget.controller.goBack();
+                      if (widget.onNavigateBack != null) {
+                        await widget.onNavigateBack!();
+                      } else {
+                        await widget.controller.goBack();
+                      }
                     } else {
-                      await widget.controller.goForward();
+                      if (widget.onNavigateForward != null) {
+                        await widget.onNavigateForward!();
+                      } else {
+                        await widget.controller.goForward();
+                      }
                     }
                   }
                 : null,
