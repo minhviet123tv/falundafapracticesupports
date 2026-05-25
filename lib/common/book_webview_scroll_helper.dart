@@ -82,7 +82,8 @@ class BookWebViewScrollHelper {
 })()
 ''';
 
-  static const int scrollReporterMinIntervalMs = 150;
+  /// Throttle báo cáo scroll — giảm áp lực bridge/WebView (đặc biệt emulator 16KB).
+  static const int scrollReporterMinIntervalMs = 200;
 
   static const String installReporterJs = '''
 (function() {

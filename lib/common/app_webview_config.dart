@@ -4,6 +4,10 @@ import 'package:webview_flutter_android/webview_flutter_android.dart';
 import 'package:webview_flutter_wkwebview/webview_flutter_wkwebview.dart';
 
 /// Cấu hình WebView dùng chung — UA giống Chrome, mixed content (Android), lazy images.
+///
+/// Lưu ý: emulator `sdk_gphone16k` (16KB page) hay SIGTRAP trong thread MemoryInfra
+/// của Chromium — thường là lỗi WebView/emulator, không phải Dart. Thử máy thật
+/// hoặc AVD 4KB; tránh resize WebView liên tục khi ẩn/hiện chrome.
 class AppWebViewConfig {
   AppWebViewConfig._();
 

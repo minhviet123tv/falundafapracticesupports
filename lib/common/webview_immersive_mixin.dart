@@ -30,8 +30,11 @@ mixin WebviewImmersiveMixin<T extends StatefulWidget> on State<T>, SingleTickerP
   static const Curve _chromeAnimCurve = Curves.easeInOut;
   static const double _toolbarHorizontalPadding = 10;
 
-  /// 0 = chrome hiện đủ; 1 = chrome ẩn (WebView đã mở rộng lên).
+  /// 0 = chrome hiện; 1 = chrome trượt lên (chỉ animation, không resize WebView từng frame).
   late final AnimationController immersiveAnim;
+
+  /// Chrome chiếm chỗ trên WebView trong Column; false = WebView full (một lần resize).
+  bool _chromeReservesLayoutSpace = true;
   final ValueNotifier<bool> immersiveActive = ValueNotifier<bool>(false);
 
   bool _overlayChromeVisible = true;
@@ -54,7 +57,9 @@ mixin WebviewImmersiveMixin<T extends StatefulWidget> on State<T>, SingleTickerP
   bool get inImmersiveMode => immersiveActive.value;
 
   bool get _chromeFullyHidden =>
-      immersiveActive.value && immersiveAnim.value >= 1.0;
+      !_chromeReservesLayoutSpace &&
+      immersiveActive.value &&
+      immersiveAnim.value >= 1.0;
 
   void initImmersive() {
     immersiveAnim = AnimationController(
@@ -93,9 +98,6 @@ mixin WebviewImmersiveMixin<T extends StatefulWidget> on State<T>, SingleTickerP
     if (until == null) return false;
     return DateTime.now().isBefore(until);
   }
-
-  double _chromeRevealFactor() =>
-      (1.0 - _chromeAnimCurve.transform(immersiveAnim.value)).clamp(0.0, 1.0);
 
   void handleImmersiveScrollReport(String message) {
     if (!mounted || immersiveAnim.isAnimating) return;
@@ -228,6 +230,7 @@ mixin WebviewImmersiveMixin<T extends StatefulWidget> on State<T>, SingleTickerP
     await immersiveAnim.forward();
     if (!mounted) return;
 
+    _chromeReservesLayoutSpace = false;
     _lastScrollY = null;
     _directionalScrollAccum = 0;
     _suppressChromeRevealUntil =
@@ -237,21 +240,20 @@ mixin WebviewImmersiveMixin<T extends StatefulWidget> on State<T>, SingleTickerP
 
   Future<void> _showChromeLayout({bool bypassCooldown = false}) async {
     if (!mounted || immersiveAnim.isAnimating) return;
-    if (_overlayChromeVisible && immersiveAnim.value <= 0) return;
+    if (_chromeReservesLayoutSpace && immersiveAnim.value <= 0) return;
     if (!bypassCooldown && _immersiveToggleCooldownActive()) return;
 
     _lastImmersiveToggleAt = DateTime.now();
     _suppressChromeRevealUntil = null;
     _lastScrollY = null;
     _directionalScrollAccum = 0;
+    _overlayChromeVisible = true;
     immersiveActive.value = false;
     externalImmersiveNotifier?.value = false;
+    _chromeReservesLayoutSpace = true;
     if (mounted) setState(() {});
 
     await immersiveAnim.reverse();
-    if (!mounted) return;
-
-    _overlayChromeVisible = true;
     if (mounted) setState(() {});
   }
 
@@ -334,10 +336,17 @@ mixin WebviewImmersiveMixin<T extends StatefulWidget> on State<T>, SingleTickerP
     );
   }
 
-  Widget _buildChromeBar({required Widget toolbar, Widget? urlBar}) {
+  double _chromeBarHeight(Widget? urlBar) =>
+      toolbarHeight + (urlBar != null ? CompactWebUrlBar.barHeight : 0);
+
+  Widget _buildChromeBar({
+    required Widget toolbar,
+    Widget? urlBar,
+    bool showElevation = true,
+  }) {
     return Material(
       color: Colors.white,
-      elevation: _chromeRevealFactor() > 0.05 ? 1 : 0,
+      elevation: showElevation ? 1 : 0,
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
@@ -364,8 +373,9 @@ mixin WebviewImmersiveMixin<T extends StatefulWidget> on State<T>, SingleTickerP
     final topInset = MediaQuery.paddingOf(context).top;
     final readingMode = immersiveActive.value;
     final bottomPad = readingMode ? 0.0 : bottomNavReserve;
-    final chromeReveal = _chromeRevealFactor();
-    final statusBarOpaque = readingMode || immersiveAnim.value > 0;
+    final chromeHeight = _chromeBarHeight(urlBar);
+    final slideT = _chromeAnimCurve.transform(immersiveAnim.value);
+    final statusBarOpaque = readingMode || !_chromeReservesLayoutSpace;
 
     return AnnotatedRegion<SystemUiOverlayStyle>(
       value: readingMode ? _immersiveOverlayStyle : SystemUiOverlayStyle.dark,
@@ -381,16 +391,23 @@ mixin WebviewImmersiveMixin<T extends StatefulWidget> on State<T>, SingleTickerP
                     : Colors.white,
                 child: SizedBox(height: topInset),
               ),
-              ClipRect(
-                child: Align(
-                  alignment: Alignment.topCenter,
-                  heightFactor: chromeReveal,
-                  child: IgnorePointer(
-                    ignoring: chromeReveal < 0.05,
-                    child: _buildChromeBar(toolbar: toolbar, urlBar: urlBar),
+              if (_chromeReservesLayoutSpace)
+                SizedBox(
+                  height: chromeHeight,
+                  child: ClipRect(
+                    child: Transform.translate(
+                      offset: Offset(0, -slideT * chromeHeight),
+                      child: IgnorePointer(
+                        ignoring: slideT > 0.92,
+                        child: _buildChromeBar(
+                          toolbar: toolbar,
+                          urlBar: urlBar,
+                          showElevation: slideT < 0.08,
+                        ),
+                      ),
+                    ),
                   ),
                 ),
-              ),
               Expanded(child: body),
             ],
           ),
