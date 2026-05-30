@@ -146,22 +146,34 @@ class BookReadingState {
     );
   }
 
-  /// Chỉ giữ vị trí cuộn của trang đang đọc (một URL).
-  BookReadingState withOnlyCurrentScroll(
+  /// Gộp vị trí cuộn theo URL (giữ nhiều trang trong phiên đọc).
+  BookReadingState withScrollForUrl(
     String urlKey,
-    BookScrollPosition position,
-  ) {
-    final map = <String, BookScrollPosition>{};
-    if (position.scrollY > 0 || position.scrollRatio > 0) {
-      map[urlKey] = position;
+    BookScrollPosition position, {
+    int maxEntries = 40,
+  }) {
+    if (position.scrollY <= 0 && position.scrollRatio <= 0) {
+      return this;
+    }
+    final nextScroll = Map<String, BookScrollPosition>.from(scrollByUrl);
+    nextScroll[urlKey] = position;
+    while (nextScroll.length > maxEntries) {
+      nextScroll.remove(nextScroll.keys.first);
     }
     return BookReadingState(
       lastUrl: lastUrl,
       history: history,
       historyIndex: historyIndex,
-      scrollByUrl: map,
+      scrollByUrl: nextScroll,
     );
   }
+
+  /// @deprecated Dùng [withScrollForUrl] — giữ alias để tương thích.
+  BookReadingState withOnlyCurrentScroll(
+    String urlKey,
+    BookScrollPosition position,
+  ) =>
+      withScrollForUrl(urlKey, position);
 
   /// Xóa vị trí đã lưu — dùng khi người dùng mở lại link (xem từ đầu).
   BookReadingState withoutScrollForUrl(String urlKey) {

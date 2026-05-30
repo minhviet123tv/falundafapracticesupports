@@ -23,6 +23,16 @@ class BookWebViewScrollHelper {
     return uri.replace(path: path).toString();
   }
 
+  static bool urlsMatch(String a, String b) =>
+      normalizeUrlKey(a) == normalizeUrlKey(b);
+
+  static int historyIndexOf(List<String> history, String url) {
+    for (var i = 0; i < history.length; i++) {
+      if (urlsMatch(history[i], url)) return i;
+    }
+    return -1;
+  }
+
   /// Hủy retry `scrollTo` đang chờ — chỉ khi người dùng cuộn tay trong lúc restore.
   static void cancelPendingRestoresOnUserScroll() {
     if (_activeRestoreGeneration != null) {

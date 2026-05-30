@@ -12,6 +12,7 @@ import '../common/app_webview_config.dart';
 import '../common/book_webview_scroll_helper.dart';
 import '../common/book_webview_state_store.dart';
 import '../common/browser_helper.dart';
+import '../common/compact_web_url_bar.dart';
 
 /*
 Lưu vị trí cuộn (pixel + tỷ lệ %) + URL đầy đủ (kể cả #mục) + lịch sử trang.
@@ -35,6 +36,8 @@ class _AllBooksWebviewState extends State<AllBooksWebview> with WidgetsBindingOb
   String? _currentUrl;
   Timer? _scrollSaveDebounce;
   bool _isRestoringScroll = false;
+  String? _preserveScrollForUrlKey;
+  bool _restoreScrollAfterFinish = false;
 
   @override
   void initState() {
@@ -55,13 +58,19 @@ class _AllBooksWebviewState extends State<AllBooksWebview> with WidgetsBindingOb
           },
           onPageStarted: (String url) {
             final leaving = _currentUrl;
-            if (leaving != null && leaving.isNotEmpty && leaving != url) {
+            if (leaving != null &&
+                leaving.isNotEmpty &&
+                !BookWebViewScrollHelper.urlsMatch(leaving, url)) {
               unawaited(_captureScrollForUrl(leaving));
             }
-            // Mở link (kể cả link từng xem): không khôi phục scroll cũ của URL đích.
-            _readingState = _readingState.withoutScrollForUrl(
-              BookWebViewScrollHelper.normalizeUrlKey(url),
-            );
+            final destKey = BookWebViewScrollHelper.normalizeUrlKey(url);
+            final preserve = _preserveScrollForUrlKey != null &&
+                _preserveScrollForUrlKey == destKey;
+            if (preserve) {
+              _preserveScrollForUrlKey = null;
+            } else if (!_restoreScrollAfterFinish) {
+              _readingState = _readingState.withoutScrollForUrl(destKey);
+            }
           },
           onPageFinished: (String url) {
             unawaited(_onPageFinished(url));
@@ -125,7 +134,7 @@ class _AllBooksWebviewState extends State<AllBooksWebview> with WidgetsBindingOb
       if (position.scrollY <= 0 && position.scrollRatio <= 0) return;
 
       _currentUrl = url;
-      _readingState = _readingState.withOnlyCurrentScroll(
+      _readingState = _readingState.withScrollForUrl(
         BookWebViewScrollHelper.normalizeUrlKey(url),
         position,
       );
@@ -140,8 +149,7 @@ class _AllBooksWebviewState extends State<AllBooksWebview> with WidgetsBindingOb
     if (state == AppLifecycleState.paused ||
         state == AppLifecycleState.inactive ||
         state == AppLifecycleState.detached) {
-      unawaited(_captureScrollForCurrentPage());
-      unawaited(_persistReadingState());
+      unawaited(_flushReadingState());
     }
   }
 
@@ -162,7 +170,7 @@ class _AllBooksWebviewState extends State<AllBooksWebview> with WidgetsBindingOb
         await BookWebViewStateStore.load(languageAllPageFalundafa.languageCode);
 
     final defaultUrl = languageAllPageFalundafa.booksPage;
-    final urlToLoad = _readingState.lastUrl ?? defaultUrl;
+    var urlToLoad = _readingState.lastUrl ?? defaultUrl;
 
     var history = List<String>.from(_readingState.history);
     var historyIndex = _readingState.historyIndex;
@@ -170,11 +178,15 @@ class _AllBooksWebviewState extends State<AllBooksWebview> with WidgetsBindingOb
     if (history.isEmpty) {
       history = <String>[urlToLoad];
       historyIndex = 0;
-    } else if (!history.contains(urlToLoad)) {
-      history.add(urlToLoad);
-      historyIndex = history.length - 1;
     } else {
-      historyIndex = history.indexOf(urlToLoad);
+      final existing = BookWebViewScrollHelper.historyIndexOf(history, urlToLoad);
+      if (existing >= 0) {
+        urlToLoad = history[existing];
+        historyIndex = existing;
+      } else {
+        history.add(urlToLoad);
+        historyIndex = history.length - 1;
+      }
     }
 
     _readingState = _readingState.withNavigation(
@@ -183,6 +195,14 @@ class _AllBooksWebviewState extends State<AllBooksWebview> with WidgetsBindingOb
       historyIndex: historyIndex,
     );
     _currentUrl = urlToLoad;
+
+    _preserveScrollForUrlKey =
+        BookWebViewScrollHelper.normalizeUrlKey(urlToLoad);
+    _restoreScrollAfterFinish = BookWebViewScrollHelper.scrollForUrl(
+          _readingState.scrollByUrl,
+          urlToLoad,
+        ) !=
+        null;
 
     await _controller.loadRequest(Uri.parse(urlToLoad));
   }
@@ -198,6 +218,22 @@ class _AllBooksWebviewState extends State<AllBooksWebview> with WidgetsBindingOb
     _isRestoringScroll = true;
     try {
       await BookWebViewScrollHelper.installReporter(_controller);
+
+      final saved = BookWebViewScrollHelper.scrollForUrl(
+        _readingState.scrollByUrl,
+        resolvedUrl,
+      );
+      if (_restoreScrollAfterFinish && saved != null) {
+        await BookWebViewScrollHelper.restorePosition(
+          _controller,
+          saved,
+          isMounted: () => mounted,
+          useScrollRatio: true,
+          retryDelaysMs: const <int>[300, 900, 1600],
+        );
+      }
+      _restoreScrollAfterFinish = false;
+
       await _persistReadingState();
     } finally {
       _isRestoringScroll = false;
@@ -212,7 +248,7 @@ class _AllBooksWebviewState extends State<AllBooksWebview> with WidgetsBindingOb
     var history = List<String>.from(_readingState.history);
     var index = _readingState.historyIndex;
 
-    final existingIndex = history.indexOf(url);
+    final existingIndex = BookWebViewScrollHelper.historyIndexOf(history, url);
     if (existingIndex >= 0) {
       index = existingIndex;
     } else {
@@ -244,10 +280,16 @@ class _AllBooksWebviewState extends State<AllBooksWebview> with WidgetsBindingOb
     if (position == null) return;
     if (position.scrollY <= 0 && position.scrollRatio <= 0) return;
 
-    _readingState = _readingState.withOnlyCurrentScroll(
+    _readingState = _readingState.withScrollForUrl(
       BookWebViewScrollHelper.normalizeUrlKey(url),
       position,
     );
+  }
+
+  Future<void> _flushReadingState() async {
+    _scrollSaveDebounce?.cancel();
+    await _captureScrollForCurrentPage();
+    await _persistReadingState();
   }
 
   Future<void> _captureScrollForCurrentPage() async {
@@ -300,15 +342,26 @@ class _AllBooksWebviewState extends State<AllBooksWebview> with WidgetsBindingOb
     await _loadReadingStateAndOpenUrl();
   }
 
+  void _prepareNavigationTo(String url) {
+    _preserveScrollForUrlKey =
+        BookWebViewScrollHelper.normalizeUrlKey(url);
+    _restoreScrollAfterFinish = BookWebViewScrollHelper.scrollForUrl(
+          _readingState.scrollByUrl,
+          url,
+        ) !=
+        null;
+  }
+
   /// Về trang mục lục sách (`booksPage`) của ngôn ngữ đang chọn trong enum.
   Future<void> _goToBooksHomePage() async {
     await _captureScrollForCurrentPage();
 
     final homeUrl = languageAllPageFalundafa.booksPage;
     _currentUrl = homeUrl;
-    _readingState = _readingState.withOnlyCurrentScroll(
+    _restoreScrollAfterFinish = false;
+    _preserveScrollForUrlKey = null;
+    _readingState = _readingState.withoutScrollForUrl(
       BookWebViewScrollHelper.normalizeUrlKey(homeUrl),
-      const BookScrollPosition(scrollY: 0, scrollRatio: 0),
     );
 
     await _controller.loadRequest(Uri.parse(homeUrl));
@@ -317,10 +370,10 @@ class _AllBooksWebviewState extends State<AllBooksWebview> with WidgetsBindingOb
   }
 
   Future<void> _goBack() async {
-    await _captureScrollForCurrentPage();
-    await _persistReadingState();
+    await _flushReadingState();
 
     if (await _controller.canGoBack()) {
+      _restoreScrollAfterFinish = true;
       await _controller.goBack();
       return;
     }
@@ -334,15 +387,16 @@ class _AllBooksWebviewState extends State<AllBooksWebview> with WidgetsBindingOb
         historyIndex: newIndex,
       );
       _currentUrl = url;
+      _prepareNavigationTo(url);
       await _controller.loadRequest(Uri.parse(url));
     }
   }
 
   Future<void> _goForward() async {
-    await _captureScrollForCurrentPage();
-    await _persistReadingState();
+    await _flushReadingState();
 
     if (await _controller.canGoForward()) {
+      _restoreScrollAfterFinish = true;
       await _controller.goForward();
       return;
     }
@@ -356,6 +410,7 @@ class _AllBooksWebviewState extends State<AllBooksWebview> with WidgetsBindingOb
         historyIndex: newIndex,
       );
       _currentUrl = url;
+      _prepareNavigationTo(url);
       await _controller.loadRequest(Uri.parse(url));
     }
   }
@@ -396,8 +451,7 @@ class _AllBooksWebviewState extends State<AllBooksWebview> with WidgetsBindingOb
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
     _scrollSaveDebounce?.cancel();
-    unawaited(_captureScrollForCurrentPage());
-    unawaited(_persistReadingState());
+    unawaited(_flushReadingState());
     super.dispose();
   }
 
@@ -463,34 +517,6 @@ class _AllBooksWebviewState extends State<AllBooksWebview> with WidgetsBindingOb
           ),
           toolbarHeight: BookWebViewScrollHelper.bookAppBarHeightPx,
           actions: [
-            FutureBuilder<bool>(
-              future: _canGoBack(),
-              builder: (context, snapshot) {
-                final enabled = snapshot.data ?? false;
-                return IconButton(
-                  onPressed: enabled ? () => unawaited(_goBack()) : null,
-                  icon: Icon(
-                    Icons.arrow_circle_left_outlined,
-                    size: 20,
-                    color: enabled ? null : Colors.grey.shade400,
-                  ),
-                );
-              },
-            ),
-            FutureBuilder<bool>(
-              future: _canGoForward(),
-              builder: (context, snapshot) {
-                final enabled = snapshot.data ?? false;
-                return IconButton(
-                  onPressed: enabled ? () => unawaited(_goForward()) : null,
-                  icon: Icon(
-                    Icons.arrow_circle_right_outlined,
-                    size: 20,
-                    color: enabled ? null : Colors.grey.shade400,
-                  ),
-                );
-              },
-            ),
             FutureBuilder<dynamic>(
               future: BrowserHelper.getCurrentUrl(_controller),
               builder: (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
@@ -509,9 +535,23 @@ class _AllBooksWebviewState extends State<AllBooksWebview> with WidgetsBindingOb
           backgroundColor: Colors.white,
         ),
         backgroundColor: Colors.white,
-        body: (progressLoadWeb <= 20)
-            ? const Center(child: CircularProgressIndicator())
-            : WebViewWidget(controller: _controller),
+        body: Column(
+          children: [
+            CompactWebUrlBar(
+              controller: _controller,
+              currentUrl: _currentUrl ?? languageAllPageFalundafa.booksPage,
+              onBack: _goBack,
+              onForward: _goForward,
+              canGoBack: _canGoBack,
+              canGoForward: _canGoForward,
+            ),
+            Expanded(
+              child: (progressLoadWeb <= 20)
+                  ? const Center(child: CircularProgressIndicator())
+                  : WebViewWidget(controller: _controller),
+            ),
+          ],
+        ),
       ),
     ),
     );

@@ -173,22 +173,6 @@ class _MinghuiWebviewState extends State<MinghuiWebview>
           ),
         ),
         const Spacer(),
-        IconButton(
-          onPressed: () async {
-            if (await _controller.canGoBack()) {
-              await _controller.goBack();
-            }
-          },
-          icon: const Icon(Icons.arrow_circle_left_outlined, size: 20),
-        ),
-        IconButton(
-          onPressed: () async {
-            if (await _controller.canGoForward()) {
-              await _controller.goForward();
-            }
-          },
-          icon: const Icon(Icons.arrow_circle_right_outlined, size: 20),
-        ),
         FutureBuilder<String?>(
           future: BrowserHelper.getCurrentUrl(_controller),
           builder: (context, snapshot) {

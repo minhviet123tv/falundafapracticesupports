@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 
@@ -7,15 +9,28 @@ import 'web_url_resolver.dart';
 class CompactWebUrlBar extends StatefulWidget {
   static const double barHeight = 36;
 
+  /// Icon duyệt web (dùng thống nhất trên mọi trang có thanh browser).
+  static const IconData backIcon = Icons.arrow_circle_left_outlined;
+  static const IconData forwardIcon = Icons.arrow_circle_right_outlined;
+  static const double navIconSize = 20;
+
   final WebViewController controller;
   final String? currentUrl;
   final EdgeInsetsGeometry? padding;
+  final Future<void> Function()? onBack;
+  final Future<void> Function()? onForward;
+  final Future<bool> Function()? canGoBack;
+  final Future<bool> Function()? canGoForward;
 
   const CompactWebUrlBar({
     super.key,
     required this.controller,
     this.currentUrl,
     this.padding,
+    this.onBack,
+    this.onForward,
+    this.canGoBack,
+    this.canGoForward,
   });
 
   @override
@@ -80,6 +95,64 @@ class _CompactWebUrlBarState extends State<CompactWebUrlBar> {
     }
   }
 
+  Future<void> _handleBack() async {
+    if (widget.onBack != null) {
+      await widget.onBack!();
+      return;
+    }
+    if (await widget.controller.canGoBack()) {
+      await widget.controller.goBack();
+    }
+  }
+
+  Future<void> _handleForward() async {
+    if (widget.onForward != null) {
+      await widget.onForward!();
+      return;
+    }
+    if (await widget.controller.canGoForward()) {
+      await widget.controller.goForward();
+    }
+  }
+
+  Future<bool> _resolveCanGoBack() async {
+    if (widget.canGoBack != null) return widget.canGoBack!();
+    return widget.controller.canGoBack();
+  }
+
+  Future<bool> _resolveCanGoForward() async {
+    if (widget.canGoForward != null) return widget.canGoForward!();
+    return widget.controller.canGoForward();
+  }
+
+  Widget _navIcon({
+    required IconData icon,
+    required VoidCallback onPressed,
+    required Future<bool> Function() enabled,
+  }) {
+    return FutureBuilder<bool>(
+      future: enabled(),
+      builder: (context, snapshot) {
+        final canPress = snapshot.data ?? false;
+        return SizedBox(
+          width: 32,
+          height: 32,
+          child: IconButton(
+            onPressed: canPress ? onPressed : null,
+            icon: Icon(
+              icon,
+              size: CompactWebUrlBar.navIconSize,
+              color: canPress ? null : Colors.grey.shade400,
+            ),
+            padding: EdgeInsets.zero,
+            constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+            visualDensity: VisualDensity.compact,
+          ),
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final pad = widget.padding ?? const EdgeInsets.symmetric(horizontal: 4);
@@ -92,21 +165,15 @@ class _CompactWebUrlBarState extends State<CompactWebUrlBar> {
           padding: pad,
           child: Row(
             children: [
-              _icon(
-                Icons.arrow_back_ios_new,
-                () async {
-                  if (await widget.controller.canGoBack()) {
-                    await widget.controller.goBack();
-                  }
-                },
+              _navIcon(
+                icon: CompactWebUrlBar.backIcon,
+                onPressed: () => unawaited(_handleBack()),
+                enabled: _resolveCanGoBack,
               ),
-              _icon(
-                Icons.arrow_forward_ios,
-                () async {
-                  if (await widget.controller.canGoForward()) {
-                    await widget.controller.goForward();
-                  }
-                },
+              _navIcon(
+                icon: CompactWebUrlBar.forwardIcon,
+                onPressed: () => unawaited(_handleForward()),
+                enabled: _resolveCanGoForward,
               ),
               Expanded(
                 child: TextField(
@@ -167,13 +234,18 @@ class _CompactWebUrlBarState extends State<CompactWebUrlBar> {
     );
   }
 
-  Widget _icon(IconData icon, VoidCallback onPressed, {String? tooltip}) {
+  Widget _icon(
+    IconData icon,
+    VoidCallback onPressed, {
+    String? tooltip,
+    double iconSize = 16,
+  }) {
     return SizedBox(
       width: 32,
       height: 32,
       child: IconButton(
         onPressed: onPressed,
-        icon: Icon(icon, size: 16),
+        icon: Icon(icon, size: iconSize),
         padding: EdgeInsets.zero,
         constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
         tooltip: tooltip,

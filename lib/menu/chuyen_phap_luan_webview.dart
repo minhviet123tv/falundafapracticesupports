@@ -58,6 +58,8 @@ class _ChuyenPhapLuanWebviewState extends State<ChuyenPhapLuanWebview>
   String? _currentUrl;
   Timer? _scrollSaveDebounce;
   bool _isRestoringScroll = false;
+  String? _preserveScrollForUrlKey;
+  bool _restoreScrollAfterFinish = false;
   bool _overlayChromeVisible = true;
   double? _lastScrollY;
   double _directionalScrollAccum = 0;
@@ -100,12 +102,19 @@ class _ChuyenPhapLuanWebviewState extends State<ChuyenPhapLuanWebview>
           },
           onPageStarted: (String url) {
             final leaving = _currentUrl;
-            if (leaving != null && leaving.isNotEmpty && leaving != url) {
+            if (leaving != null &&
+                leaving.isNotEmpty &&
+                !BookWebViewScrollHelper.urlsMatch(leaving, url)) {
               unawaited(_captureScrollForUrl(leaving));
             }
-            _readingState = _readingState.withoutScrollForUrl(
-              BookWebViewScrollHelper.normalizeUrlKey(url),
-            );
+            final destKey = BookWebViewScrollHelper.normalizeUrlKey(url);
+            final preserve = _preserveScrollForUrlKey != null &&
+                _preserveScrollForUrlKey == destKey;
+            if (preserve) {
+              _preserveScrollForUrlKey = null;
+            } else if (!_restoreScrollAfterFinish) {
+              _readingState = _readingState.withoutScrollForUrl(destKey);
+            }
             _lastScrollY = null;
             _directionalScrollAccum = 0;
             _lastScrollHandleAt = null;
@@ -203,7 +212,7 @@ class _ChuyenPhapLuanWebviewState extends State<ChuyenPhapLuanWebview>
       if (position.scrollY <= 0 && position.scrollRatio <= 0) return;
 
       _currentUrl = url;
-      _readingState = _readingState.withOnlyCurrentScroll(
+      _readingState = _readingState.withScrollForUrl(
         BookWebViewScrollHelper.normalizeUrlKey(url),
         position,
       );
@@ -354,8 +363,7 @@ class _ChuyenPhapLuanWebviewState extends State<ChuyenPhapLuanWebview>
     if (state == AppLifecycleState.paused ||
         state == AppLifecycleState.inactive ||
         state == AppLifecycleState.detached) {
-      unawaited(_captureScrollForCurrentPage());
-      unawaited(_persistReadingState());
+      unawaited(_flushReadingState());
     }
   }
 
@@ -378,7 +386,7 @@ class _ChuyenPhapLuanWebviewState extends State<ChuyenPhapLuanWebview>
     _readingState = await BookWebViewStateStore.load(_languageCode);
 
     final defaultUrl = _language.urlChuyenPhapLuan;
-    final urlToLoad = _readingState.lastUrl ?? defaultUrl;
+    var urlToLoad = _readingState.lastUrl ?? defaultUrl;
 
     var history = List<String>.from(_readingState.history);
     var historyIndex = _readingState.historyIndex;
@@ -386,11 +394,15 @@ class _ChuyenPhapLuanWebviewState extends State<ChuyenPhapLuanWebview>
     if (history.isEmpty) {
       history = <String>[urlToLoad];
       historyIndex = 0;
-    } else if (!history.contains(urlToLoad)) {
-      history.add(urlToLoad);
-      historyIndex = history.length - 1;
     } else {
-      historyIndex = history.indexOf(urlToLoad);
+      final existing = BookWebViewScrollHelper.historyIndexOf(history, urlToLoad);
+      if (existing >= 0) {
+        urlToLoad = history[existing];
+        historyIndex = existing;
+      } else {
+        history.add(urlToLoad);
+        historyIndex = history.length - 1;
+      }
     }
 
     _readingState = _readingState.withNavigation(
@@ -399,6 +411,14 @@ class _ChuyenPhapLuanWebviewState extends State<ChuyenPhapLuanWebview>
       historyIndex: historyIndex,
     );
     _currentUrl = urlToLoad;
+
+    _preserveScrollForUrlKey =
+        BookWebViewScrollHelper.normalizeUrlKey(urlToLoad);
+    _restoreScrollAfterFinish = BookWebViewScrollHelper.scrollForUrl(
+          _readingState.scrollByUrl,
+          urlToLoad,
+        ) !=
+        null;
 
     await _controller.loadRequest(Uri.parse(urlToLoad));
   }
@@ -414,6 +434,22 @@ class _ChuyenPhapLuanWebviewState extends State<ChuyenPhapLuanWebview>
     _isRestoringScroll = true;
     try {
       await BookWebViewScrollHelper.installReporter(_controller);
+
+      final saved = BookWebViewScrollHelper.scrollForUrl(
+        _readingState.scrollByUrl,
+        resolvedUrl,
+      );
+      if (_restoreScrollAfterFinish && saved != null) {
+        await BookWebViewScrollHelper.restorePosition(
+          _controller,
+          saved,
+          isMounted: () => mounted,
+          useScrollRatio: true,
+          retryDelaysMs: const <int>[300, 900, 1600],
+        );
+      }
+      _restoreScrollAfterFinish = false;
+
       await _persistReadingState();
     } finally {
       _isRestoringScroll = false;
@@ -431,7 +467,7 @@ class _ChuyenPhapLuanWebviewState extends State<ChuyenPhapLuanWebview>
     var history = List<String>.from(_readingState.history);
     var index = _readingState.historyIndex;
 
-    final existingIndex = history.indexOf(url);
+    final existingIndex = BookWebViewScrollHelper.historyIndexOf(history, url);
     if (existingIndex >= 0) {
       index = existingIndex;
     } else {
@@ -463,10 +499,16 @@ class _ChuyenPhapLuanWebviewState extends State<ChuyenPhapLuanWebview>
     if (position == null) return;
     if (position.scrollY <= 0 && position.scrollRatio <= 0) return;
 
-    _readingState = _readingState.withOnlyCurrentScroll(
+    _readingState = _readingState.withScrollForUrl(
       BookWebViewScrollHelper.normalizeUrlKey(url),
       position,
     );
+  }
+
+  Future<void> _flushReadingState() async {
+    _scrollSaveDebounce?.cancel();
+    await _captureScrollForCurrentPage();
+    await _persistReadingState();
   }
 
   Future<void> _captureScrollForCurrentPage() async {
@@ -539,15 +581,26 @@ class _ChuyenPhapLuanWebviewState extends State<ChuyenPhapLuanWebview>
     await _loadReadingStateAndOpenUrl();
   }
 
+  void _prepareNavigationTo(String url) {
+    _preserveScrollForUrlKey =
+        BookWebViewScrollHelper.normalizeUrlKey(url);
+    _restoreScrollAfterFinish = BookWebViewScrollHelper.scrollForUrl(
+          _readingState.scrollByUrl,
+          url,
+        ) !=
+        null;
+  }
+
   /// Về đầu sách Chuyển Pháp Luân (`urlChuyenPhapLuan`) của ngôn ngữ hiện tại.
   Future<void> _goToZflHomePage() async {
     await _captureScrollForCurrentPage();
 
     final homeUrl = _language.urlChuyenPhapLuan;
     _currentUrl = homeUrl;
-    _readingState = _readingState.withOnlyCurrentScroll(
+    _restoreScrollAfterFinish = false;
+    _preserveScrollForUrlKey = null;
+    _readingState = _readingState.withoutScrollForUrl(
       BookWebViewScrollHelper.normalizeUrlKey(homeUrl),
-      const BookScrollPosition(scrollY: 0, scrollRatio: 0),
     );
 
     await _controller.loadRequest(Uri.parse(homeUrl));
@@ -556,10 +609,10 @@ class _ChuyenPhapLuanWebviewState extends State<ChuyenPhapLuanWebview>
   }
 
   Future<void> _goBack() async {
-    await _captureScrollForCurrentPage();
-    await _persistReadingState();
+    await _flushReadingState();
 
     if (await _controller.canGoBack()) {
+      _restoreScrollAfterFinish = true;
       await _controller.goBack();
       return;
     }
@@ -573,15 +626,16 @@ class _ChuyenPhapLuanWebviewState extends State<ChuyenPhapLuanWebview>
         historyIndex: newIndex,
       );
       _currentUrl = url;
+      _prepareNavigationTo(url);
       await _controller.loadRequest(Uri.parse(url));
     }
   }
 
   Future<void> _goForward() async {
-    await _captureScrollForCurrentPage();
-    await _persistReadingState();
+    await _flushReadingState();
 
     if (await _controller.canGoForward()) {
+      _restoreScrollAfterFinish = true;
       await _controller.goForward();
       return;
     }
@@ -595,6 +649,7 @@ class _ChuyenPhapLuanWebviewState extends State<ChuyenPhapLuanWebview>
         historyIndex: newIndex,
       );
       _currentUrl = url;
+      _prepareNavigationTo(url);
       await _controller.loadRequest(Uri.parse(url));
     }
   }
@@ -645,8 +700,7 @@ class _ChuyenPhapLuanWebviewState extends State<ChuyenPhapLuanWebview>
     _immersiveAnim.dispose();
     WidgetsBinding.instance.removeObserver(this);
     _scrollSaveDebounce?.cancel();
-    unawaited(_captureScrollForCurrentPage());
-    unawaited(_persistReadingState());
+    unawaited(_flushReadingState());
     super.dispose();
   }
 
@@ -694,32 +748,6 @@ class _ChuyenPhapLuanWebviewState extends State<ChuyenPhapLuanWebview>
 
   List<Widget> _navigationActions({required bool immersive}) {
     return [
-      FutureBuilder<bool>(
-        future: _canGoBack(),
-        builder: (context, snapshot) {
-          final enabled = snapshot.data ?? false;
-          return IconButton(
-            onPressed: enabled ? () => unawaited(_goBack()) : null,
-            icon: Icon(
-              Icons.arrow_circle_left_outlined,
-              color: enabled ? null : Colors.grey.shade400,
-            ),
-          );
-        },
-      ),
-      FutureBuilder<bool>(
-        future: _canGoForward(),
-        builder: (context, snapshot) {
-          final enabled = snapshot.data ?? false;
-          return IconButton(
-            onPressed: enabled ? () => unawaited(_goForward()) : null,
-            icon: Icon(
-              Icons.arrow_circle_right_outlined,
-              color: enabled ? null : Colors.grey.shade400,
-            ),
-          );
-        },
-      ),
       FutureBuilder<dynamic>(
         future: BrowserHelper.getCurrentUrl(_controller),
         builder: (context, snapshot) {
@@ -777,6 +805,10 @@ class _ChuyenPhapLuanWebviewState extends State<ChuyenPhapLuanWebview>
           CompactWebUrlBar(
             controller: _controller,
             currentUrl: _currentUrl ?? _language.urlChuyenPhapLuan,
+            onBack: _goBack,
+            onForward: _goForward,
+            canGoBack: _canGoBack,
+            canGoForward: _canGoForward,
           ),
         ],
       ),
