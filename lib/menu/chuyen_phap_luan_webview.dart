@@ -35,7 +35,7 @@ class _ChuyenPhapLuanWebviewState extends State<ChuyenPhapLuanWebview>
   static const double _minScrollableExtra = 40;
   static const Duration _immersiveToggleCooldown = Duration(milliseconds: 400);
   static const Duration _scrollHandleThrottle = Duration(milliseconds: 80);
-  static const Duration _postHideRevealSuppress = Duration(milliseconds: 500);
+  static const Duration _postHideRevealSuppress = Duration(milliseconds: 600);
   static const double _scrollImpulsePx = 12;
   static const Color _statusBarBackground = Colors.black;
   static const SystemUiOverlayStyle _immersiveOverlayStyle = SystemUiOverlayStyle(
@@ -216,16 +216,6 @@ class _ChuyenPhapLuanWebviewState extends State<ChuyenPhapLuanWebview>
   void _updateChromeVisibilityFromScroll(double scrollY, double maxScroll) {
     if (_isRestoringScroll || !mounted) return;
 
-    final minScrollable = _chromeBarHeight + _minScrollableExtra;
-    if (maxScroll < minScrollable) {
-      _lastScrollY = scrollY;
-      _directionalScrollAccum = 0;
-      if (!_chromeFullyHidden) {
-        unawaited(_showChromeLayout(bypassCooldown: true));
-      }
-      return;
-    }
-
     if (scrollY <= _revealChromeAtTopScrollPx) {
       _lastScrollY = scrollY;
       _directionalScrollAccum = 0;
@@ -236,13 +226,23 @@ class _ChuyenPhapLuanWebviewState extends State<ChuyenPhapLuanWebview>
       return;
     }
 
-    if (_overlayChromeVisible && scrollY < _hideChromeBelowScrollPx) {
-      _lastScrollY = scrollY;
-      _directionalScrollAccum = 0;
+    if (BookTabChrome.immersive.value && _chromeRevealSuppressActive()) {
       return;
     }
 
-    if (BookTabChrome.immersive.value && _chromeRevealSuppressActive()) {
+    final minScrollable = _chromeBarHeight + _minScrollableExtra;
+    if (maxScroll < minScrollable) {
+      _lastScrollY = scrollY;
+      _directionalScrollAccum = 0;
+      if (!BookTabChrome.immersive.value && _chromeReservesLayoutSpace) {
+        unawaited(_showChromeLayout(bypassCooldown: true));
+      }
+      return;
+    }
+
+    if (_overlayChromeVisible && scrollY < _hideChromeBelowScrollPx) {
+      _lastScrollY = scrollY;
+      _directionalScrollAccum = 0;
       return;
     }
 
@@ -258,7 +258,7 @@ class _ChuyenPhapLuanWebviewState extends State<ChuyenPhapLuanWebview>
       if (delta != 0) {
         if (_overlayChromeVisible) {
           _applyScrollWhileChromeVisible(delta, scrollY);
-        } else if (BookTabChrome.immersive.value) {
+        } else if (BookTabChrome.immersive.value && !_chromeReservesLayoutSpace) {
           _applyScrollWhileChromeHidden(delta);
         }
       }
@@ -315,6 +315,9 @@ class _ChuyenPhapLuanWebviewState extends State<ChuyenPhapLuanWebview>
     if (_immersiveToggleCooldownActive()) return;
 
     _lastImmersiveToggleAt = DateTime.now();
+    _suppressChromeRevealUntil = DateTime.now().add(
+      _immersiveAnimDuration + _postHideRevealSuppress,
+    );
     _overlayChromeVisible = false;
     BookTabChrome.immersive.value = true;
     if (mounted) setState(() {});
@@ -325,8 +328,6 @@ class _ChuyenPhapLuanWebviewState extends State<ChuyenPhapLuanWebview>
     _chromeReservesLayoutSpace = false;
     _lastScrollY = null;
     _directionalScrollAccum = 0;
-    _suppressChromeRevealUntil =
-        DateTime.now().add(_postHideRevealSuppress);
     if (mounted) setState(() {});
   }
 

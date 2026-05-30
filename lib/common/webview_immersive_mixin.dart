@@ -17,7 +17,7 @@ mixin WebviewImmersiveMixin<T extends StatefulWidget> on State<T>, SingleTickerP
   static const double _minScrollableExtra = 40;
   static const Duration _immersiveToggleCooldown = Duration(milliseconds: 400);
   static const Duration _scrollHandleThrottle = Duration(milliseconds: 80);
-  static const Duration _postHideRevealSuppress = Duration(milliseconds: 500);
+  static const Duration _postHideRevealSuppress = Duration(milliseconds: 600);
   static const double _scrollImpulsePx = 12;
   static const Color _statusBarBackground = Colors.black;
   static const SystemUiOverlayStyle _immersiveOverlayStyle = SystemUiOverlayStyle(
@@ -123,16 +123,6 @@ mixin WebviewImmersiveMixin<T extends StatefulWidget> on State<T>, SingleTickerP
   void _updateChromeVisibilityFromScroll(double scrollY, double maxScroll) {
     if (!mounted) return;
 
-    final minScrollable = immersiveChromeBarHeight + _minScrollableExtra;
-    if (maxScroll < minScrollable) {
-      _lastScrollY = scrollY;
-      _directionalScrollAccum = 0;
-      if (!_chromeFullyHidden) {
-        unawaited(_showChromeLayout(bypassCooldown: true));
-      }
-      return;
-    }
-
     if (scrollY <= _revealChromeAtTopScrollPx) {
       _lastScrollY = scrollY;
       _directionalScrollAccum = 0;
@@ -143,13 +133,24 @@ mixin WebviewImmersiveMixin<T extends StatefulWidget> on State<T>, SingleTickerP
       return;
     }
 
-    if (_overlayChromeVisible && scrollY < _hideChromeBelowScrollPx) {
-      _lastScrollY = scrollY;
-      _directionalScrollAccum = 0;
+    if (immersiveActive.value && _chromeRevealSuppressActive()) {
       return;
     }
 
-    if (immersiveActive.value && _chromeRevealSuppressActive()) {
+    final minScrollable = immersiveChromeBarHeight + _minScrollableExtra;
+    if (maxScroll < minScrollable) {
+      _lastScrollY = scrollY;
+      _directionalScrollAccum = 0;
+      // WebView vừa mở rộng làm maxScroll giảm — không ép hiện lại chrome khi đang đọc.
+      if (!immersiveActive.value && _chromeReservesLayoutSpace) {
+        unawaited(_showChromeLayout(bypassCooldown: true));
+      }
+      return;
+    }
+
+    if (_overlayChromeVisible && scrollY < _hideChromeBelowScrollPx) {
+      _lastScrollY = scrollY;
+      _directionalScrollAccum = 0;
       return;
     }
 
@@ -165,7 +166,7 @@ mixin WebviewImmersiveMixin<T extends StatefulWidget> on State<T>, SingleTickerP
       if (delta != 0) {
         if (_overlayChromeVisible) {
           _applyScrollWhileChromeVisible(delta, scrollY);
-        } else if (immersiveActive.value) {
+        } else if (immersiveActive.value && !_chromeReservesLayoutSpace) {
           _applyScrollWhileChromeHidden(delta);
         }
       }
@@ -222,6 +223,9 @@ mixin WebviewImmersiveMixin<T extends StatefulWidget> on State<T>, SingleTickerP
     if (_immersiveToggleCooldownActive()) return;
 
     _lastImmersiveToggleAt = DateTime.now();
+    _suppressChromeRevealUntil = DateTime.now().add(
+      _chromeAnimDuration + _postHideRevealSuppress,
+    );
     _overlayChromeVisible = false;
     immersiveActive.value = true;
     externalImmersiveNotifier?.value = true;
@@ -233,8 +237,6 @@ mixin WebviewImmersiveMixin<T extends StatefulWidget> on State<T>, SingleTickerP
     _chromeReservesLayoutSpace = false;
     _lastScrollY = null;
     _directionalScrollAccum = 0;
-    _suppressChromeRevealUntil =
-        DateTime.now().add(_postHideRevealSuppress);
     if (mounted) setState(() {});
   }
 
