@@ -85,6 +85,8 @@ mixin WebviewImmersiveMixin<T extends StatefulWidget> on State<T>, SingleTickerP
 
   DateTime? _suppressChromeRevealUntil;
 
+  bool _immersiveScrollReady = false;
+
 
 
   bool get immersiveHasUrlBar => true;
@@ -128,6 +130,9 @@ mixin WebviewImmersiveMixin<T extends StatefulWidget> on State<T>, SingleTickerP
   /// Khoảng cách tối thiểu giữa hai báo cáo scroll từ JS (ms).
   int get immersiveScrollReportMinIntervalMs =>
       BookWebViewScrollHelper.scrollReporterMinIntervalMs;
+
+  /// Luôn hiện chrome khi trang load xong (tab Book).
+  bool get immersiveScrollResetChromeOnPageOpen => false;
 
   bool get inImmersiveMode => immersiveActive.value;
 
@@ -225,6 +230,32 @@ mixin WebviewImmersiveMixin<T extends StatefulWidget> on State<T>, SingleTickerP
 
       final scrollY = y.toDouble();
 
+      if (decoded['init'] == true) {
+
+        _lastScrollY = scrollY;
+
+        return;
+
+      }
+
+      if (immersiveScrollSnapsChrome && !_immersiveScrollReady) {
+
+        _lastScrollY = scrollY;
+
+        return;
+
+      }
+
+      final intent = decoded['intent'];
+
+      if (intent is String && immersiveScrollSnapsChrome) {
+
+        _handleScrollIntent(intent, scrollY);
+
+        return;
+
+      }
+
       if (immersiveAnim.isAnimating) {
 
         if (immersiveScrollHandlesDuringAnimation) {
@@ -256,6 +287,40 @@ mixin WebviewImmersiveMixin<T extends StatefulWidget> on State<T>, SingleTickerP
       _updateChromeVisibilityFromScroll(scrollY);
 
     } catch (_) {}
+
+  }
+
+  void _handleScrollIntent(String intent, double scrollY) {
+
+    if (!mounted) return;
+
+    _lastScrollY = scrollY;
+
+    if (_immersiveLockedByButton) return;
+
+    if (immersiveAnim.isAnimating && immersiveScrollHandlesDuringAnimation) {
+
+      immersiveAnim.stop();
+
+    } else if (immersiveAnim.isAnimating) {
+
+      return;
+
+    }
+
+    if (intent == 'down' && _overlayChromeVisible) {
+
+      unawaited(_hideChromeLayout(fromScroll: true));
+
+      return;
+
+    }
+
+    if (intent == 'up' && !_overlayChromeVisible) {
+
+      unawaited(_showChromeLayout(bypassCooldown: true, fromScroll: true));
+
+    }
 
   }
 
@@ -312,18 +377,6 @@ mixin WebviewImmersiveMixin<T extends StatefulWidget> on State<T>, SingleTickerP
     if (prevY == null) {
 
       _lastScrollY = scrollY;
-
-      if (immersiveScrollSnapsChrome &&
-
-          _overlayChromeVisible &&
-
-          !immersiveAnim.isAnimating &&
-
-          scrollY > _revealChromeAtTopScrollPx) {
-
-        unawaited(_hideChromeLayout(fromScroll: true));
-
-      }
 
       return;
 
@@ -616,11 +669,33 @@ mixin WebviewImmersiveMixin<T extends StatefulWidget> on State<T>, SingleTickerP
 
     _lastScrollHandleAt = null;
 
+    if (immersiveScrollResetChromeOnPageOpen && !_immersiveLockedByButton) {
+
+      immersiveAnim.stop();
+
+      _overlayChromeVisible = true;
+
+      immersiveActive.value = false;
+
+      externalImmersiveNotifier?.value = false;
+
+      immersiveAnim.value = 0.0;
+
+      _suppressChromeRevealUntil = null;
+
+    }
+
+    _immersiveScrollReady = true;
+
+    if (mounted) setState(() {});
+
   }
 
 
 
   void onImmersivePageStarted() {
+
+    _immersiveScrollReady = false;
 
     _lastScrollY = null;
 

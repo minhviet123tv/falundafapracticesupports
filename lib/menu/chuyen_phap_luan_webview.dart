@@ -77,6 +77,9 @@ class _ChuyenPhapLuanWebviewState extends State<ChuyenPhapLuanWebview>
   int get immersiveScrollReportMinIntervalMs => 0;
 
   @override
+  bool get immersiveScrollResetChromeOnPageOpen => true;
+
+  @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
@@ -155,10 +158,10 @@ class _ChuyenPhapLuanWebviewState extends State<ChuyenPhapLuanWebview>
   }
 
   void _onScrollReported(String message) {
-    if (_isRestoringScroll || !mounted) {
-      return;
+    if (!mounted) return;
+    if (!_isRestoringScroll) {
+      BookWebViewScrollHelper.cancelPendingRestoresOnUserScroll();
     }
-    BookWebViewScrollHelper.cancelPendingRestoresOnUserScroll();
     try {
       final decoded = jsonDecode(message);
       if (decoded is! Map) return;
@@ -168,7 +171,11 @@ class _ChuyenPhapLuanWebviewState extends State<ChuyenPhapLuanWebview>
       if (url is! String || url.isEmpty) return;
       if (y is! num) return;
 
-      handleImmersiveScrollReport(message);
+      if (!_isRestoringScroll) {
+        handleImmersiveScrollReport(message);
+      }
+
+      if (_isRestoringScroll) return;
 
       final position = BookScrollPosition(
         scrollY: y.toDouble(),

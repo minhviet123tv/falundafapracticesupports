@@ -95,25 +95,70 @@ class BookWebViewScrollHelper {
   /// Throttle báo cáo scroll — giảm áp lực bridge/WebView (đặc biệt emulator 16KB).
   static const int scrollReporterMinIntervalMs = 200;
 
-  static String installReporterJsFor({int minIntervalMs = scrollReporterMinIntervalMs}) => '''
+  static String installReporterJsFor({int minIntervalMs = scrollReporterMinIntervalMs}) {
+    final withIntent = minIntervalMs == 0;
+    final intentBlock = withIntent
+        ? '''
+  if (!window.__zflIntentHooked) {
+    window.__zflIntentHooked = true;
+    function postIntent(dir) {
+      var el = document.scrollingElement || document.documentElement;
+      var y = window.pageYOffset || el.scrollTop || 0;
+      var viewH = window.innerHeight || document.documentElement.clientHeight || 0;
+      var max = Math.max(0, (el.scrollHeight || 0) - viewH);
+      var ratio = max > 0 ? y / max : 0;
+      if (window.ScrollReporter) {
+        ScrollReporter.postMessage(JSON.stringify({
+          y: y, ratio: ratio, max: max, url: location.href, intent: dir
+        }));
+      }
+    }
+    window.addEventListener('wheel', function(e) {
+      if (e.deltaY > 0) postIntent('down');
+      else if (e.deltaY < 0) postIntent('up');
+    }, {passive: true});
+    var lastTouchY = null;
+    window.addEventListener('touchstart', function(e) {
+      lastTouchY = e.touches.length ? e.touches[0].clientY : null;
+    }, {passive: true});
+    window.addEventListener('touchmove', function(e) {
+      if (!e.touches.length) return;
+      var ty = e.touches[0].clientY;
+      if (lastTouchY != null) {
+        var dy = ty - lastTouchY;
+        if (dy < -2) postIntent('down');
+        else if (dy > 2) postIntent('up');
+      }
+      lastTouchY = ty;
+    }, {passive: true});
+    window.addEventListener('touchend', function() { lastTouchY = null; }, {passive: true});
+  }
+'''
+        : '';
+
+    return '''
 (function() {
+  window.__zflScrollMinInterval = $minIntervalMs;
+  $intentBlock
   if (window.__zflScrollHooked) return;
   window.__zflScrollHooked = true;
   var persistTimer = null;
   var rafPending = false;
   var lastPostMs = 0;
-  var minInterval = $minIntervalMs;
-  function report(force) {
+  function report(force, isInit) {
     var el = document.scrollingElement || document.documentElement;
     var y = window.pageYOffset || el.scrollTop || 0;
     var viewH = window.innerHeight || document.documentElement.clientHeight || 0;
     var max = Math.max(0, (el.scrollHeight || 0) - viewH);
     var ratio = max > 0 ? y / max : 0;
     var now = Date.now();
+    var minInterval = window.__zflScrollMinInterval || 0;
     if (!force && minInterval > 0 && now - lastPostMs < minInterval) return;
     lastPostMs = now;
     if (window.ScrollReporter) {
-      ScrollReporter.postMessage(JSON.stringify({y: y, ratio: ratio, max: max, url: location.href}));
+      var payload = {y: y, ratio: ratio, max: max, url: location.href};
+      if (isInit) payload.init = true;
+      ScrollReporter.postMessage(JSON.stringify(payload));
     }
   }
   window.addEventListener('scroll', function() {
@@ -121,15 +166,16 @@ class BookWebViewScrollHelper {
       rafPending = true;
       requestAnimationFrame(function() {
         rafPending = false;
-        report(false);
+        report(false, false);
       });
     }
     clearTimeout(persistTimer);
-    persistTimer = setTimeout(function() { report(true); }, 350);
+    persistTimer = setTimeout(function() { report(true, false); }, 350);
   }, {passive: true});
-  report(true);
+  report(true, true);
 })();
 ''';
+  }
 
   /// [scrollOffsetPx]: cộng vào scrollY sau khi tính (âm = cuộn lên, dương = cuộn xuống).
   /// [useScrollRatio]: false = dùng pixel tab Book (ổn định khi đổi WebView / chiều cao viewport).
