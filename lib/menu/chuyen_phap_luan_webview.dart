@@ -14,6 +14,7 @@ import '../common/book_webview_scroll_helper.dart';
 import '../common/book_webview_state_store.dart';
 import '../common/browser_helper.dart';
 import '../common/compact_web_url_bar.dart';
+import '../common/webview_immersive_mixin.dart';
 
 /// Tab Book: đọc Chuyển Pháp Luân online theo [LanguageNameOfChuyenPhapLuan].
 class ChuyenPhapLuanWebview extends StatefulWidget {
@@ -24,32 +25,14 @@ class ChuyenPhapLuanWebview extends StatefulWidget {
 }
 
 class _ChuyenPhapLuanWebviewState extends State<ChuyenPhapLuanWebview>
-    with WidgetsBindingObserver, SingleTickerProviderStateMixin {
+    with
+        WidgetsBindingObserver,
+        SingleTickerProviderStateMixin,
+        WebviewImmersiveMixin {
   static const String _prefsLanguageKey = 'LanguageNameOfChuyenPhapLuan';
   static const int _maxHistoryEntries = 80;
-  static const double _toolbarHeight = BookWebViewScrollHelper.bookAppBarHeightPx;
-  double get _chromeBarHeight => _toolbarHeight + CompactWebUrlBar.barHeight;
-  static const double _scrollDirectionThreshold = 36;
-  static const double _hideChromeBelowScrollPx = 36;
-  static const double _revealChromeAtTopScrollPx = 20;
-  static const double _minScrollableExtra = 40;
-  static const Duration _immersiveToggleCooldown = Duration(milliseconds: 400);
-  static const Duration _scrollHandleThrottle = Duration(milliseconds: 80);
-  static const Duration _postHideRevealSuppress = Duration(milliseconds: 600);
-  static const double _scrollImpulsePx = 12;
-  static const Color _statusBarBackground = Colors.black;
-  static const SystemUiOverlayStyle _immersiveOverlayStyle = SystemUiOverlayStyle(
-    statusBarColor: Colors.black,
-    statusBarIconBrightness: Brightness.light,
-    systemNavigationBarColor: Colors.white,
-    systemNavigationBarIconBrightness: Brightness.dark,
-  );
-  static const Duration _immersiveAnimDuration = Duration(milliseconds: 220);
-  static const Curve _immersiveAnimCurve = Curves.easeInOut;
-  static const double _overlayToolbarHorizontalPadding = 10;
 
   late final WebViewController _controller;
-  late final AnimationController _immersiveAnim;
   late LanguageNameOfChuyenPhapLuan _language;
   final double _border10 = 10.0;
   int progressLoadWeb = 0;
@@ -60,33 +43,45 @@ class _ChuyenPhapLuanWebviewState extends State<ChuyenPhapLuanWebview>
   bool _isRestoringScroll = false;
   String? _preserveScrollForUrlKey;
   bool _restoreScrollAfterFinish = false;
-  bool _overlayChromeVisible = true;
-  double? _lastScrollY;
-  double _directionalScrollAccum = 0;
-  DateTime? _lastImmersiveToggleAt;
-  DateTime? _lastScrollHandleAt;
-  DateTime? _suppressChromeRevealUntil;
-  VoidCallback? _chromeListener;
 
   String get _languageCode => _language.name;
 
-  bool get _inImmersiveMode => BookTabChrome.immersive.value;
+  @override
+  ValueNotifier<bool>? get externalImmersiveNotifier => BookTabChrome.immersive;
 
-  bool _chromeReservesLayoutSpace = true;
+  /// Menu bottom là overlay trong main.dart — không resize WebView.
+  @override
+  double get bottomNavReserve => 0;
 
-  bool get _chromeFullyHidden =>
-      !_chromeReservesLayoutSpace &&
-      BookTabChrome.immersive.value &&
-      _immersiveAnim.value >= 1.0;
+  /// Cuộn xuống → ẩn AppBar + browser + menu bottom ngay.
+  @override
+  bool get immersiveScrollHideIgnoresCooldown => true;
+
+  @override
+  double get immersiveScrollUpRevealThresholdPx => 0;
+
+  @override
+  bool get immersiveScrollRevealIgnoresSuppress => true;
+
+  @override
+  bool get immersiveScrollHandlesDuringAnimation => true;
+
+  @override
+  bool get immersiveScrollIgnoresThrottle => true;
+
+  @override
+  bool get immersiveScrollSnapsChrome => true;
+
+  /// Báo cáo scroll mỗi frame — phản hồi ẩn/hiện ngay lần cuộn đầu.
+  @override
+  int get immersiveScrollReportMinIntervalMs => 0;
 
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
-    _immersiveAnim = AnimationController(
-      vsync: this,
-      duration: _immersiveAnimDuration,
-    );
+    initImmersive();
+    BookTabChrome.bindChromeAnimation(immersiveAnim);
     _language = LanguageNameOfChuyenPhapLuan.vietnamese;
 
     final WebViewController controller = AppWebViewConfig.createController();
@@ -115,9 +110,7 @@ class _ChuyenPhapLuanWebviewState extends State<ChuyenPhapLuanWebview>
             } else if (!_restoreScrollAfterFinish) {
               _readingState = _readingState.withoutScrollForUrl(destKey);
             }
-            _lastScrollY = null;
-            _directionalScrollAccum = 0;
-            _lastScrollHandleAt = null;
+            onImmersivePageStarted();
           },
           onPageFinished: (String url) {
             unawaited(_onPageFinished(url));
@@ -156,33 +149,13 @@ class _ChuyenPhapLuanWebviewState extends State<ChuyenPhapLuanWebview>
       );
 
     _controller = controller;
-    _chromeListener = () {
-      if (!BookTabChrome.immersive.value &&
-          _immersiveAnim.value > 0 &&
-          mounted) {
-        unawaited(_exitImmersiveMode());
-      }
-    };
-    BookTabChrome.immersive.addListener(_chromeListener!);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       unawaited(_loadSavedLanguageAndOpen());
     });
   }
 
-  bool _immersiveToggleCooldownActive() {
-    final last = _lastImmersiveToggleAt;
-    if (last == null) return false;
-    return DateTime.now().difference(last) < _immersiveToggleCooldown;
-  }
-
-  bool _chromeRevealSuppressActive() {
-    final until = _suppressChromeRevealUntil;
-    if (until == null) return false;
-    return DateTime.now().isBefore(until);
-  }
-
   void _onScrollReported(String message) {
-    if (_isRestoringScroll || !mounted || _immersiveAnim.isAnimating) {
+    if (_isRestoringScroll || !mounted) {
       return;
     }
     BookWebViewScrollHelper.cancelPendingRestoresOnUserScroll();
@@ -192,18 +165,10 @@ class _ChuyenPhapLuanWebviewState extends State<ChuyenPhapLuanWebview>
       final url = decoded['url'];
       final y = decoded['y'];
       final ratio = decoded['ratio'];
-      final maxScroll = decoded['max'];
       if (url is! String || url.isEmpty) return;
       if (y is! num) return;
 
-      final scrollY = y.toDouble();
-      final maxScrollPx = maxScroll is num ? maxScroll.toDouble() : 0.0;
-      if (scrollY > _revealChromeAtTopScrollPx && _lastScrollHandleAt != null) {
-        final elapsed = DateTime.now().difference(_lastScrollHandleAt!);
-        if (elapsed < _scrollHandleThrottle) return;
-      }
-      _lastScrollHandleAt = DateTime.now();
-      _updateChromeVisibilityFromScroll(scrollY, maxScrollPx);
+      handleImmersiveScrollReport(message);
 
       final position = BookScrollPosition(
         scrollY: y.toDouble(),
@@ -220,142 +185,6 @@ class _ChuyenPhapLuanWebviewState extends State<ChuyenPhapLuanWebview>
     } catch (e) {
       debugPrint('Scroll report parse error: $e');
     }
-  }
-
-  void _updateChromeVisibilityFromScroll(double scrollY, double maxScroll) {
-    if (_isRestoringScroll || !mounted) return;
-
-    if (scrollY <= _revealChromeAtTopScrollPx) {
-      _lastScrollY = scrollY;
-      _directionalScrollAccum = 0;
-      if (_overlayChromeVisible || _chromeRevealSuppressActive()) {
-        return;
-      }
-      unawaited(_showChromeLayout(bypassCooldown: true));
-      return;
-    }
-
-    if (BookTabChrome.immersive.value && _chromeRevealSuppressActive()) {
-      return;
-    }
-
-    final minScrollable = _chromeBarHeight + _minScrollableExtra;
-    if (maxScroll < minScrollable) {
-      _lastScrollY = scrollY;
-      _directionalScrollAccum = 0;
-      if (!BookTabChrome.immersive.value && _chromeReservesLayoutSpace) {
-        unawaited(_showChromeLayout(bypassCooldown: true));
-      }
-      return;
-    }
-
-    if (_overlayChromeVisible && scrollY < _hideChromeBelowScrollPx) {
-      _lastScrollY = scrollY;
-      _directionalScrollAccum = 0;
-      return;
-    }
-
-    if (_immersiveToggleCooldownActive()) {
-      if (_overlayChromeVisible) {
-        _lastScrollY = scrollY;
-      }
-      return;
-    }
-
-    if (_lastScrollY != null) {
-      final delta = scrollY - _lastScrollY!;
-      if (delta != 0) {
-        if (_overlayChromeVisible) {
-          _applyScrollWhileChromeVisible(delta, scrollY);
-        } else if (BookTabChrome.immersive.value && !_chromeReservesLayoutSpace) {
-          _applyScrollWhileChromeHidden(delta);
-        }
-      }
-    }
-    _lastScrollY = scrollY;
-  }
-
-  void _applyScrollWhileChromeVisible(double delta, double scrollY) {
-    if (scrollY < _hideChromeBelowScrollPx) {
-      _directionalScrollAccum = 0;
-      return;
-    }
-    if (delta <= 0) {
-      _directionalScrollAccum = 0;
-      return;
-    }
-    if (_directionalScrollAccum < 0) {
-      _directionalScrollAccum = 0;
-    }
-    _directionalScrollAccum += delta;
-    if (_directionalScrollAccum >= _scrollDirectionThreshold ||
-        delta >= _scrollImpulsePx) {
-      _directionalScrollAccum = 0;
-      unawaited(_hideChromeLayout());
-    }
-  }
-
-  void _applyScrollWhileChromeHidden(double delta) {
-    if (_chromeRevealSuppressActive() || _immersiveAnim.isAnimating) {
-      return;
-    }
-    if (delta >= 0) {
-      _directionalScrollAccum = 0;
-      return;
-    }
-    if (_directionalScrollAccum > 0) {
-      _directionalScrollAccum = 0;
-    }
-    _directionalScrollAccum += delta;
-    if (_directionalScrollAccum <= -_scrollDirectionThreshold ||
-        delta <= -_scrollImpulsePx) {
-      _directionalScrollAccum = 0;
-      unawaited(_showChromeLayout());
-    }
-  }
-
-  Future<void> _hideChromeLayout() async {
-    if (!mounted ||
-        _immersiveAnim.isAnimating ||
-        _chromeFullyHidden ||
-        !_overlayChromeVisible) {
-      return;
-    }
-    if (_immersiveToggleCooldownActive()) return;
-
-    _lastImmersiveToggleAt = DateTime.now();
-    _suppressChromeRevealUntil = DateTime.now().add(
-      _immersiveAnimDuration + _postHideRevealSuppress,
-    );
-    _overlayChromeVisible = false;
-    BookTabChrome.immersive.value = true;
-    if (mounted) setState(() {});
-
-    await _immersiveAnim.forward();
-    if (!mounted) return;
-
-    _chromeReservesLayoutSpace = false;
-    _lastScrollY = null;
-    _directionalScrollAccum = 0;
-    if (mounted) setState(() {});
-  }
-
-  Future<void> _showChromeLayout({bool bypassCooldown = false}) async {
-    if (!mounted || _immersiveAnim.isAnimating) return;
-    if (_chromeReservesLayoutSpace && _immersiveAnim.value <= 0) return;
-    if (!bypassCooldown && _immersiveToggleCooldownActive()) return;
-
-    _lastImmersiveToggleAt = DateTime.now();
-    _suppressChromeRevealUntil = null;
-    _lastScrollY = null;
-    _directionalScrollAccum = 0;
-    _overlayChromeVisible = true;
-    BookTabChrome.immersive.value = false;
-    _chromeReservesLayoutSpace = true;
-    if (mounted) setState(() {});
-
-    await _immersiveAnim.reverse();
-    if (mounted) setState(() {});
   }
 
   @override
@@ -433,7 +262,7 @@ class _ChuyenPhapLuanWebviewState extends State<ChuyenPhapLuanWebview>
     _commitUrlToHistory(resolvedUrl);
     _isRestoringScroll = true;
     try {
-      await BookWebViewScrollHelper.installReporter(_controller);
+      await installImmersivePageChrome(_controller);
 
       final saved = BookWebViewScrollHelper.scrollForUrl(
         _readingState.scrollByUrl,
@@ -455,9 +284,8 @@ class _ChuyenPhapLuanWebviewState extends State<ChuyenPhapLuanWebview>
       _isRestoringScroll = false;
     }
 
-    _lastScrollY = null;
-    _directionalScrollAccum = 0;
-    _lastScrollHandleAt = null;
+    final scrollPos = await BookWebViewScrollHelper.readPosition(_controller);
+    await onImmersivePageFinished(scrollY: scrollPos?.scrollY ?? 0);
     if (mounted) {
       setState(() {});
     }
@@ -520,8 +348,9 @@ class _ChuyenPhapLuanWebviewState extends State<ChuyenPhapLuanWebview>
     await _captureScrollForUrl(url);
   }
 
-  Future<void> _toggleImmersiveMode() async {
-    if (_inImmersiveMode) {
+  @override
+  Future<void> toggleImmersiveMode() async {
+    if (inImmersiveMode) {
       await _exitImmersiveMode();
     } else {
       await _enterImmersiveMode();
@@ -529,10 +358,10 @@ class _ChuyenPhapLuanWebviewState extends State<ChuyenPhapLuanWebview>
   }
 
   Future<void> _enterImmersiveMode() async {
-    if (!mounted || _inImmersiveMode) return;
+    if (!mounted || inImmersiveMode) return;
     unawaited(_captureScrollForCurrentPage());
     unawaited(_persistReadingState());
-    await _hideChromeLayout();
+    await enterImmersiveMode();
   }
 
   Future<void> _exitImmersiveMode() async {
@@ -540,7 +369,7 @@ class _ChuyenPhapLuanWebviewState extends State<ChuyenPhapLuanWebview>
     await _captureScrollForCurrentPage();
     await _persistReadingState();
     if (!mounted) return;
-    await _showChromeLayout(bypassCooldown: true);
+    await exitImmersiveMode();
   }
 
   void _schedulePersist() {
@@ -665,10 +494,7 @@ class _ChuyenPhapLuanWebviewState extends State<ChuyenPhapLuanWebview>
   }
 
   Future<void> _onSystemBack() async {
-    if (_inImmersiveMode) {
-      await _exitImmersiveMode();
-      return;
-    }
+    if (await handleImmersiveSystemBack()) return;
     if (await _canGoBack()) {
       await _goBack();
       return;
@@ -691,13 +517,8 @@ class _ChuyenPhapLuanWebviewState extends State<ChuyenPhapLuanWebview>
 
   @override
   void dispose() {
-    if (_chromeListener != null) {
-      BookTabChrome.immersive.removeListener(_chromeListener!);
-    }
-    if (BookTabChrome.immersive.value) {
-      BookTabChrome.immersive.value = false;
-    }
-    _immersiveAnim.dispose();
+    BookTabChrome.unbindChromeAnimation(immersiveAnim);
+    disposeImmersive();
     WidgetsBinding.instance.removeObserver(this);
     _scrollSaveDebounce?.cancel();
     unawaited(_flushReadingState());
@@ -746,139 +567,57 @@ class _ChuyenPhapLuanWebviewState extends State<ChuyenPhapLuanWebview>
     );
   }
 
-  List<Widget> _navigationActions({required bool immersive}) {
-    return [
-      FutureBuilder<dynamic>(
-        future: BrowserHelper.getCurrentUrl(_controller),
-        builder: (context, snapshot) {
-          if (!snapshot.hasData) return const SizedBox.shrink();
-          return IconButton(
-            onPressed: () {
-              BrowserHelper.launchExternal(
-                Uri.parse(snapshot.data.toString()),
-              );
-            },
-            icon: const Icon(Icons.open_in_new, size: 20),
-          );
-        },
-      ),
-      IconButton(
-        onPressed: () => unawaited(_toggleImmersiveMode()),
-        icon: Icon(
-          immersive ? Icons.fullscreen_exit : Icons.zoom_out_map,
-          size: 20,
+  Widget _buildToolbar() {
+    return Row(
+      children: [
+        _languageMenuButton(),
+        IconButton(
+          onPressed: () => unawaited(_goToZflHomePage()),
+          icon: const Icon(Icons.menu_book, size: 20),
+          tooltip: 'Về đầu sách',
         ),
-        tooltip: immersive ? 'Thu gọn' : 'Mở rộng màn hình',
-      ),
-    ];
-  }
-
-  /// AppBar tab Book + thanh địa chỉ (một khối chrome).
-  Widget _buildBookChromeBar() {
-    final immersive = BookTabChrome.immersive.value;
-    return Material(
-      color: Colors.white,
-      elevation: 1,
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          SizedBox(
-            height: _toolbarHeight,
-            child: Padding(
-              padding: const EdgeInsets.symmetric(
-                horizontal: _overlayToolbarHorizontalPadding,
-              ),
-              child: Row(
-                children: [
-                  _languageMenuButton(),
-                  IconButton(
-                    onPressed: () => unawaited(_goToZflHomePage()),
-                    icon: const Icon(Icons.menu_book, size: 20),
-                    tooltip: 'Về đầu sách',
-                  ),
-                  const Spacer(),
-                  ..._navigationActions(immersive: immersive),
-                ],
-              ),
-            ),
-          ),
-          CompactWebUrlBar(
-            controller: _controller,
-            currentUrl: _currentUrl ?? _language.urlChuyenPhapLuan,
-            onBack: _goBack,
-            onForward: _goForward,
-            canGoBack: _canGoBack,
-            canGoForward: _canGoForward,
-          ),
-        ],
-      ),
+        const Spacer(),
+        FutureBuilder<dynamic>(
+          future: BrowserHelper.getCurrentUrl(_controller),
+          builder: (context, snapshot) {
+            if (!snapshot.hasData) return const SizedBox.shrink();
+            return IconButton(
+              onPressed: () {
+                BrowserHelper.launchExternal(
+                  Uri.parse(snapshot.data.toString()),
+                );
+              },
+              icon: const Icon(Icons.open_in_new, size: 20),
+            );
+          },
+        ),
+        buildImmersiveToggleButton(),
+      ],
     );
   }
 
-  Widget _webViewBody() {
-    return progressLoadWeb <= 20
-        ? const Center(child: CircularProgressIndicator())
-        : WebViewWidget(controller: _controller);
-  }
-
-  Widget _buildUnifiedChrome(BuildContext context) {
-    final topInset = MediaQuery.paddingOf(context).top;
-    final bottomInset = MediaQuery.paddingOf(context).bottom;
-    final bottomNavReserve = kBottomNavigationBarHeight + bottomInset;
-    final readingMode = BookTabChrome.immersive.value;
-    final bottomPad = readingMode ? 0.0 : bottomNavReserve;
-    final slideT =
-        Curves.easeInOut.transform(_immersiveAnim.value);
-    final statusBarOpaque = readingMode || !_chromeReservesLayoutSpace;
-
-    return AnnotatedRegion<SystemUiOverlayStyle>(
-      value: readingMode ? _immersiveOverlayStyle : SystemUiOverlayStyle.dark,
-      child: Scaffold(
-        backgroundColor: Colors.white,
-        body: Padding(
-          padding: EdgeInsets.only(bottom: bottomPad),
-          child: Column(
-            children: [
-              ColoredBox(
-                color: statusBarOpaque
-                    ? _statusBarBackground
-                    : Colors.white,
-                child: SizedBox(height: topInset),
-              ),
-              if (_chromeReservesLayoutSpace)
-                SizedBox(
-                  height: _chromeBarHeight,
-                  child: ClipRect(
-                    child: Transform.translate(
-                      offset: Offset(0, -slideT * _chromeBarHeight),
-                      child: IgnorePointer(
-                        ignoring: slideT > 0.92,
-                        child: _buildBookChromeBar(),
-                      ),
-                    ),
-                  ),
-                ),
-              Expanded(child: _webViewBody()),
-            ],
-          ),
-        ),
-      ),
+  Widget _buildUrlBar() {
+    return CompactWebUrlBar(
+      controller: _controller,
+      currentUrl: _currentUrl ?? _language.urlChuyenPhapLuan,
+      onBack: _goBack,
+      onForward: _goForward,
+      canGoBack: _canGoBack,
+      canGoForward: _canGoForward,
     );
   }
 
   @override
   Widget build(BuildContext context) {
-    return PopScope(
-      canPop: false,
-      onPopInvokedWithResult: (bool didPop, dynamic result) {
-        if (!didPop) {
-          unawaited(_onSystemBack());
-        }
+    return buildImmersiveScaffold(
+      toolbar: _buildToolbar(),
+      urlBar: _buildUrlBar(),
+      onPop: () {
+        unawaited(_onSystemBack());
       },
-      child: AnimatedBuilder(
-        animation: _immersiveAnim,
-        builder: (context, child) => _buildUnifiedChrome(context),
-      ),
+      body: progressLoadWeb <= 20
+          ? const Center(child: CircularProgressIndicator())
+          : WebViewWidget(controller: _controller),
     );
   }
 }

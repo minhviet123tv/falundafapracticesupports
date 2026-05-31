@@ -247,78 +247,31 @@ class _FalunDafaExerciseHomePageState extends State<FalunDafaExerciseHomePage>
   @override
   Widget build(BuildContext context) {
     super.build(context); // Cần thiết cho AutomaticKeepAliveClientMixin
-    
-    return ValueListenableBuilder<bool>(
-      valueListenable: BookTabChrome.immersive,
-      builder: (context, bookImmersive, _) {
-        final slideBottomNav = bookImmersive && indexMenu == 1;
-        final bottomNav = BottomNavigationBar(
-        currentIndex: indexMenu, // Chỉ định index đang được chọn đồng thời trong menu và listWidgetBody
-        selectedItemColor: Colors.blue,
-        type: BottomNavigationBarType.fixed, // Tối ưu hóa bộ nhớ
-        items: const [
 
-          //1. Menu lựa chọn
-          BottomNavigationBarItem(
-              icon: Icon(Icons.home, color: Color.fromARGB(255, 71, 71, 71),),
-              label: "Home",
-              activeIcon: Icon(Icons.home, color: Color(0xFF2196f3)), // rgba(49, 108, 208)
-          ),
+    final bottomNav = _buildBottomNavigationBar();
 
-          //2. Menu mở sách Chuyển Pháp Luân
-          BottomNavigationBarItem(
-            icon: Icon(Icons.menu_book, color: Color.fromARGB(255, 71, 71, 71)), // Sử dụng icon thay vì Image.asset để tiết kiệm bộ nhớ
-            label: "Book",
-            activeIcon: Icon(Icons.menu_book, color: Colors.orange,),
-          ),
-
-          //3. Menu audio 09 bài giảng
-          BottomNavigationBarItem(
-            icon: Icon(Icons.audiotrack, color: Color.fromARGB(255, 71, 71, 71)), // Sử dụng icon thay vì Image.asset để tiết kiệm bộ nhớ
-            label: "9 Lesson",
-            activeIcon: Icon(Icons.audiotrack, color: Colors.orange,),
-          ),
-
-          //4. Menu nhạc luyện công
-          BottomNavigationBarItem(
-            icon: Icon(Icons.self_improvement, color: Color.fromARGB(255, 71, 71, 71)), // Sử dụng icon thay vì Image.asset để tiết kiệm bộ nhớ
-            label: "5 Practice",
-            activeIcon: Icon(Icons.self_improvement, color: Colors.orange,),
-          ),
-
-        ],
-
-        // Xử lý khi click vào từng menu bottom
-        onTap: (index){
-          if (index != 1) {
-            BookTabChrome.immersive.value = false;
-          }
-          indexMenu = index;
-          saveMenuBottom(index); // Lưu index của menu bottom vào shared
-          setState(() { }); // Cập nhật dữ liệu của trang
-        },
-      );
-
-        // Tab Book: menu bottom nổi trên body (extendBody) — khi ẩn không còn vùng trắng phía dưới.
-        if (indexMenu == 1) {
-          return Scaffold(
-            extendBody: true,
-            backgroundColor: Colors.white,
-            body: Stack(
-              fit: StackFit.expand,
-              children: [
-                Positioned.fill(child: _tabForIndex(indexMenu)),
-                Positioned(
+    // Tab Book: body ổn định; chỉ overlay bottom menu lắng nghe immersive.
+    if (indexMenu == 1) {
+      return Scaffold(
+        extendBody: true,
+        backgroundColor: Colors.white,
+        body: Stack(
+          fit: StackFit.expand,
+          children: [
+            Positioned.fill(child: _tabForIndex(1)),
+            ListenableBuilder(
+              listenable: BookTabChrome.chromeListenable,
+              builder: (context, _) {
+                final bottomInset = MediaQuery.paddingOf(context).bottom;
+                final slidePx = BookTabChrome.chromeSlideT() *
+                    (kBottomNavigationBarHeight + bottomInset);
+                return Positioned(
                   left: 0,
                   right: 0,
                   bottom: 0,
                   child: ClipRect(
-                    child: AnimatedSlide(
-                      offset: slideBottomNav
-                          ? const Offset(0, 1)
-                          : Offset.zero,
-                      duration: const Duration(milliseconds: 220),
-                      curve: Curves.easeInOut,
+                    child: Transform.translate(
+                      offset: Offset(0, slidePx),
                       child: Material(
                         color: Colors.white,
                         child: SafeArea(
@@ -328,17 +281,58 @@ class _FalunDafaExerciseHomePageState extends State<FalunDafaExerciseHomePage>
                       ),
                     ),
                   ),
-                ),
-              ],
+                );
+              },
             ),
-          );
-        }
+          ],
+        ),
+      );
+    }
 
-        return Scaffold(
-          body: Center(child: _tabForIndex(indexMenu)),
-          backgroundColor: Colors.white,
-          bottomNavigationBar: bottomNav,
-        );
+    return Scaffold(
+      body: Center(child: _tabForIndex(indexMenu)),
+      backgroundColor: Colors.white,
+      bottomNavigationBar: bottomNav,
+    );
+  }
+
+  BottomNavigationBar _buildBottomNavigationBar() {
+    return BottomNavigationBar(
+      currentIndex: indexMenu,
+      selectedItemColor: Colors.blue,
+      type: BottomNavigationBarType.fixed,
+      items: const [
+        BottomNavigationBarItem(
+          icon: Icon(Icons.home, color: Color.fromARGB(255, 71, 71, 71)),
+          label: 'Home',
+          activeIcon: Icon(Icons.home, color: Color(0xFF2196f3)),
+        ),
+        BottomNavigationBarItem(
+          icon: Icon(Icons.menu_book, color: Color.fromARGB(255, 71, 71, 71)),
+          label: 'Book',
+          activeIcon: Icon(Icons.menu_book, color: Colors.orange),
+        ),
+        BottomNavigationBarItem(
+          icon: Icon(Icons.audiotrack, color: Color.fromARGB(255, 71, 71, 71)),
+          label: '9 Lesson',
+          activeIcon: Icon(Icons.audiotrack, color: Colors.orange),
+        ),
+        BottomNavigationBarItem(
+          icon: Icon(
+            Icons.self_improvement,
+            color: Color.fromARGB(255, 71, 71, 71),
+          ),
+          label: '5 Practice',
+          activeIcon: Icon(Icons.self_improvement, color: Colors.orange),
+        ),
+      ],
+      onTap: (index) {
+        if (index != 1) {
+          BookTabChrome.immersive.value = false;
+        }
+        indexMenu = index;
+        saveMenuBottom(index);
+        setState(() {});
       },
     );
   }

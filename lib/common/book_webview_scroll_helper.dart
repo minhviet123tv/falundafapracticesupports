@@ -95,14 +95,14 @@ class BookWebViewScrollHelper {
   /// Throttle báo cáo scroll — giảm áp lực bridge/WebView (đặc biệt emulator 16KB).
   static const int scrollReporterMinIntervalMs = 200;
 
-  static const String installReporterJs = '''
+  static String installReporterJsFor({int minIntervalMs = scrollReporterMinIntervalMs}) => '''
 (function() {
   if (window.__zflScrollHooked) return;
   window.__zflScrollHooked = true;
   var persistTimer = null;
   var rafPending = false;
   var lastPostMs = 0;
-  var minInterval = $scrollReporterMinIntervalMs;
+  var minInterval = $minIntervalMs;
   function report(force) {
     var el = document.scrollingElement || document.documentElement;
     var y = window.pageYOffset || el.scrollTop || 0;
@@ -110,7 +110,7 @@ class BookWebViewScrollHelper {
     var max = Math.max(0, (el.scrollHeight || 0) - viewH);
     var ratio = max > 0 ? y / max : 0;
     var now = Date.now();
-    if (!force && now - lastPostMs < minInterval) return;
+    if (!force && minInterval > 0 && now - lastPostMs < minInterval) return;
     lastPostMs = now;
     if (window.ScrollReporter) {
       ScrollReporter.postMessage(JSON.stringify({y: y, ratio: ratio, max: max, url: location.href}));
@@ -127,6 +127,7 @@ class BookWebViewScrollHelper {
     clearTimeout(persistTimer);
     persistTimer = setTimeout(function() { report(true); }, 350);
   }, {passive: true});
+  report(true);
 })();
 ''';
 
@@ -274,9 +275,14 @@ class BookWebViewScrollHelper {
     }
   }
 
-  static Future<void> installReporter(WebViewController controller) async {
+  static Future<void> installReporter(
+    WebViewController controller, {
+    int minIntervalMs = scrollReporterMinIntervalMs,
+  }) async {
     try {
-      await controller.runJavaScript(installReporterJs);
+      await controller.runJavaScript(
+        installReporterJsFor(minIntervalMs: minIntervalMs),
+      );
     } catch (_) {}
   }
 }

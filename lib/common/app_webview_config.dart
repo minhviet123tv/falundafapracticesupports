@@ -7,7 +7,7 @@ import 'package:webview_flutter_wkwebview/webview_flutter_wkwebview.dart';
 ///
 /// Lưu ý: emulator `sdk_gphone16k` (16KB page) hay SIGTRAP trong thread MemoryInfra
 /// của Chromium — thường là lỗi WebView/emulator, không phải Dart. Thử máy thật
-/// hoặc AVD 4KB; tránh resize WebView liên tục khi ẩn/hiện chrome.
+/// hoặc AVD 4KB. Chrome ẩn/hiện dùng overlay (không resize WebView).
 class AppWebViewConfig {
   AppWebViewConfig._();
 

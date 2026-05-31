@@ -1,386 +1,849 @@
 import 'dart:async';
+
 import 'dart:convert';
 
+
+
 import 'package:flutter/material.dart';
+
 import 'package:flutter/services.dart';
+
 import 'package:webview_flutter/webview_flutter.dart';
 
+
+
 import 'book_webview_scroll_helper.dart';
+
 import 'compact_web_url_bar.dart';
 
-/// Chrome (AppBar + URL) trên, WebView [Expanded] ngay dưới; ẩn chrome = thu chiều cao, WebView mở rộng theo.
+import 'webview_chrome_inset.dart';
+
+
+
+/// WebView full màn hình; AppBar + browser overlay trượt lên/xuống (không resize WebView).
+
+/// Đầu trang web có spacer ([WebViewChromeInset]) cao bằng chrome.
+
 mixin WebviewImmersiveMixin<T extends StatefulWidget> on State<T>, SingleTickerProviderStateMixin<T> {
+
   static const double toolbarHeight = BookWebViewScrollHelper.bookAppBarHeightPx;
-  static const double _scrollDirectionThreshold = 36;
-  static const double _hideChromeBelowScrollPx = 36;
-  static const double _revealChromeAtTopScrollPx = 20;
-  static const double _minScrollableExtra = 40;
-  static const Duration _immersiveToggleCooldown = Duration(milliseconds: 400);
+
+  static const double _revealChromeAtTopScrollPx = 6;
+
+  static const double _scrollUpRevealThreshold = 24;
+
+  static const Duration _immersiveToggleCooldown = Duration(milliseconds: 280);
+
   static const Duration _scrollHandleThrottle = Duration(milliseconds: 80);
-  static const Duration _postHideRevealSuppress = Duration(milliseconds: 600);
-  static const double _scrollImpulsePx = 12;
+
+  static const Duration _postHideRevealSuppress = Duration(milliseconds: 400);
+
   static const Color _statusBarBackground = Colors.black;
+  static const Color _statusBarBackgroundNormal = Colors.white;
+
+  static const SystemUiOverlayStyle _normalOverlayStyle = SystemUiOverlayStyle(
+    statusBarColor: _statusBarBackgroundNormal,
+    statusBarIconBrightness: Brightness.dark,
+    systemNavigationBarColor: Colors.white,
+    systemNavigationBarIconBrightness: Brightness.dark,
+  );
+
   static const SystemUiOverlayStyle _immersiveOverlayStyle = SystemUiOverlayStyle(
     statusBarColor: Colors.black,
     statusBarIconBrightness: Brightness.light,
     systemNavigationBarColor: Colors.white,
     systemNavigationBarIconBrightness: Brightness.dark,
   );
+
   static const Duration _chromeAnimDuration = Duration(milliseconds: 220);
+
   static const Curve _chromeAnimCurve = Curves.easeInOut;
+
   static const double _toolbarHorizontalPadding = 10;
 
-  /// 0 = chrome hiện; 1 = chrome trượt lên (chỉ animation, không resize WebView từng frame).
+
+
   late final AnimationController immersiveAnim;
 
-  /// Chrome chiếm chỗ trên WebView trong Column; false = WebView full (một lần resize).
-  bool _chromeReservesLayoutSpace = true;
+
+
   final ValueNotifier<bool> immersiveActive = ValueNotifier<bool>(false);
 
+
+
   bool _overlayChromeVisible = true;
+
+  bool _immersiveLockedByButton = false;
+
   double? _lastScrollY;
+
   double _directionalScrollAccum = 0;
+
   DateTime? _lastImmersiveToggleAt;
+
   DateTime? _lastScrollHandleAt;
+
   DateTime? _suppressChromeRevealUntil;
+
+
 
   bool get immersiveHasUrlBar => true;
 
-  double get immersiveChromeBarHeight =>
-      toolbarHeight +
-      (immersiveHasUrlBar ? CompactWebUrlBar.barHeight : 0);
+
+
+  double get immersiveChromeBarHeight => WebViewChromeInset.contentHeight(
+
+        hasUrlBar: immersiveHasUrlBar,
+
+        toolbarHeight: toolbarHeight,
+
+      );
+
+
 
   ValueNotifier<bool>? get externalImmersiveNotifier => null;
 
+
+
   double get bottomNavReserve => 0;
+
+  /// Cuộn xuống ẩn chrome không chờ cooldown (tab Book).
+  bool get immersiveScrollHideIgnoresCooldown => false;
+
+  /// 0 = hiện chrome ngay khi cuộn lên; mặc định 24px.
+  double get immersiveScrollUpRevealThresholdPx => _scrollUpRevealThreshold;
+
+  /// Cuộn lên hiện chrome ngay sau khi vừa ẩn (tab Book).
+  bool get immersiveScrollRevealIgnoresSuppress => false;
+
+  /// Cho phép đảo chiều ẩn/hiện khi animation đang chạy.
+  bool get immersiveScrollHandlesDuringAnimation => false;
+
+  /// Bỏ throttle 80ms giữa các báo cáo scroll (tab Book).
+  bool get immersiveScrollIgnoresThrottle => false;
+
+  /// Cuộn ẩn/hiện chrome tức thì, không animate 220ms (tab Book).
+  bool get immersiveScrollSnapsChrome => false;
+
+  /// Khoảng cách tối thiểu giữa hai báo cáo scroll từ JS (ms).
+  int get immersiveScrollReportMinIntervalMs =>
+      BookWebViewScrollHelper.scrollReporterMinIntervalMs;
 
   bool get inImmersiveMode => immersiveActive.value;
 
-  bool get _chromeFullyHidden =>
-      !_chromeReservesLayoutSpace &&
-      immersiveActive.value &&
-      immersiveAnim.value >= 1.0;
+
 
   void initImmersive() {
+
     immersiveAnim = AnimationController(
+
       vsync: this,
+
       duration: _chromeAnimDuration,
+
       value: 0,
+
     );
+
     externalImmersiveNotifier?.addListener(_onExternalImmersiveChanged);
+
   }
+
+
 
   void disposeImmersive() {
+
     externalImmersiveNotifier?.removeListener(_onExternalImmersiveChanged);
+
     if (externalImmersiveNotifier?.value == true) {
+
       externalImmersiveNotifier!.value = false;
+
     }
+
     immersiveActive.dispose();
+
     immersiveAnim.dispose();
+
   }
+
+
 
   void _onExternalImmersiveChanged() {
+
     if (externalImmersiveNotifier?.value != true &&
+
         immersiveActive.value &&
+
         mounted) {
+
       unawaited(exitImmersiveMode());
+
     }
+
   }
+
+
 
   bool _immersiveToggleCooldownActive() {
+
     final last = _lastImmersiveToggleAt;
+
     if (last == null) return false;
+
     return DateTime.now().difference(last) < _immersiveToggleCooldown;
+
   }
+
+
 
   bool _chromeRevealSuppressActive() {
+
     final until = _suppressChromeRevealUntil;
+
     if (until == null) return false;
+
     return DateTime.now().isBefore(until);
+
   }
+
+
 
   void handleImmersiveScrollReport(String message) {
-    if (!mounted || immersiveAnim.isAnimating) return;
-    try {
-      final decoded = jsonDecode(message);
-      if (decoded is! Map) return;
-      final y = decoded['y'];
-      final maxScroll = decoded['max'];
-      if (y is! num) return;
-      final scrollY = y.toDouble();
-      final maxScrollPx = maxScroll is num ? maxScroll.toDouble() : 0.0;
 
-      if (scrollY > _revealChromeAtTopScrollPx && _lastScrollHandleAt != null) {
-        final elapsed = DateTime.now().difference(_lastScrollHandleAt!);
-        if (elapsed < _scrollHandleThrottle) return;
+    if (!mounted) return;
+
+    try {
+
+      final decoded = jsonDecode(message);
+
+      if (decoded is! Map) return;
+
+      final y = decoded['y'];
+
+      if (y is! num) return;
+
+      final scrollY = y.toDouble();
+
+      if (immersiveAnim.isAnimating) {
+
+        if (immersiveScrollHandlesDuringAnimation) {
+
+          _updateChromeVisibilityFromScrollDuringAnimation(scrollY);
+
+        }
+
+        return;
+
       }
+
+
+
+      if (scrollY > _revealChromeAtTopScrollPx &&
+          !immersiveScrollIgnoresThrottle &&
+          _lastScrollHandleAt != null) {
+
+        final elapsed = DateTime.now().difference(_lastScrollHandleAt!);
+
+        if (elapsed < _scrollHandleThrottle) return;
+
+      }
+
       _lastScrollHandleAt = DateTime.now();
 
-      _updateChromeVisibilityFromScroll(scrollY, maxScrollPx);
+
+
+      _updateChromeVisibilityFromScroll(scrollY);
+
     } catch (_) {}
+
   }
 
-  void _updateChromeVisibilityFromScroll(double scrollY, double maxScroll) {
+  void _updateChromeVisibilityFromScrollDuringAnimation(double scrollY) {
+
     if (!mounted) return;
 
-    if (scrollY <= _revealChromeAtTopScrollPx) {
-      _lastScrollY = scrollY;
-      _directionalScrollAccum = 0;
-      if (_overlayChromeVisible || _chromeRevealSuppressActive()) {
-        return;
-      }
-      unawaited(_showChromeLayout(bypassCooldown: true));
-      return;
-    }
+    final prevY = _lastScrollY;
 
-    if (immersiveActive.value && _chromeRevealSuppressActive()) {
-      return;
-    }
-
-    final minScrollable = immersiveChromeBarHeight + _minScrollableExtra;
-    if (maxScroll < minScrollable) {
-      _lastScrollY = scrollY;
-      _directionalScrollAccum = 0;
-      // WebView vừa mở rộng làm maxScroll giảm — không ép hiện lại chrome khi đang đọc.
-      if (!immersiveActive.value && _chromeReservesLayoutSpace) {
-        unawaited(_showChromeLayout(bypassCooldown: true));
-      }
-      return;
-    }
-
-    if (_overlayChromeVisible && scrollY < _hideChromeBelowScrollPx) {
-      _lastScrollY = scrollY;
-      _directionalScrollAccum = 0;
-      return;
-    }
-
-    if (_immersiveToggleCooldownActive()) {
-      if (_overlayChromeVisible) {
-        _lastScrollY = scrollY;
-      }
-      return;
-    }
-
-    if (_lastScrollY != null) {
-      final delta = scrollY - _lastScrollY!;
-      if (delta != 0) {
-        if (_overlayChromeVisible) {
-          _applyScrollWhileChromeVisible(delta, scrollY);
-        } else if (immersiveActive.value && !_chromeReservesLayoutSpace) {
-          _applyScrollWhileChromeHidden(delta);
-        }
-      }
-    }
     _lastScrollY = scrollY;
+
+    if (prevY == null) return;
+
+    final delta = scrollY - prevY;
+
+    if (delta == 0) return;
+
+    final status = immersiveAnim.status;
+
+    if (status == AnimationStatus.forward &&
+
+        delta < 0 &&
+
+        !_immersiveLockedByButton) {
+
+      immersiveAnim.stop();
+
+      unawaited(_showChromeLayout(bypassCooldown: true, fromScroll: true));
+
+      return;
+
+    }
+
+    if (status == AnimationStatus.reverse && delta > 0) {
+
+      immersiveAnim.stop();
+
+      unawaited(_hideChromeLayout(fromScroll: true));
+
+    }
+
   }
 
-  void _applyScrollWhileChromeVisible(double delta, double scrollY) {
-    if (scrollY < _hideChromeBelowScrollPx) {
-      _directionalScrollAccum = 0;
+
+
+  void _updateChromeVisibilityFromScroll(double scrollY) {
+
+    if (!mounted) return;
+
+
+
+    final prevY = _lastScrollY;
+
+    if (prevY == null) {
+
+      _lastScrollY = scrollY;
+
+      if (immersiveScrollSnapsChrome &&
+
+          _overlayChromeVisible &&
+
+          !immersiveAnim.isAnimating &&
+
+          scrollY > _revealChromeAtTopScrollPx) {
+
+        unawaited(_hideChromeLayout(fromScroll: true));
+
+      }
+
       return;
+
     }
-    if (delta <= 0) {
-      _directionalScrollAccum = 0;
+
+    _lastScrollY = scrollY;
+
+    final delta = scrollY - prevY;
+
+    if (delta == 0) return;
+
+
+
+    if (_overlayChromeVisible && !immersiveAnim.isAnimating) {
+
+      if (delta > 0) {
+
+        final cooldownOk = immersiveScrollHideIgnoresCooldown ||
+
+            !_immersiveToggleCooldownActive();
+
+        if (cooldownOk) {
+
+          unawaited(_hideChromeLayout(fromScroll: true));
+
+        }
+
+      }
+
       return;
+
     }
-    if (_directionalScrollAccum < 0) {
-      _directionalScrollAccum = 0;
+
+
+
+    final suppressOk = immersiveScrollRevealIgnoresSuppress ||
+
+        !_chromeRevealSuppressActive();
+
+    if (!_overlayChromeVisible &&
+
+        !immersiveAnim.isAnimating &&
+
+        suppressOk &&
+
+        !_immersiveLockedByButton) {
+
+      if (scrollY <= _revealChromeAtTopScrollPx && delta <= 0) {
+
+        unawaited(_showChromeLayout(bypassCooldown: true, fromScroll: true));
+
+        return;
+
+      }
+
+      if (delta < 0) {
+
+        if (immersiveScrollUpRevealThresholdPx <= 0) {
+
+          unawaited(_showChromeLayout(
+
+            bypassCooldown: immersiveScrollHideIgnoresCooldown,
+
+            fromScroll: true,
+
+          ));
+
+          return;
+
+        }
+
+        if (_directionalScrollAccum > 0) {
+
+          _directionalScrollAccum = 0;
+
+        }
+
+        _directionalScrollAccum += delta;
+
+        if (_directionalScrollAccum <= -immersiveScrollUpRevealThresholdPx) {
+
+          _directionalScrollAccum = 0;
+
+          unawaited(_showChromeLayout());
+
+        }
+
+      } else {
+
+        _directionalScrollAccum = 0;
+
+      }
+
     }
-    _directionalScrollAccum += delta;
-    if (_directionalScrollAccum >= _scrollDirectionThreshold ||
-        delta >= _scrollImpulsePx) {
-      _directionalScrollAccum = 0;
-      unawaited(_hideChromeLayout());
-    }
+
   }
 
-  void _applyScrollWhileChromeHidden(double delta) {
-    if (_chromeRevealSuppressActive() || immersiveAnim.isAnimating) {
-      return;
-    }
-    if (delta >= 0) {
-      _directionalScrollAccum = 0;
-      return;
-    }
-    if (_directionalScrollAccum > 0) {
-      _directionalScrollAccum = 0;
-    }
-    _directionalScrollAccum += delta;
-    if (_directionalScrollAccum <= -_scrollDirectionThreshold ||
-        delta <= -_scrollImpulsePx) {
-      _directionalScrollAccum = 0;
-      unawaited(_showChromeLayout());
-    }
-  }
 
-  Future<void> _hideChromeLayout() async {
-    if (!mounted ||
-        immersiveAnim.isAnimating ||
-        _chromeFullyHidden ||
-        !_overlayChromeVisible) {
+
+  Future<void> _hideChromeLayout({bool fromScroll = false}) async {
+
+    if (!mounted || !_overlayChromeVisible) {
+
       return;
+
     }
-    if (_immersiveToggleCooldownActive()) return;
+
+    if (immersiveAnim.isAnimating) {
+
+      if (!(fromScroll && immersiveScrollSnapsChrome)) {
+
+        return;
+
+      }
+
+      immersiveAnim.stop();
+
+    }
+
+    if (_immersiveToggleCooldownActive() &&
+
+        !(fromScroll && immersiveScrollHideIgnoresCooldown)) {
+
+      return;
+
+    }
+
+
+
+    if (fromScroll) {
+
+      _immersiveLockedByButton = false;
+
+    }
+
+
 
     _lastImmersiveToggleAt = DateTime.now();
-    _suppressChromeRevealUntil = DateTime.now().add(
-      _chromeAnimDuration + _postHideRevealSuppress,
-    );
+
+    if (!(fromScroll && immersiveScrollRevealIgnoresSuppress)) {
+
+      _suppressChromeRevealUntil = DateTime.now().add(
+
+        _chromeAnimDuration + _postHideRevealSuppress,
+
+      );
+
+    }
+
     _overlayChromeVisible = false;
+
     immersiveActive.value = true;
+
     externalImmersiveNotifier?.value = true;
+
     if (mounted) setState(() {});
+
+
+
+    if (fromScroll && immersiveScrollSnapsChrome) {
+
+      immersiveAnim.value = 1.0;
+
+      _directionalScrollAccum = 0;
+
+      if (mounted) setState(() {});
+
+      return;
+
+    }
+
+
 
     await immersiveAnim.forward();
+
     if (!mounted) return;
 
-    _chromeReservesLayoutSpace = false;
-    _lastScrollY = null;
+
+
+    if (!fromScroll) {
+
+      _lastScrollY = null;
+
+    }
+
     _directionalScrollAccum = 0;
+
     if (mounted) setState(() {});
+
   }
 
-  Future<void> _showChromeLayout({bool bypassCooldown = false}) async {
-    if (!mounted || immersiveAnim.isAnimating) return;
-    if (_chromeReservesLayoutSpace && immersiveAnim.value <= 0) return;
+
+
+  Future<void> _showChromeLayout({
+
+    bool bypassCooldown = false,
+
+    bool fromScroll = false,
+
+  }) async {
+
+    if (!mounted) return;
+
+    if (immersiveAnim.isAnimating) {
+
+      if (!(fromScroll && immersiveScrollSnapsChrome)) {
+
+        return;
+
+      }
+
+      immersiveAnim.stop();
+
+    }
+
+    if (_overlayChromeVisible && immersiveAnim.value <= 0) return;
+
     if (!bypassCooldown && _immersiveToggleCooldownActive()) return;
 
+
+
     _lastImmersiveToggleAt = DateTime.now();
+
     _suppressChromeRevealUntil = null;
-    _lastScrollY = null;
+
+    if (!fromScroll) {
+
+      _lastScrollY = null;
+
+    }
+
     _directionalScrollAccum = 0;
+
     _overlayChromeVisible = true;
+
     immersiveActive.value = false;
+
     externalImmersiveNotifier?.value = false;
-    _chromeReservesLayoutSpace = true;
+
     if (mounted) setState(() {});
+
+
+
+    if (fromScroll && immersiveScrollSnapsChrome) {
+
+      immersiveAnim.value = 0.0;
+
+      if (mounted) setState(() {});
+
+      return;
+
+    }
+
+
 
     await immersiveAnim.reverse();
+
     if (mounted) setState(() {});
+
   }
+
+
+
+  Future<void> installImmersivePageChrome(WebViewController controller) async {
+
+    await WebViewChromeInset.install(controller, immersiveChromeBarHeight);
+
+    await BookWebViewScrollHelper.installReporter(
+      controller,
+      minIntervalMs: immersiveScrollReportMinIntervalMs,
+    );
+
+  }
+
+
 
   Future<void> installImmersiveScrollReporter(WebViewController controller) async {
-    await BookWebViewScrollHelper.installReporter(controller);
+
+    await installImmersivePageChrome(controller);
+
   }
 
-  Future<void> onImmersivePageFinished() async {
-    _lastScrollY = null;
+
+
+  Future<void> onImmersivePageFinished({double? scrollY}) async {
+
+    _lastScrollY = scrollY;
+
     _directionalScrollAccum = 0;
+
     _lastScrollHandleAt = null;
+
   }
+
+
 
   void onImmersivePageStarted() {
+
     _lastScrollY = null;
+
     _directionalScrollAccum = 0;
+
     _lastScrollHandleAt = null;
+
   }
+
+
 
   Future<void> toggleImmersiveMode() async {
+
     if (inImmersiveMode) {
+
       await exitImmersiveMode();
+
     } else {
+
       await enterImmersiveMode();
+
     }
+
   }
+
+
 
   Future<void> enterImmersiveMode() async {
+
     if (!mounted || inImmersiveMode) return;
+
+    _immersiveLockedByButton = true;
+
     await _hideChromeLayout();
+
   }
+
+
 
   Future<void> exitImmersiveMode() async {
+
     if (!mounted) return;
+
+    _immersiveLockedByButton = false;
+
     await _showChromeLayout(bypassCooldown: true);
+
   }
+
+
 
   Future<bool> handleImmersiveSystemBack() async {
+
     if (immersiveActive.value) {
+
       await exitImmersiveMode();
+
       return true;
+
     }
+
     return false;
+
   }
+
+
 
   Widget buildImmersiveToggleButton() {
+
     return ValueListenableBuilder<bool>(
+
       valueListenable: immersiveActive,
+
       builder: (context, immersive, _) {
+
         return IconButton(
+
           onPressed: () => toggleImmersiveMode(),
+
           icon: Icon(
+
             immersive ? Icons.fullscreen_exit : Icons.zoom_out_map,
+
             size: 20,
+
           ),
+
           tooltip: immersive ? 'Thu gọn' : 'Mở rộng màn hình',
+
         );
+
       },
+
     );
+
   }
+
+
 
   Widget buildImmersiveScaffold({
+
     required Widget toolbar,
+
     Widget? urlBar,
+
     required Widget body,
+
     VoidCallback? onPop,
+
   }) {
+
     return PopScope(
+
       canPop: false,
+
       onPopInvokedWithResult: (bool didPop, dynamic result) async {
+
         if (didPop) return;
+
         if (await handleImmersiveSystemBack()) return;
+
         onPop?.call();
+
       },
+
       child: ListenableBuilder(
+
         listenable: Listenable.merge([immersiveAnim, immersiveActive]),
+
         builder: (context, _) =>
+
             _buildImmersiveChrome(toolbar: toolbar, urlBar: urlBar, body: body),
+
       ),
+
     );
+
   }
+
+
 
   double _chromeBarHeight(Widget? urlBar) =>
+
       toolbarHeight + (urlBar != null ? CompactWebUrlBar.barHeight : 0);
 
+
+
   Widget _buildChromeBar({
+
     required Widget toolbar,
+
     Widget? urlBar,
+
     bool showElevation = true,
+
   }) {
+
     return Material(
+
       color: Colors.white,
+
       elevation: showElevation ? 1 : 0,
+
       child: Column(
+
         mainAxisSize: MainAxisSize.min,
+
         children: [
+
           SizedBox(
+
             height: toolbarHeight,
+
             child: Padding(
+
               padding: const EdgeInsets.symmetric(
+
                 horizontal: _toolbarHorizontalPadding,
+
               ),
+
               child: toolbar,
+
             ),
+
           ),
+
           if (urlBar != null) urlBar,
+
         ],
+
       ),
+
     );
+
   }
 
+
+
   Widget _buildImmersiveChrome({
+
     required Widget toolbar,
+
     Widget? urlBar,
+
     required Widget body,
+
   }) {
+
     final topInset = MediaQuery.paddingOf(context).top;
+
     final readingMode = immersiveActive.value;
+
     final bottomPad = readingMode ? 0.0 : bottomNavReserve;
+
     final chromeHeight = _chromeBarHeight(urlBar);
+
     final slideT = _chromeAnimCurve.transform(immersiveAnim.value);
-    final statusBarOpaque = readingMode || !_chromeReservesLayoutSpace;
+
+
 
     return AnnotatedRegion<SystemUiOverlayStyle>(
-      value: readingMode ? _immersiveOverlayStyle : SystemUiOverlayStyle.dark,
+      value: readingMode ? _immersiveOverlayStyle : _normalOverlayStyle,
       child: Scaffold(
         backgroundColor: Colors.white,
         body: Padding(
@@ -388,33 +851,48 @@ mixin WebviewImmersiveMixin<T extends StatefulWidget> on State<T>, SingleTickerP
           child: Column(
             children: [
               ColoredBox(
-                color: statusBarOpaque
+                color: readingMode
                     ? _statusBarBackground
-                    : Colors.white,
-                child: SizedBox(height: topInset),
+                    : _statusBarBackgroundNormal,
+                child: SizedBox(
+                  height: topInset,
+                  width: double.infinity,
+                ),
               ),
-              if (_chromeReservesLayoutSpace)
-                SizedBox(
-                  height: chromeHeight,
-                  child: ClipRect(
-                    child: Transform.translate(
-                      offset: Offset(0, -slideT * chromeHeight),
-                      child: IgnorePointer(
-                        ignoring: slideT > 0.92,
-                        child: _buildChromeBar(
-                          toolbar: toolbar,
-                          urlBar: urlBar,
-                          showElevation: slideT < 0.08,
+              Expanded(
+                child: Stack(
+                  fit: StackFit.expand,
+                  children: [
+                    body,
+                    Positioned(
+                      top: 0,
+                      left: 0,
+                      right: 0,
+                      child: ClipRect(
+                        child: Transform.translate(
+                          offset: Offset(0, -slideT * chromeHeight),
+                          child: IgnorePointer(
+                            ignoring: slideT > 0.92,
+                            child: _buildChromeBar(
+                              toolbar: toolbar,
+                              urlBar: urlBar,
+                              showElevation: slideT < 0.08,
+                            ),
+                          ),
                         ),
                       ),
                     ),
-                  ),
+                  ],
                 ),
-              Expanded(child: body),
+              ),
             ],
           ),
         ),
       ),
     );
+
   }
+
 }
+
+
