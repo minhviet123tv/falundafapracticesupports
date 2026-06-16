@@ -9,7 +9,6 @@ import 'player_widget.dart';
 import 'player_widget_9baigiang.dart';
 
 import 'menu/chuyen_phap_luan_webview.dart';
-import 'common/book_tab_chrome.dart';
 import 'menu_huongdan_page.dart';
 import 'common/memory_config.dart';
 import 'common/memory_monitor.dart';
@@ -174,7 +173,7 @@ class FalunDafaExerciseHomePage extends StatefulWidget {
 class _FalunDafaExerciseHomePageState extends State<FalunDafaExerciseHomePage> 
     with AutomaticKeepAliveClientMixin {
 
-  static const int _tabCount = 4;
+  static const int _navItemCount = 4;
 
   // Chỉ tạo tab khi người dùng mở lần đầu — tránh khởi tạo WebView + AudioPlayer cùng lúc.
   final Map<int, Widget> _tabWidgets = <int, Widget>{};
@@ -206,23 +205,50 @@ class _FalunDafaExerciseHomePageState extends State<FalunDafaExerciseHomePage>
     _sharedPreferences ??= await SharedPreferences.getInstance();
   }
   
-  Widget _createTab(int index) {
-    switch (index) {
+  int _bodyIndexForNav(int navIndex) {
+    switch (navIndex) {
+      case 2:
+        return 1;
+      case 3:
+        return 2;
+      default:
+        return 0;
+    }
+  }
+
+  Widget _createTab(int bodyIndex) {
+    switch (bodyIndex) {
       case 0:
         return MenuHome();
       case 1:
-        return ChuyenPhapLuanWebview();
-      case 2:
         return PlayerWidget9Baigiang();
-      case 3:
+      case 2:
         return PlayerWidget();
       default:
         return MenuHome();
     }
   }
 
-  Widget _tabForIndex(int index) {
-    return _tabWidgets.putIfAbsent(index, () => _createTab(index));
+  Widget _tabForNavIndex(int navIndex) {
+    final bodyIndex = _bodyIndexForNav(navIndex);
+    return _tabWidgets.putIfAbsent(bodyIndex, () => _createTab(bodyIndex));
+  }
+
+  void _openBookWebview() {
+    Navigator.push(
+      context,
+      PageRouteBuilder(
+        pageBuilder: (_, __, ___) => ChuyenPhapLuanWebview(),
+        transitionsBuilder: (context, animation, secondaryAnimation, child) {
+          final tween = Tween(begin: const Offset(0.0, 1.0), end: Offset.zero)
+              .chain(CurveTween(curve: Curves.ease));
+          return SlideTransition(
+            position: animation.drive(tween),
+            child: child,
+          );
+        },
+      ),
+    );
   }
 
   //B.1 Load index của menu bottom được lưu trong shared - Tối ưu hóa bộ nhớ
@@ -230,10 +256,14 @@ class _FalunDafaExerciseHomePageState extends State<FalunDafaExerciseHomePage>
     // Sử dụng cache SharedPreferences để tránh load lại
     _sharedPreferences ??= await SharedPreferences.getInstance();
     
-    int indexSelectedHere = _sharedPreferences!.getInt("index_menu_bottom") ?? 0;
+    var indexSelectedHere = _sharedPreferences!.getInt("index_menu_bottom") ?? 0;
 
-    if (indexSelectedHere > _tabCount - 1) {
-      indexSelectedHere = _tabCount - 1;
+    if (indexSelectedHere > _navItemCount - 1) {
+      indexSelectedHere = _navItemCount - 1;
+    }
+    // Book mở trang riêng — không còn là tab body.
+    if (indexSelectedHere == 1) {
+      indexSelectedHere = 0;
     }
     indexMenu = indexSelectedHere;
     
@@ -248,51 +278,10 @@ class _FalunDafaExerciseHomePageState extends State<FalunDafaExerciseHomePage>
   Widget build(BuildContext context) {
     super.build(context); // Cần thiết cho AutomaticKeepAliveClientMixin
 
-    final bottomNav = _buildBottomNavigationBar();
-
-    // Tab Book: body ổn định; chỉ overlay bottom menu lắng nghe immersive.
-    if (indexMenu == 1) {
-      return Scaffold(
-        extendBody: true,
-        backgroundColor: Colors.white,
-        body: Stack(
-          fit: StackFit.expand,
-          children: [
-            Positioned.fill(child: _tabForIndex(1)),
-            ListenableBuilder(
-              listenable: BookTabChrome.chromeListenable,
-              builder: (context, _) {
-                final bottomInset = MediaQuery.paddingOf(context).bottom;
-                final slidePx = BookTabChrome.chromeSlideT() *
-                    (kBottomNavigationBarHeight + bottomInset);
-                return Positioned(
-                  left: 0,
-                  right: 0,
-                  bottom: 0,
-                  child: ClipRect(
-                    child: Transform.translate(
-                      offset: Offset(0, slidePx),
-                      child: Material(
-                        color: Colors.white,
-                        child: SafeArea(
-                          top: false,
-                          child: bottomNav,
-                        ),
-                      ),
-                    ),
-                  ),
-                );
-              },
-            ),
-          ],
-        ),
-      );
-    }
-
     return Scaffold(
-      body: Center(child: _tabForIndex(indexMenu)),
+      body: Center(child: _tabForNavIndex(indexMenu)),
       backgroundColor: Colors.white,
-      bottomNavigationBar: bottomNav,
+      bottomNavigationBar: _buildBottomNavigationBar(),
     );
   }
 
@@ -327,8 +316,9 @@ class _FalunDafaExerciseHomePageState extends State<FalunDafaExerciseHomePage>
         ),
       ],
       onTap: (index) {
-        if (index != 1) {
-          BookTabChrome.immersive.value = false;
+        if (index == 1) {
+          _openBookWebview();
+          return;
         }
         indexMenu = index;
         saveMenuBottom(index);

@@ -9,14 +9,13 @@ import 'package:webview_flutter/webview_flutter.dart';
 
 import '../controller_app/link_internet_sachchuyenphapluan_quocte.dart';
 import '../common/app_webview_config.dart';
-import '../common/book_tab_chrome.dart';
 import '../common/book_webview_scroll_helper.dart';
 import '../common/book_webview_state_store.dart';
 import '../common/browser_helper.dart';
 import '../common/compact_web_url_bar.dart';
 import '../common/webview_immersive_mixin.dart';
 
-/// Tab Book: đọc Chuyển Pháp Luân online theo [LanguageNameOfChuyenPhapLuan].
+/// Trang Book: đọc Chuyển Pháp Luân online theo [LanguageNameOfChuyenPhapLuan].
 class ChuyenPhapLuanWebview extends StatefulWidget {
   static const String routeName = 'ChuyenPhapLuanWebview_routeName';
 
@@ -47,53 +46,10 @@ class _ChuyenPhapLuanWebviewState extends State<ChuyenPhapLuanWebview>
   String get _languageCode => _language.name;
 
   @override
-  ValueNotifier<bool>? get externalImmersiveNotifier => BookTabChrome.immersive;
-
-  /// Menu bottom là overlay trong main.dart — không resize WebView.
-  @override
-  double get bottomNavReserve => 0;
-
-  static const double _bookScrollChromeThresholdPx = 20;
-
-  @override
-  bool get immersiveScrollHideIgnoresCooldown => false;
-
-  @override
-  double get immersiveScrollDownHideThresholdPx => _bookScrollChromeThresholdPx;
-
-  @override
-  double get immersiveScrollUpRevealThresholdPx => _bookScrollChromeThresholdPx;
-
-  @override
-  bool get immersiveScrollRevealAtTopInstant => false;
-
-  @override
-  bool get immersiveScrollRevealWhenLockedByButton => true;
-
-  @override
-  bool get immersiveScrollRevealIgnoresSuppress => false;
-
-  @override
-  bool get immersiveScrollHandlesDuringAnimation => false;
-
-  @override
-  bool get immersiveScrollIgnoresThrottle => false;
-
-  @override
-  bool get immersiveScrollSnapsChrome => false;
-
-  @override
-  bool get immersiveScrollUsesTouchIntent => false;
-
-  @override
-  bool get immersiveScrollResetChromeOnPageOpen => true;
-
-  @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
     initImmersive();
-    BookTabChrome.bindChromeAnimation(immersiveAnim);
     _language = LanguageNameOfChuyenPhapLuan.vietnamese;
 
     final WebViewController controller = AppWebViewConfig.createController();
@@ -533,7 +489,6 @@ class _ChuyenPhapLuanWebviewState extends State<ChuyenPhapLuanWebview>
 
   @override
   void dispose() {
-    BookTabChrome.unbindChromeAnimation(immersiveAnim);
     disposeImmersive();
     WidgetsBinding.instance.removeObserver(this);
     _scrollSaveDebounce?.cancel();
@@ -586,6 +541,11 @@ class _ChuyenPhapLuanWebviewState extends State<ChuyenPhapLuanWebview>
   Widget _buildToolbar() {
     return Row(
       children: [
+        IconButton(
+          onPressed: () => unawaited(_onSystemBack()),
+          icon: const Icon(Icons.arrow_back, size: 20),
+          tooltip: 'Quay lại',
+        ),
         _languageMenuButton(),
         IconButton(
           onPressed: () => unawaited(_goToZflHomePage()),
