@@ -112,11 +112,23 @@ mixin WebviewImmersiveMixin<T extends StatefulWidget> on State<T>, SingleTickerP
   /// Cuộn xuống ẩn chrome không chờ cooldown (tab Book).
   bool get immersiveScrollHideIgnoresCooldown => false;
 
-  /// 0 = hiện chrome ngay khi cuộn lên; mặc định 24px.
+  /// Tích lũy cuộn xuống (px) trước khi ẩn chrome; mặc định 24px.
+  double get immersiveScrollDownHideThresholdPx => _scrollUpRevealThreshold;
+
+  /// Tích lũy cuộn lên (px) trước khi hiện chrome; mặc định 24px.
   double get immersiveScrollUpRevealThresholdPx => _scrollUpRevealThreshold;
+
+  /// Hiện chrome ngay khi ở đầu trang và cuộn lên.
+  bool get immersiveScrollRevealAtTopInstant => true;
+
+  /// Hiện chrome bằng scroll lên khi đang khóa bởi nút Mở rộng.
+  bool get immersiveScrollRevealWhenLockedByButton => false;
 
   /// Cuộn lên hiện chrome ngay sau khi vừa ẩn (tab Book).
   bool get immersiveScrollRevealIgnoresSuppress => false;
+
+  /// Dùng touch/wheel intent (ẩn/hiện tức thì); tắt khi dùng ngưỡng px.
+  bool get immersiveScrollUsesTouchIntent => false;
 
   /// Cho phép đảo chiều ẩn/hiện khi animation đang chạy.
   bool get immersiveScrollHandlesDuringAnimation => false;
@@ -134,7 +146,8 @@ mixin WebviewImmersiveMixin<T extends StatefulWidget> on State<T>, SingleTickerP
   /// Luôn hiện chrome khi trang load xong (tab Book).
   bool get immersiveScrollResetChromeOnPageOpen => false;
 
-  bool get inImmersiveMode => immersiveActive.value;
+  bool get inImmersiveMode =>
+      immersiveActive.value || immersiveAnim.value > 0.5;
 
 
 
@@ -248,7 +261,9 @@ mixin WebviewImmersiveMixin<T extends StatefulWidget> on State<T>, SingleTickerP
 
       final intent = decoded['intent'];
 
-      if (intent is String && immersiveScrollSnapsChrome) {
+      if (intent is String &&
+          immersiveScrollUsesTouchIntent &&
+          _immersiveScrollReady) {
 
         _handleScrollIntent(intent, scrollY);
 
@@ -394,15 +409,37 @@ mixin WebviewImmersiveMixin<T extends StatefulWidget> on State<T>, SingleTickerP
 
       if (delta > 0) {
 
-        final cooldownOk = immersiveScrollHideIgnoresCooldown ||
+        if (_directionalScrollAccum < 0) {
 
-            !_immersiveToggleCooldownActive();
-
-        if (cooldownOk) {
-
-          unawaited(_hideChromeLayout(fromScroll: true));
+          _directionalScrollAccum = 0;
 
         }
+
+        _directionalScrollAccum += delta;
+
+        final hideThreshold = immersiveScrollDownHideThresholdPx;
+
+        if (hideThreshold <= 0 ||
+
+            _directionalScrollAccum >= hideThreshold) {
+
+          _directionalScrollAccum = 0;
+
+          final cooldownOk = immersiveScrollHideIgnoresCooldown ||
+
+              !_immersiveToggleCooldownActive();
+
+          if (cooldownOk) {
+
+            unawaited(_hideChromeLayout(fromScroll: true));
+
+          }
+
+        }
+
+      } else {
+
+        _directionalScrollAccum = 0;
 
       }
 
@@ -416,15 +453,23 @@ mixin WebviewImmersiveMixin<T extends StatefulWidget> on State<T>, SingleTickerP
 
         !_chromeRevealSuppressActive();
 
+    final revealLockedOk = !_immersiveLockedByButton ||
+
+        immersiveScrollRevealWhenLockedByButton;
+
     if (!_overlayChromeVisible &&
 
         !immersiveAnim.isAnimating &&
 
         suppressOk &&
 
-        !_immersiveLockedByButton) {
+        revealLockedOk) {
 
-      if (scrollY <= _revealChromeAtTopScrollPx && delta <= 0) {
+      if (immersiveScrollRevealAtTopInstant &&
+
+          scrollY <= _revealChromeAtTopScrollPx &&
+
+          delta <= 0) {
 
         unawaited(_showChromeLayout(bypassCooldown: true, fromScroll: true));
 
@@ -460,7 +505,7 @@ mixin WebviewImmersiveMixin<T extends StatefulWidget> on State<T>, SingleTickerP
 
           _directionalScrollAccum = 0;
 
-          unawaited(_showChromeLayout());
+          unawaited(_showChromeLayout(fromScroll: true));
 
         }
 
@@ -528,10 +573,6 @@ mixin WebviewImmersiveMixin<T extends StatefulWidget> on State<T>, SingleTickerP
 
     _overlayChromeVisible = false;
 
-    immersiveActive.value = true;
-
-    externalImmersiveNotifier?.value = true;
-
     if (mounted) setState(() {});
 
 
@@ -539,6 +580,10 @@ mixin WebviewImmersiveMixin<T extends StatefulWidget> on State<T>, SingleTickerP
     if (fromScroll && immersiveScrollSnapsChrome) {
 
       immersiveAnim.value = 1.0;
+
+      immersiveActive.value = true;
+
+      externalImmersiveNotifier?.value = true;
 
       _directionalScrollAccum = 0;
 
@@ -554,7 +599,9 @@ mixin WebviewImmersiveMixin<T extends StatefulWidget> on State<T>, SingleTickerP
 
     if (!mounted) return;
 
+    immersiveActive.value = true;
 
+    externalImmersiveNotifier?.value = true;
 
     if (!fromScroll) {
 
@@ -610,11 +657,13 @@ mixin WebviewImmersiveMixin<T extends StatefulWidget> on State<T>, SingleTickerP
 
     _directionalScrollAccum = 0;
 
+    if (fromScroll && immersiveScrollRevealWhenLockedByButton) {
+
+      _immersiveLockedByButton = false;
+
+    }
+
     _overlayChromeVisible = true;
-
-    immersiveActive.value = false;
-
-    externalImmersiveNotifier?.value = false;
 
     if (mounted) setState(() {});
 
@@ -623,6 +672,10 @@ mixin WebviewImmersiveMixin<T extends StatefulWidget> on State<T>, SingleTickerP
     if (fromScroll && immersiveScrollSnapsChrome) {
 
       immersiveAnim.value = 0.0;
+
+      immersiveActive.value = false;
+
+      externalImmersiveNotifier?.value = false;
 
       if (mounted) setState(() {});
 
@@ -633,6 +686,12 @@ mixin WebviewImmersiveMixin<T extends StatefulWidget> on State<T>, SingleTickerP
 
 
     await immersiveAnim.reverse();
+
+    if (!mounted) return;
+
+    immersiveActive.value = false;
+
+    externalImmersiveNotifier?.value = false;
 
     if (mounted) setState(() {});
 
@@ -907,13 +966,13 @@ mixin WebviewImmersiveMixin<T extends StatefulWidget> on State<T>, SingleTickerP
 
     final topInset = MediaQuery.paddingOf(context).top;
 
-    final readingMode = immersiveActive.value;
-
-    final bottomPad = readingMode ? 0.0 : bottomNavReserve;
-
     final chromeHeight = _chromeBarHeight(urlBar);
 
     final slideT = _chromeAnimCurve.transform(immersiveAnim.value);
+
+    final readingMode = slideT > 0.5;
+
+    final bottomPad = readingMode ? 0.0 : bottomNavReserve;
 
 
 

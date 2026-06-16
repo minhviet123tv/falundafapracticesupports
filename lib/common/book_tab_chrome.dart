@@ -22,7 +22,7 @@ class BookTabChrome {
     }
   }
 
-  /// 0 = hiện; 1 = ẩn hoàn toàn.
+  /// 0 = hiện; 1 = ẩn hoàn toàn — luôn theo [chromeAnimation], không theo [immersive].
   static double chromeSlideT() {
     final anim = chromeAnimation;
     if (anim is Animation<double>) {
@@ -31,11 +31,6 @@ class BookTabChrome {
     return immersive.value ? 1.0 : 0.0;
   }
 
-  static Listenable get chromeListenable {
-    final anim = chromeAnimation;
-    if (anim != null) {
-      return Listenable.merge([immersive, anim]);
-    }
-    return immersive;
-  }
+  static Listenable get chromeListenable =>
+      chromeAnimation ?? immersive;
 }

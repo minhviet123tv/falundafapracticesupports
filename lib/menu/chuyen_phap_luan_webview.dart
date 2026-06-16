@@ -53,28 +53,37 @@ class _ChuyenPhapLuanWebviewState extends State<ChuyenPhapLuanWebview>
   @override
   double get bottomNavReserve => 0;
 
-  /// Cuộn xuống → ẩn AppBar + browser + menu bottom ngay.
-  @override
-  bool get immersiveScrollHideIgnoresCooldown => true;
+  static const double _bookScrollChromeThresholdPx = 20;
 
   @override
-  double get immersiveScrollUpRevealThresholdPx => 0;
+  bool get immersiveScrollHideIgnoresCooldown => false;
 
   @override
-  bool get immersiveScrollRevealIgnoresSuppress => true;
+  double get immersiveScrollDownHideThresholdPx => _bookScrollChromeThresholdPx;
 
   @override
-  bool get immersiveScrollHandlesDuringAnimation => true;
+  double get immersiveScrollUpRevealThresholdPx => _bookScrollChromeThresholdPx;
 
   @override
-  bool get immersiveScrollIgnoresThrottle => true;
+  bool get immersiveScrollRevealAtTopInstant => false;
 
   @override
-  bool get immersiveScrollSnapsChrome => true;
+  bool get immersiveScrollRevealWhenLockedByButton => true;
 
-  /// Báo cáo scroll mỗi frame — phản hồi ẩn/hiện ngay lần cuộn đầu.
   @override
-  int get immersiveScrollReportMinIntervalMs => 0;
+  bool get immersiveScrollRevealIgnoresSuppress => false;
+
+  @override
+  bool get immersiveScrollHandlesDuringAnimation => false;
+
+  @override
+  bool get immersiveScrollIgnoresThrottle => false;
+
+  @override
+  bool get immersiveScrollSnapsChrome => false;
+
+  @override
+  bool get immersiveScrollUsesTouchIntent => false;
 
   @override
   bool get immersiveScrollResetChromeOnPageOpen => true;

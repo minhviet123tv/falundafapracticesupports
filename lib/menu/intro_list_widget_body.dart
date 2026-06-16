@@ -414,7 +414,7 @@ List<PageViewModel> listPageViewModelHuongDanTapCoBan = [
       child: Column(
         children: [
           Text(
-            "\"Tu\" là từ Hán Việt, \"tu\" có nghĩa là sửa hay sửa đổi, còn \"luyện\" là rèn luyện, mục đích để đảm bảo, giữ gìn những gì sau khi tu được. Có thể nói rằng \"tu luyện\" là việc sửa lại bản thân và giữ gìn những gì đã sửa được.\n"
+            "\"Tu\" là từ Hán Việt, \"tu\" có nghĩa là sửa hay sửa đổi. Còn \"luyện\" là rèn luyện (rèn luyện tâm tính, rèn luyện thân thể...). Có thể nói rằng \"tu luyện\" là việc sửa lại bản thân theo một phương pháp và giữ gìn những gì đã sửa được, đã luyện được.\n"
             "\nPháp Luân Công là môn tu luyện của Phật Pháp giúp người học có thể tu luyện ngay trong cuộc sống như tại gia đình, nơi làm việc, trường học ... Trong đó chú trọng việc sửa đổi các tâm tính không tốt như tâm tật đố, tâm lý hiển thị, tâm tranh đấu ...\n"
             "\nViệc tập luyện 5 bài công pháp giúp học viên trở nên khoẻ mạnh hơn nhờ những thay đổi tích cực của cơ thể."
             "\nĐể tu luyện tâm tính, học viên cần học pháp bằng việc lắng nghe 9 bài giảng của sư phụ hoặc đọc sách, trong đó sách chính là Chuyển Pháp Luân (có chung nội dung với 9 bài giảng)."
