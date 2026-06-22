@@ -55,7 +55,7 @@ class HuongDanTapCoBanPage extends StatelessWidget {
           onTap: (){
             // Navigator.push(context, MaterialPageRoute(builder: (builder) => WebViewBrowser(linkUrl: 'https://www.ganjingworld.com/embed/1fdmph5i6al3ExcRdoWQUzS541l51c', title: "Bài 1: Phật Triển Thiên Thủ Pháp", textHuongDan: "Nam đối xứng nữ | Nữ đối xứng nam.",)));
             Navigator.push(context, PageRouteBuilder(
-              pageBuilder: (_, __, ___) => WebViewBrowser(linkUrl: 'https://www.ganjingworld.com/embed/1fdmph5i6al3ExcRdoWQUzS541l51c', title: "Bài 1: Phật Triển Thiên Thủ Pháp", textHuongDan: "Nam đối xứng nữ | Nữ đối xứng nam.",),
+              pageBuilder: (_, __, ___) => WebViewBrowser(linkUrl: 'https://www.ganjingworld.com/vi-VN/embed/1feprapkl1i77D9YXA1UBoCtd10s1c', title: "Bài 1: Phật Triển Thiên Thủ Pháp", textHuongDan: "Nam đối xứng nữ | Nữ đối xứng nam.",),
               transitionsBuilder: (context, animation, secondaryAnimation, child) {
                 var tween = Tween(begin: Offset(0.0, 1.0), end: Offset.zero).chain(CurveTween(curve: Curves.ease)); // begin: Xác định điểm đầu (theo trục ngang x như (-1,1) (0.0,1.0) (180,1) ...) | end: điểm cuối (hay dùng zero) | curve: kiểu đường cong di chuyển
                 return SlideTransition(position: animation.drive(tween), child: child,);
