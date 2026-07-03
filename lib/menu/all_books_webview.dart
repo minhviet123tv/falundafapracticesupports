@@ -13,6 +13,7 @@ import '../common/book_webview_scroll_helper.dart';
 import '../common/book_webview_state_store.dart';
 import '../common/browser_helper.dart';
 import '../common/compact_web_url_bar.dart';
+import '../common/webview_immersive_mixin.dart';
 
 /*
 Lưu vị trí cuộn (pixel + tỷ lệ %) + URL đầy đủ (kể cả #mục) + lịch sử trang.
@@ -24,7 +25,8 @@ class AllBooksWebview extends StatefulWidget {
   State<AllBooksWebview> createState() => _AllBooksWebviewState();
 }
 
-class _AllBooksWebviewState extends State<AllBooksWebview> with WidgetsBindingObserver {
+class _AllBooksWebviewState extends State<AllBooksWebview> 
+    with WidgetsBindingObserver, SingleTickerProviderStateMixin, WebviewImmersiveMixin {
   static const int _maxHistoryEntries = 80;
 
   late final WebViewController _controller;
@@ -42,6 +44,7 @@ class _AllBooksWebviewState extends State<AllBooksWebview> with WidgetsBindingOb
   @override
   void initState() {
     super.initState();
+    initImmersive();
     WidgetsBinding.instance.addObserver(this);
     languageAllPageFalundafa = LanguageAllPageFalundafa.vietnamese;
 
@@ -57,6 +60,7 @@ class _AllBooksWebviewState extends State<AllBooksWebview> with WidgetsBindingOb
             });
           },
           onPageStarted: (String url) {
+            onImmersivePageStarted();
             final leaving = _currentUrl;
             if (leaving != null &&
                 leaving.isNotEmpty &&
@@ -117,7 +121,9 @@ class _AllBooksWebviewState extends State<AllBooksWebview> with WidgetsBindingOb
 
   void _onScrollReported(String message) {
     if (_isRestoringScroll || !mounted) return;
-    BookWebViewScrollHelper.cancelPendingRestoresOnUserScroll();
+    
+    handleImmersiveScrollReport(message);
+    
     try {
       final decoded = jsonDecode(message);
       if (decoded is! Map) return;
@@ -217,7 +223,7 @@ class _AllBooksWebviewState extends State<AllBooksWebview> with WidgetsBindingOb
     _commitUrlToHistory(resolvedUrl);
     _isRestoringScroll = true;
     try {
-      await BookWebViewScrollHelper.installReporter(_controller);
+      await installImmersiveScrollReporter(_controller);
 
       final saved = BookWebViewScrollHelper.scrollForUrl(
         _readingState.scrollByUrl,
@@ -235,6 +241,7 @@ class _AllBooksWebviewState extends State<AllBooksWebview> with WidgetsBindingOb
       _restoreScrollAfterFinish = false;
 
       await _persistReadingState();
+      await onImmersivePageFinished(scrollY: saved?.scrollY);
     } finally {
       _isRestoringScroll = false;
     }
@@ -449,111 +456,96 @@ class _AllBooksWebviewState extends State<AllBooksWebview> with WidgetsBindingOb
 
   @override
   void dispose() {
+    disposeImmersive();
     WidgetsBinding.instance.removeObserver(this);
     _scrollSaveDebounce?.cancel();
     unawaited(_flushReadingState());
     super.dispose();
   }
 
+  Widget _buildToolbar() {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        PopupMenuButton<LanguageAllPageFalundafa>(
+          tooltip: 'Select language',
+          position: PopupMenuPosition.under,
+          color: Colors.white,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(border10)),
+          onSelected: (LanguageAllPageFalundafa value) {
+            unawaited(_onLanguageChanged(value));
+          },
+          itemBuilder: (context) {
+            return LanguageAllPageFalundafa.values
+                .map(
+                  (value) => PopupMenuItem<LanguageAllPageFalundafa>(
+                    value: value,
+                    height: 44,
+                    child: Text(value.languageName),
+                  ),
+                )
+                .toList();
+          },
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 8),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  languageAllPageFalundafa.languageName,
+                  style: const TextStyle(fontWeight: FontWeight.w500, fontSize: 11),
+                ),
+                const SizedBox(width: 4),
+                const Icon(Icons.arrow_drop_down, size: 18),
+              ],
+            ),
+          ),
+        ),
+        IconButton(
+          onPressed: () => unawaited(_goToBooksHomePage()),
+          icon: const Icon(Icons.menu_book, size: 20),
+          tooltip: 'Trang mục lục sách',
+        ),
+        const Spacer(),
+        FutureBuilder<dynamic>(
+          future: BrowserHelper.getCurrentUrl(_controller),
+          builder: (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
+            if (snapshot.hasData) {
+              return IconButton(
+                onPressed: () {
+                  BrowserHelper.launchExternal(Uri.parse(snapshot.data.toString()));
+                },
+                icon: const Icon(Icons.open_in_new, size: 20),
+              );
+            }
+            return const SizedBox.shrink();
+          },
+        ),
+        buildImmersiveToggleButton(),
+      ],
+    );
+  }
+
+  Widget _buildUrlBar() {
+    return CompactWebUrlBar(
+      controller: _controller,
+      currentUrl: _currentUrl ?? languageAllPageFalundafa.booksPage,
+      onBack: _goBack,
+      onForward: _goForward,
+      canGoBack: _canGoBack,
+      canGoForward: _canGoForward,
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
-    return PopScope(
-      canPop: false,
-      onPopInvokedWithResult: (bool didPop, dynamic result) {
-        if (!didPop) {
-          unawaited(_onSystemBack());
-        }
-      },
-      child: SafeArea(
-      child: Scaffold(
-        appBar: AppBar(
-          title: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              PopupMenuButton<LanguageAllPageFalundafa>(
-                tooltip: 'Select language',
-                position: PopupMenuPosition.under,
-                color: Colors.white,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(border10)),
-                onSelected: (LanguageAllPageFalundafa value) {
-                  unawaited(_onLanguageChanged(value));
-                },
-                itemBuilder: (context) {
-                  return LanguageAllPageFalundafa.values
-                      .map(
-                        (value) => PopupMenuItem<LanguageAllPageFalundafa>(
-                          value: value,
-                          height: 44,
-                          child: Text(value.languageName),
-                        ),
-                      )
-                      .toList();
-                },
-                child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.all(Radius.circular(border10)),
-                    border: Border.all(color: Colors.white70),
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Text(
-                        languageAllPageFalundafa.languageName,
-                        style: const TextStyle(fontWeight: FontWeight.w500, fontSize: 11),
-                      ),
-                      const SizedBox(width: 4),
-                      const Icon(Icons.arrow_drop_down, size: 18),
-                    ],
-                  ),
-                ),
-              ),
-              IconButton(
-                onPressed: () => unawaited(_goToBooksHomePage()),
-                icon: const Icon(Icons.menu_book, size: 20),
-                tooltip: 'Trang mục lục sách',
-              ),
-            ],
-          ),
-          toolbarHeight: BookWebViewScrollHelper.bookAppBarHeightPx,
-          actions: [
-            FutureBuilder<dynamic>(
-              future: BrowserHelper.getCurrentUrl(_controller),
-              builder: (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
-                if (snapshot.hasData) {
-                  return IconButton(
-                    onPressed: () {
-                      BrowserHelper.launchExternal(Uri.parse(snapshot.data.toString()));
-                    },
-                    icon: const Icon(Icons.open_in_new, size: 20),
-                  );
-                }
-                return const SizedBox.shrink();
-              },
-            ),
-          ],
-          backgroundColor: Colors.white,
-        ),
-        backgroundColor: Colors.white,
-        body: Column(
-          children: [
-            CompactWebUrlBar(
-              controller: _controller,
-              currentUrl: _currentUrl ?? languageAllPageFalundafa.booksPage,
-              onBack: _goBack,
-              onForward: _goForward,
-              canGoBack: _canGoBack,
-              canGoForward: _canGoForward,
-            ),
-            Expanded(
-              child: (progressLoadWeb <= 20)
-                  ? const Center(child: CircularProgressIndicator())
-                  : WebViewWidget(controller: _controller),
-            ),
-          ],
-        ),
-      ),
-    ),
+    return buildImmersiveScaffold(
+      toolbar: _buildToolbar(),
+      urlBar: _buildUrlBar(),
+      onPop: _onSystemBack,
+      body: (progressLoadWeb <= 20)
+          ? const Center(child: CircularProgressIndicator())
+          : WebViewWidget(controller: _controller),
     );
   }
 }
