@@ -87,6 +87,8 @@ mixin WebviewImmersiveMixin<T extends StatefulWidget> on State<T>, SingleTickerP
 
   bool _immersiveScrollReady = false;
 
+  double? _swipeStartX;
+
 
 
   bool get immersiveHasUrlBar => true;
@@ -886,7 +888,17 @@ mixin WebviewImmersiveMixin<T extends StatefulWidget> on State<T>, SingleTickerP
 
         builder: (context, _) =>
 
-            _buildImmersiveChrome(toolbar: toolbar, urlBar: urlBar, body: body),
+            _buildImmersiveChrome(
+
+              toolbar: toolbar,
+
+              urlBar: urlBar,
+
+              body: body,
+
+              onPop: onPop,
+
+            ),
 
       ),
 
@@ -962,6 +974,8 @@ mixin WebviewImmersiveMixin<T extends StatefulWidget> on State<T>, SingleTickerP
 
     required Widget body,
 
+    VoidCallback? onPop,
+
   }) {
 
     final topInset = MediaQuery.paddingOf(context).top;
@@ -994,29 +1008,49 @@ mixin WebviewImmersiveMixin<T extends StatefulWidget> on State<T>, SingleTickerP
                 ),
               ),
               Expanded(
-                child: Stack(
-                  fit: StackFit.expand,
-                  children: [
-                    body,
-                    Positioned(
-                      top: 0,
-                      left: 0,
-                      right: 0,
-                      child: ClipRect(
-                        child: Transform.translate(
-                          offset: Offset(0, -slideT * chromeHeight),
-                          child: IgnorePointer(
-                            ignoring: slideT > 0.92,
-                            child: _buildChromeBar(
-                              toolbar: toolbar,
-                              urlBar: urlBar,
-                              showElevation: slideT < 0.08,
+                child: GestureDetector(
+                  onHorizontalDragStart: (DragStartDetails details) {
+                    _swipeStartX = details.globalPosition.dx;
+                  },
+                  onHorizontalDragUpdate: (DragUpdateDetails details) {
+                    if (_swipeStartX == null) return;
+                    final screenWidth = MediaQuery.of(context).size.width;
+                    if (_swipeStartX! > screenWidth * 0.5) {
+                      _swipeStartX = null;
+                    }
+                  },
+                  onHorizontalDragEnd: (DragEndDetails details) {
+                    if (onPop != null && _swipeStartX != null && details.primaryVelocity != null) {
+                      if (details.primaryVelocity! > 300) {
+                        onPop();
+                      }
+                    }
+                    _swipeStartX = null;
+                  },
+                  child: Stack(
+                    fit: StackFit.expand,
+                    children: [
+                      body,
+                      Positioned(
+                        top: 0,
+                        left: 0,
+                        right: 0,
+                        child: ClipRect(
+                          child: Transform.translate(
+                            offset: Offset(0, -slideT * chromeHeight),
+                            child: IgnorePointer(
+                              ignoring: slideT > 0.92,
+                              child: _buildChromeBar(
+                                toolbar: toolbar,
+                                urlBar: urlBar,
+                                showElevation: slideT < 0.08,
+                              ),
                             ),
                           ),
                         ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
               ),
             ],
