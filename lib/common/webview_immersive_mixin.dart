@@ -87,7 +87,10 @@ mixin WebviewImmersiveMixin<T extends StatefulWidget> on State<T>, SingleTickerP
 
   bool _immersiveScrollReady = false;
 
-  double? _swipeStartX;
+  /// Vuốt-back từ mép trái — không bọc cả WebView (tránh chặn cuộn dọc).
+  static const double _swipeBackEdgeWidth = 24;
+  bool _edgeSwipeEligible = false;
+  double _edgeSwipeDelta = 0;
 
 
 
@@ -1008,49 +1011,61 @@ mixin WebviewImmersiveMixin<T extends StatefulWidget> on State<T>, SingleTickerP
                 ),
               ),
               Expanded(
-                child: GestureDetector(
-                  onHorizontalDragStart: (DragStartDetails details) {
-                    _swipeStartX = details.globalPosition.dx;
-                  },
-                  onHorizontalDragUpdate: (DragUpdateDetails details) {
-                    if (_swipeStartX == null) return;
-                    final screenWidth = MediaQuery.of(context).size.width;
-                    if (_swipeStartX! > screenWidth * 0.5) {
-                      _swipeStartX = null;
-                    }
-                  },
-                  onHorizontalDragEnd: (DragEndDetails details) {
-                    if (onPop != null && _swipeStartX != null && details.primaryVelocity != null) {
-                      if (details.primaryVelocity! > 300) {
-                        onPop();
-                      }
-                    }
-                    _swipeStartX = null;
-                  },
-                  child: Stack(
-                    fit: StackFit.expand,
-                    children: [
-                      body,
+                child: Stack(
+                  fit: StackFit.expand,
+                  children: [
+                    body,
+                    if (onPop != null)
                       Positioned(
-                        top: 0,
                         left: 0,
-                        right: 0,
-                        child: ClipRect(
-                          child: Transform.translate(
-                            offset: Offset(0, -slideT * chromeHeight),
-                            child: IgnorePointer(
-                              ignoring: slideT > 0.92,
-                              child: _buildChromeBar(
-                                toolbar: toolbar,
-                                urlBar: urlBar,
-                                showElevation: slideT < 0.08,
-                              ),
+                        top: 0,
+                        bottom: 0,
+                        width: _swipeBackEdgeWidth,
+                        child: GestureDetector(
+                          behavior: HitTestBehavior.translucent,
+                          onHorizontalDragStart: (_) {
+                            _edgeSwipeEligible = true;
+                            _edgeSwipeDelta = 0;
+                          },
+                          onHorizontalDragUpdate: (details) {
+                            if (_edgeSwipeEligible) {
+                              _edgeSwipeDelta += details.delta.dx;
+                            }
+                          },
+                          onHorizontalDragEnd: (details) {
+                            if (!_edgeSwipeEligible) return;
+                            _edgeSwipeEligible = false;
+                            final velocity = details.primaryVelocity ?? 0;
+                            if (velocity > 200 || _edgeSwipeDelta > 72) {
+                              onPop();
+                            }
+                            _edgeSwipeDelta = 0;
+                          },
+                          onHorizontalDragCancel: () {
+                            _edgeSwipeEligible = false;
+                            _edgeSwipeDelta = 0;
+                          },
+                        ),
+                      ),
+                    Positioned(
+                      top: 0,
+                      left: 0,
+                      right: 0,
+                      child: ClipRect(
+                        child: Transform.translate(
+                          offset: Offset(0, -slideT * chromeHeight),
+                          child: IgnorePointer(
+                            ignoring: slideT > 0.92,
+                            child: _buildChromeBar(
+                              toolbar: toolbar,
+                              urlBar: urlBar,
+                              showElevation: slideT < 0.08,
                             ),
                           ),
                         ),
                       ),
-                    ],
-                  ),
+                    ),
+                  ],
                 ),
               ),
             ],

@@ -245,7 +245,7 @@ class _ChuyenPhapLuanWebviewState extends State<ChuyenPhapLuanWebview>
           saved,
           isMounted: () => mounted,
           useScrollRatio: true,
-          retryDelaysMs: const <int>[300, 900, 1600],
+          retryDelaysMs: const <int>[350],
         );
       }
       _restoreScrollAfterFinish = false;
@@ -470,55 +470,6 @@ class _ChuyenPhapLuanWebviewState extends State<ChuyenPhapLuanWebview>
     Navigator.of(context).pop();
   }
 
-  /// Back hệ thống / vuốt: về app chính (bottom nav). Lùi WebView chỉ qua CompactWebUrlBar.
-  Future<void> _onSystemBack() async {
-    await _popToMainApp();
-  }
-
-  Widget _wrapWithNavigateBackSwipe(Widget child) {
-    final maxStartX = MediaQuery.sizeOf(context).width * 0.5;
-    var dragEligible = false;
-    var dragDelta = 0.0;
-
-    return Stack(
-      fit: StackFit.expand,
-      children: [
-        child,
-        Positioned(
-          left: 0,
-          top: 0,
-          bottom: 0,
-          width: maxStartX,
-          child: GestureDetector(
-            behavior: HitTestBehavior.translucent,
-            onHorizontalDragStart: (details) {
-              dragEligible = details.localPosition.dx <= maxStartX;
-              dragDelta = 0;
-            },
-            onHorizontalDragUpdate: (details) {
-              if (dragEligible) {
-                dragDelta += details.delta.dx;
-              }
-            },
-            onHorizontalDragEnd: (details) {
-              if (!dragEligible) return;
-              dragEligible = false;
-              final velocity = details.primaryVelocity ?? 0;
-              if (velocity > 200 || dragDelta > 72) {
-                unawaited(_onSystemBack());
-              }
-              dragDelta = 0;
-            },
-            onHorizontalDragCancel: () {
-              dragEligible = false;
-              dragDelta = 0;
-            },
-          ),
-        ),
-      ],
-    );
-  }
-
   @override
   void setState(VoidCallback fn) {
     if (mounted) {
@@ -630,11 +581,9 @@ class _ChuyenPhapLuanWebviewState extends State<ChuyenPhapLuanWebview>
       onPop: () {
         unawaited(_popToMainApp());
       },
-      body: _wrapWithNavigateBackSwipe(
-        progressLoadWeb <= 20
-            ? const Center(child: CircularProgressIndicator())
-            : WebViewWidget(controller: _controller),
-      ),
+      body: progressLoadWeb <= 20
+          ? const Center(child: CircularProgressIndicator())
+          : WebViewWidget(controller: _controller),
     );
   }
 }

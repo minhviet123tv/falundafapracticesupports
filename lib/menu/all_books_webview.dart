@@ -235,7 +235,7 @@ class _AllBooksWebviewState extends State<AllBooksWebview>
           saved,
           isMounted: () => mounted,
           useScrollRatio: true,
-          retryDelaysMs: const <int>[300, 900, 1600],
+          retryDelaysMs: const <int>[350],
         );
       }
       _restoreScrollAfterFinish = false;
