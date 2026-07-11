@@ -87,11 +87,6 @@ mixin WebviewImmersiveMixin<T extends StatefulWidget> on State<T>, SingleTickerP
 
   bool _immersiveScrollReady = false;
 
-  /// Vuốt-back từ mép trái — không bọc cả WebView (tránh chặn cuộn dọc).
-  static const double _swipeBackEdgeWidth = 24;
-  bool _edgeSwipeEligible = false;
-  double _edgeSwipeDelta = 0;
-
 
 
   bool get immersiveHasUrlBar => true;
@@ -860,53 +855,32 @@ mixin WebviewImmersiveMixin<T extends StatefulWidget> on State<T>, SingleTickerP
 
 
   Widget buildImmersiveScaffold({
-
     required Widget toolbar,
-
     Widget? urlBar,
-
     required Widget body,
-
     VoidCallback? onPop,
-
   }) {
-
-    return PopScope(
-
-      canPop: false,
-
-      onPopInvokedWithResult: (bool didPop, dynamic result) async {
-
-        if (didPop) return;
-
-        if (await handleImmersiveSystemBack()) return;
-
-        onPop?.call();
-
+    return ListenableBuilder(
+      listenable: Listenable.merge([immersiveAnim, immersiveActive]),
+      builder: (context, _) {
+        // Cho phép swipe-to-back có hiệu ứng khi không immersive.
+        final allowRoutePop =
+            !immersiveActive.value && immersiveAnim.value < 0.5;
+        return PopScope(
+          canPop: allowRoutePop,
+          onPopInvokedWithResult: (bool didPop, dynamic result) async {
+            if (didPop) return;
+            if (await handleImmersiveSystemBack()) return;
+            onPop?.call();
+          },
+          child: _buildImmersiveChrome(
+            toolbar: toolbar,
+            urlBar: urlBar,
+            body: body,
+          ),
+        );
       },
-
-      child: ListenableBuilder(
-
-        listenable: Listenable.merge([immersiveAnim, immersiveActive]),
-
-        builder: (context, _) =>
-
-            _buildImmersiveChrome(
-
-              toolbar: toolbar,
-
-              urlBar: urlBar,
-
-              body: body,
-
-              onPop: onPop,
-
-            ),
-
-      ),
-
     );
-
   }
 
 
@@ -970,28 +944,15 @@ mixin WebviewImmersiveMixin<T extends StatefulWidget> on State<T>, SingleTickerP
 
 
   Widget _buildImmersiveChrome({
-
     required Widget toolbar,
-
     Widget? urlBar,
-
     required Widget body,
-
-    VoidCallback? onPop,
-
   }) {
-
     final topInset = MediaQuery.paddingOf(context).top;
-
     final chromeHeight = _chromeBarHeight(urlBar);
-
     final slideT = _chromeAnimCurve.transform(immersiveAnim.value);
-
     final readingMode = slideT > 0.5;
-
     final bottomPad = readingMode ? 0.0 : bottomNavReserve;
-
-
 
     return AnnotatedRegion<SystemUiOverlayStyle>(
       value: readingMode ? _immersiveOverlayStyle : _normalOverlayStyle,
@@ -1015,38 +976,6 @@ mixin WebviewImmersiveMixin<T extends StatefulWidget> on State<T>, SingleTickerP
                   fit: StackFit.expand,
                   children: [
                     body,
-                    if (onPop != null)
-                      Positioned(
-                        left: 0,
-                        top: 0,
-                        bottom: 0,
-                        width: _swipeBackEdgeWidth,
-                        child: GestureDetector(
-                          behavior: HitTestBehavior.translucent,
-                          onHorizontalDragStart: (_) {
-                            _edgeSwipeEligible = true;
-                            _edgeSwipeDelta = 0;
-                          },
-                          onHorizontalDragUpdate: (details) {
-                            if (_edgeSwipeEligible) {
-                              _edgeSwipeDelta += details.delta.dx;
-                            }
-                          },
-                          onHorizontalDragEnd: (details) {
-                            if (!_edgeSwipeEligible) return;
-                            _edgeSwipeEligible = false;
-                            final velocity = details.primaryVelocity ?? 0;
-                            if (velocity > 200 || _edgeSwipeDelta > 72) {
-                              onPop();
-                            }
-                            _edgeSwipeDelta = 0;
-                          },
-                          onHorizontalDragCancel: () {
-                            _edgeSwipeEligible = false;
-                            _edgeSwipeDelta = 0;
-                          },
-                        ),
-                      ),
                     Positioned(
                       top: 0,
                       left: 0,
@@ -1073,9 +1002,7 @@ mixin WebviewImmersiveMixin<T extends StatefulWidget> on State<T>, SingleTickerP
         ),
       ),
     );
-
   }
-
 }
 
 

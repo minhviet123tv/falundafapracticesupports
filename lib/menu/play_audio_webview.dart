@@ -7,6 +7,7 @@ import 'package:webview_flutter/webview_flutter.dart';
 import '../common/app_webview_config.dart';
 import '../common/browser_helper.dart';
 import '../common/compact_web_url_bar.dart';
+import '../common/swipe_to_back.dart';
 
 /*
 webview_flutter: ^4.8.0
@@ -243,49 +244,51 @@ class _WebViewBrowserAudioState extends State<WebViewBrowserAudio> {
   //D. Trang
   @override
   Widget build(BuildContext context) {
-    return SafeArea(
-      child: Scaffold(
-        backgroundColor: Colors.green,
-        appBar: AppBar(
-          title: Text(widget.title, style: textSize18,),
-          actions: [
-            //IV. Icon open web (out app)
-            FutureBuilder<String?>(
-              future: BrowserHelper.getCurrentUrl(_controller),
-              builder: (BuildContext context, AsyncSnapshot<String?> snapshot) {
-                if(snapshot.hasData){
-                  return IconButton(
-                    onPressed: (){
-                      BrowserHelper.launchExternal(Uri.parse(snapshot.data!));
-                    },
-                    icon: Icon(Icons.open_in_new, size: 20,),
-                  );
-                } else {
-                  return SizedBox();
-                }
-              },),
-          ],
-        ),
-      
-        body: Column(
-          children: [
-            if (_showUrlBar)
-              CompactWebUrlBar(
-                controller: _controller,
-                currentUrl: _currentUrl ?? widget.linkUrl,
+    return SwipeToBack(
+      child: SafeArea(
+        child: Scaffold(
+          backgroundColor: Colors.green,
+          appBar: AppBar(
+            title: Text(widget.title, style: textSize18,),
+            actions: [
+              //IV. Icon open web (out app)
+              FutureBuilder<String?>(
+                future: BrowserHelper.getCurrentUrl(_controller),
+                builder: (BuildContext context, AsyncSnapshot<String?> snapshot) {
+                  if(snapshot.hasData){
+                    return IconButton(
+                      onPressed: (){
+                        BrowserHelper.launchExternal(Uri.parse(snapshot.data!));
+                      },
+                      icon: Icon(Icons.open_in_new, size: 20,),
+                    );
+                  } else {
+                    return SizedBox();
+                  }
+                },),
+            ],
+          ),
+        
+          body: Column(
+            children: [
+              if (_showUrlBar)
+                CompactWebUrlBar(
+                  controller: _controller,
+                  currentUrl: _currentUrl ?? widget.linkUrl,
+                ),
+              Expanded(
+                child: Stack(
+                  alignment: Alignment.center,
+                  children: [
+                    const CircularProgressIndicator(),
+                    WebViewWidget(controller: _controller),
+                  ],
+                ),
               ),
-            Expanded(
-              child: Stack(
-                alignment: Alignment.center,
-                children: [
-                  const CircularProgressIndicator(),
-                  WebViewWidget(controller: _controller),
-                ],
-              ),
-            ),
-          ],
+            ],
+          ),
+        
         ),
-      
       ),
     );
   }

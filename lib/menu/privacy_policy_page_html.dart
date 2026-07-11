@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_widget_from_html/flutter_widget_from_html.dart';
 
+import '../common/swipe_to_back.dart';
+
 /*
 flutter_widget_from_html: ^0.15.0 #widget, code html
 Chú ý cho code bên trong thẻ HtmlWidget và trong thẻ lại chứa code trong 2 lần dấu ''':
@@ -12,19 +14,20 @@ HtmlWidget( ''' <code> ''' )
 class PrivacyPolicyPageHtml extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    return SafeArea(
-      child: Scaffold(
-        appBar: AppBar(
-          title: const Text('Privacy Policy & Contact', style: TextStyle(fontSize: 20, fontWeight: FontWeight.w500),),
-          backgroundColor: Colors.green,
-        ),
-        body: const Center(
-          child: SingleChildScrollView(
-            child: Padding(
-              padding: EdgeInsets.all(10.0),
+    return SwipeToBack(
+      child: SafeArea(
+        child: Scaffold(
+          appBar: AppBar(
+            title: const Text('Privacy Policy & Contact', style: TextStyle(fontSize: 20, fontWeight: FontWeight.w500),),
+            backgroundColor: Colors.green,
+          ),
+          body: const Center(
+            child: SingleChildScrollView(
+              child: Padding(
+                padding: EdgeInsets.all(10.0),
       
-              //HtmlWidget
-              child: HtmlWidget(
+                //HtmlWidget
+                child: HtmlWidget(
                   '''
                   <!DOCTYPE html>
                   <html>
@@ -125,6 +128,7 @@ class PrivacyPolicyPageHtml extends StatelessWidget {
             ),
           ),
         ),
+      ),
       ),
     );
   }

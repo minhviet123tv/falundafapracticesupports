@@ -4,6 +4,7 @@ import 'package:introduction_screen/introduction_screen.dart';
 
 import 'package:falun_dafa_practice_supports/main.dart';
 import 'package:falun_dafa_practice_supports/menu/intro_list_widget_body.dart';
+import 'package:falun_dafa_practice_supports/common/swipe_to_back.dart';
 
 /*
 introduction_screen: ^3.1.14
@@ -39,7 +40,9 @@ class OnBoardingPageState extends State<IntroductionScreenWidget> {
     final bottomLift = bottomInset > 0 ? 6.0 : 0.0;
 
     //* Màn hình Introduction Screen
-    return SafeArea(
+    return SwipeToBack(
+      onBack: () => _onIntroEnd(context),
+      child: SafeArea(
       bottom: true,
       child: IntroductionScreen(
         key: introKey, // key thứ tự page
@@ -85,6 +88,7 @@ class OnBoardingPageState extends State<IntroductionScreenWidget> {
           ),
         ),
       ),
+    ),
     );
   }
 
@@ -106,12 +110,12 @@ class OnBoardingPageState extends State<IntroductionScreenWidget> {
 
   //F. Hàm thực hiện sau khi kết thúc intro -> Trả về trang home
   void _onIntroEnd(context) {
-    if(widget.setPageIntro == SetPageIntro.molandau){
-      Navigator.of(context).pushReplacement(MaterialPageRoute(builder: (_) => RunAppFalunDafaExercise()),); // Mở trang home
+    if (widget.setPageIntro == SetPageIntro.molandau) {
+      AppNavigator.pushReplacement(context, RunAppFalunDafaExercise());
     } else if (widget.setPageIntro == SetPageIntro.gioithieuapp) {
-      Navigator.pop(context); // Quay lại trang home (Hiệu ứng phù hợp)
-    } else if (widget.setPageIntro == SetPageIntro.tapcoban){
-      Navigator.pop(context); // Quay về trang Hướng dẫn/Tập cơ bản
+      Navigator.pop(context);
+    } else if (widget.setPageIntro == SetPageIntro.tapcoban) {
+      Navigator.pop(context);
     }
   }
 }

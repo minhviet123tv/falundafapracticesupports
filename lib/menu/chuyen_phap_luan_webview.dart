@@ -52,6 +52,28 @@ class _ChuyenPhapLuanWebviewState extends State<ChuyenPhapLuanWebview>
   @override
   double get immersiveScrollUpRevealThresholdPx => 96;
 
+  /// Pad khi chrome đang phủ đỉnh WebView (= chiều cao AppBar + URL bar).
+  double get _chromeOverlayScrollPad =>
+      immersiveAnim.value < 0.5 ? immersiveChromeBarHeight : 0;
+
+  /// Lưu mốc nội dung đang đọc (mép trên vùng nhìn thấy, dưới chrome).
+  BookScrollPosition _positionForPersist(BookScrollPosition raw) {
+    final pad = _chromeOverlayScrollPad;
+    if (pad <= 0) return raw;
+    return BookScrollPosition(
+      scrollY: raw.scrollY + pad,
+      scrollRatio: raw.scrollRatio,
+    );
+  }
+
+  /// Khôi phục: đặt mốc đã lưu ngay dưới chrome (không bị che).
+  BookScrollPosition _positionForRestore(BookScrollPosition saved) {
+    final pad = _chromeOverlayScrollPad;
+    if (pad <= 0) return saved;
+    final y = (saved.scrollY - pad).clamp(0.0, double.infinity);
+    return BookScrollPosition(scrollY: y, scrollRatio: saved.scrollRatio);
+  }
+
   @override
   void initState() {
     super.initState();
@@ -159,7 +181,7 @@ class _ChuyenPhapLuanWebviewState extends State<ChuyenPhapLuanWebview>
       _currentUrl = url;
       _readingState = _readingState.withScrollForUrl(
         BookWebViewScrollHelper.normalizeUrlKey(url),
-        position,
+        _positionForPersist(position),
       );
       _schedulePersist();
     } catch (e) {
@@ -249,11 +271,12 @@ class _ChuyenPhapLuanWebviewState extends State<ChuyenPhapLuanWebview>
         resolvedUrl,
       );
       if (_restoreScrollAfterFinish && saved != null) {
+        // Mốc đã lưu = mép trên vùng đọc (dưới chrome). Đầu trang dùng spacer riêng.
         await BookWebViewScrollHelper.restorePosition(
           _controller,
-          saved,
+          _positionForRestore(saved),
           isMounted: () => mounted,
-          useScrollRatio: true,
+          useScrollRatio: false,
           retryDelaysMs: const <int>[350],
         );
       }
@@ -309,7 +332,7 @@ class _ChuyenPhapLuanWebviewState extends State<ChuyenPhapLuanWebview>
 
     _readingState = _readingState.withScrollForUrl(
       BookWebViewScrollHelper.normalizeUrlKey(url),
-      position,
+      _positionForPersist(position),
     );
   }
 

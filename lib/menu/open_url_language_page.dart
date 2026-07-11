@@ -3,6 +3,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../controller_app/link_all_page_and_api_enum.dart';
+import '../common/swipe_to_back.dart';
 
 /*
 Mở các liên kết theo danh sách và lưu ngôn ngữ yêu thích
@@ -102,7 +103,8 @@ class _OpenUrlPageState extends State<OpenUrlPage> {
   //D. Trang: Danh sách nút để mở liên kết
   @override
   Widget build(BuildContext context) {
-    return SafeArea(
+    return SwipeToBack(
+      child: SafeArea(
       child: Scaffold(
         appBar: AppBar(
           title: const Text('Select language'),
@@ -208,6 +210,7 @@ class _OpenUrlPageState extends State<OpenUrlPage> {
           ],
         ),
       ),
+    ),
     );
   }
 

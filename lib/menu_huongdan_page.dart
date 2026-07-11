@@ -10,6 +10,7 @@ import 'menu/huongdantapcoban.dart';
 import 'menu/webview_browser/falundafa_webview.dart';
 import 'menu/webview_browser/minghui_webview.dart';
 import 'menu/webview_browser/visaoconhanloai_webview.dart';
+import 'common/swipe_to_back.dart';
 
 // Danh sách Menu trang chủ dạng Grid
 class MenuHome extends StatelessWidget {
@@ -50,12 +51,7 @@ class MenuHome extends StatelessWidget {
           //1. Item menu 1: Mở trang hướng dẫn tập cơ bản
           InkWell(
             onTap: () {
-              Navigator.push(
-                context,
-                PageRouteBuilder(
-                  pageBuilder: (_, __, ___) => HuongDanTapCoBanPage(),
-                ),
-              );
+              AppNavigator.push(context, HuongDanTapCoBanPage());
             },
             child: itemMenu("assets/images/menu_item_2.jpg", "Hướng dẫn \ntập cơ bản"),
           ),
@@ -63,21 +59,7 @@ class MenuHome extends StatelessWidget {
           //2. Item menu 2: Mở trang bài viết "Vì sao có nhân loại"
           InkWell(
             onTap: () {
-              Navigator.push(
-                context,
-                PageRouteBuilder(
-                  pageBuilder: (_, __, ___) => VisaoconhanloaiWebview(),
-                  transitionsBuilder: (context, animation, secondaryAnimation, child) {
-                    var tween = Tween(begin: Offset(0.0, 1.0), end: Offset.zero).chain(CurveTween(
-                        curve: Curves
-                            .ease)); // begin: Xác định điểm đầu (theo trục ngang x như (-1,1) (0.0,1.0) (180,1) ...) | end: điểm cuối (hay dùng zero) | curve: kiểu đường cong di chuyển
-                    return SlideTransition(
-                      position: animation.drive(tween),
-                      child: child,
-                    );
-                  },
-                ),
-              );
+              AppNavigator.push(context, VisaoconhanloaiWebview());
             },
             child: itemMenu("assets/images/menu_item_3.jpg", "How Humankind Came To Be?"),
           ),
@@ -85,15 +67,9 @@ class MenuHome extends StatelessWidget {
           //3. Item menu 3: Mở trang web "Falundafa.org"
           InkWell(
             onTap: () {
-              Navigator.push(
+              AppNavigator.push(
                 context,
-                PageRouteBuilder(
-                  transitionDuration: Duration.zero,
-                  // Nhập phần trang đích của liên kết để tạo open url ra trình duyệt bên ngoài
-                  pageBuilder: (_, __, ___) => OpenUrlPage(
-                    trangDichCuaLienKet: TrangDichCuaLienKet.falundafa,
-                  ), // OpenUrlPage() | FalundafaWebview()
-                ),
+                OpenUrlPage(trangDichCuaLienKet: TrangDichCuaLienKet.falundafa),
               );
             },
             child: itemMenu("assets/images/menu_item_4.jpg", "Falundafa.org"),
@@ -102,15 +78,7 @@ class MenuHome extends StatelessWidget {
           //4. Item menu 4: Mở webview minghui.org
           InkWell(
             onTap: () {
-              Navigator.push(
-                context,
-                PageRouteBuilder(
-                  transitionDuration: Duration.zero,
-                  // Dùng trình duyệt ngay trong ứng dụng nên không điền trang đích liên kết
-                  pageBuilder: (_, __, ___) =>
-                      MinghuiWebview(), // OpenUrlPage(trangDichCuaLienKet: TrangDichCuaLienKet.visaoconhanloai,) | MinghuiWebview()
-                ),
-              );
+              AppNavigator.push(context, MinghuiWebview());
             },
             child: itemMenu("assets/images/menu_item_5.jpg", "Minghui.org"),
           ),
@@ -126,22 +94,7 @@ class MenuHome extends StatelessWidget {
           //6. Item menu 6: Trang giới thiệu về chính sách bảo mật, thông tin liên hệ
           InkWell(
             onTap: () {
-              Navigator.push(
-                context,
-                PageRouteBuilder(
-                  // transitionDuration: Duration.zero,
-                  pageBuilder: (_, __, ___) => PrivacyPolicyPageHtml(),
-                  transitionsBuilder: (context, animation, secondaryAnimation, child) {
-                    var tween = Tween(begin: Offset(0.0, 1.0), end: Offset.zero).chain(CurveTween(
-                        curve: Curves
-                            .ease)); // begin: Xác định điểm đầu (theo trục ngang x như (-1,1) (0.0,1.0) (180,1) ...) | end: điểm cuối (hay dùng zero) | curve: kiểu đường cong di chuyển
-                    return SlideTransition(
-                      position: animation.drive(tween),
-                      child: child,
-                    );
-                  },
-                ),
-              );
+              AppNavigator.push(context, PrivacyPolicyPageHtml());
             },
             child: itemMenu("assets/images/menu_item_6.jpg", "Privacy policy & Contact"),
           ),
@@ -205,12 +158,12 @@ class MenuHome extends StatelessWidget {
 
   //E.1 Hàm mở lại trang kiểu intro
   void _openIntro(BuildContext context, List<PageViewModel> listPageViewModel) {
-    Navigator.of(context).push(
-      MaterialPageRoute(
-          builder: (_) => IntroductionScreenWidget(
-                listPageViewModel: listPageViewModel,
-                setPageIntro: SetPageIntro.gioithieuapp,
-              )),
+    AppNavigator.push(
+      context,
+      IntroductionScreenWidget(
+        listPageViewModel: listPageViewModel,
+        setPageIntro: SetPageIntro.gioithieuapp,
+      ),
     );
   }
 }

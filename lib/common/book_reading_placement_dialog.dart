@@ -35,46 +35,64 @@ class _BookReadingPlacementDialogContent extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final screenWidth = MediaQuery.sizeOf(context).width;
+    final media = MediaQuery.of(context);
+    final screenWidth = media.size.width;
+    final screenHeight = media.size.height;
     final dialogWidth = (screenWidth * 0.92).clamp(300.0, 420.0);
+    // Giới hạn chiều cao để máy thấp (Note 9 landscape / notch) vẫn cuộn được.
+    final maxDialogHeight = (screenHeight - media.viewPadding.vertical - 48)
+        .clamp(280.0, screenHeight * 0.88);
 
     return Dialog(
-      insetPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
+      insetPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       child: ConstrainedBox(
-        constraints: BoxConstraints(maxWidth: dialogWidth),
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.fromLTRB(20, 22, 20, 16),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(
-                'Lưu ý khi đọc sách',
-                textAlign: TextAlign.center,
-                style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                      fontWeight: FontWeight.w700,
-                      fontSize: 22,
-                      color: Colors.black87,
+        constraints: BoxConstraints(
+          maxWidth: dialogWidth,
+          maxHeight: maxDialogHeight,
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Flexible(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.fromLTRB(20, 22, 20, 8),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      'Lưu ý khi đọc sách',
+                      textAlign: TextAlign.center,
+                      style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                            fontWeight: FontWeight.w700,
+                            fontSize: 22,
+                            color: Colors.black87,
+                          ),
                     ),
+                    const SizedBox(height: 20),
+                    _section(
+                      title: 'Nên đặt điện thoại trên giá đỡ và ở trên cao',
+                      isPositive: true,
+                      images: const [_goodImage],
+                      imageWidth: dialogWidth * 0.55,
+                    ),
+                    const SizedBox(height: 18),
+                    _section(
+                      title: 'Không nên đặt điện thoại dưới thấp khi đọc',
+                      isPositive: false,
+                      images: const [_badImage1, _badImage2],
+                      imageWidth: (dialogWidth - 56) / 2,
+                    ),
+                    const SizedBox(height: 12),
+                  ],
+                ),
               ),
-              const SizedBox(height: 20),
-              _section(
-                title: 'Nên đặt điện thoại trên giá đỡ và ở trên cao',
-                isPositive: true,
-                images: const [_goodImage],
-                imageWidth: dialogWidth * 0.55,
-              ),
-              const SizedBox(height: 18),
-              _section(
-                title: 'Không nên đặt điện thoại dưới thấp khi đọc',
-                isPositive: false,
-                images: const [_badImage1, _badImage2],
-                imageWidth: (dialogWidth - 56) / 2,
-              ),
-              const SizedBox(height: 22),
-              _actionButtons(context),
-            ],
-          ),
+            ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(12, 4, 12, 14),
+              child: _actionButtons(context),
+            ),
+          ],
         ),
       ),
     );

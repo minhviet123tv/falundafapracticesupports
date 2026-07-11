@@ -11,6 +11,7 @@ import 'package:falun_dafa_practice_supports/common/offline_audio_helper.dart';
 import 'controller_app/link_internet_list_baigiang_quocte.dart';
 import 'menu/play_audio_webview.dart';
 import 'download_from_url.dart';
+import 'common/swipe_to_back.dart';
 
 //* PlayerWidget9Baigiang
 class PlayerWidget9Baigiang extends StatefulWidget {
@@ -150,9 +151,16 @@ class _PlayerWidgetState extends State<PlayerWidget9Baigiang> {
 
   Future<void> _loadDownloadedPathMap() async {
     final map = await DownloadedAudioStore.getAll();
+    final cleaned = <String, String>{};
+    for (final entry in map.entries) {
+      final playable = await DownloadedAudioStore.resolvePlayablePath(entry.key);
+      if (playable != null) {
+        cleaned[DownloadedAudioStore.normalizeUrl(entry.key)] = playable;
+      }
+    }
     if (!mounted) return;
     setState(() {
-      _downloadedPathMap = map;
+      _downloadedPathMap = cleaned;
     });
   }
 
@@ -535,6 +543,8 @@ class _PlayerWidgetState extends State<PlayerWidget9Baigiang> {
       });
       try {
         await OfflineAudioHelper.playLocalFile(_audioPlayer, localPath);
+        final key = DownloadedAudioStore.normalizeUrl(onlineUrl);
+        _downloadedPathMap[key] = localPath;
       } catch (e) {
         debugPrint('Lesson audio play failed: $e');
         if (!mounted) return;
@@ -552,7 +562,7 @@ class _PlayerWidgetState extends State<PlayerWidget9Baigiang> {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text(
-              'File offline không còn tồn tại, chuyển sang phát online.',
+              'Không tìm thấy file offline — hãy Reset rồi tải lại. Đang mở online.',
             ),
           ),
         );
@@ -569,9 +579,13 @@ class _PlayerWidgetState extends State<PlayerWidget9Baigiang> {
       });
     }
     if (!mounted) return;
-    Navigator.push(context, MaterialPageRoute(builder: (builder){
-      return WebViewBrowserAudio(linkUrl: onlineUrl, title: '${listInternetSource[index].name}',);
-    }));
+    AppNavigator.push(
+      context,
+      WebViewBrowserAudio(
+        linkUrl: onlineUrl,
+        title: listInternetSource[index].name,
+      ),
+    );
   }
 
   Future<void> _onPlayPausePressed(int index) async {

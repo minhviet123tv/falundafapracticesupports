@@ -9,6 +9,7 @@ import 'package:webview_flutter/webview_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../common/app_webview_config.dart';
+import '../common/swipe_to_back.dart';
 
 /*
 webview_flutter: ^4.8.0
@@ -146,41 +147,43 @@ class _WebViewBrowserState extends State<WebViewBrowser> {
   //D. Trang
   @override
   Widget build(BuildContext context) {
-    return SafeArea(
-      child: Scaffold(
-        backgroundColor: hideSuggest == false ? Colors.green : Colors.black,
-        appBar: AppBar(
-          title: Text(widget.title, style: textSize18,),
-          actions: [
+    return SwipeToBack(
+      child: SafeArea(
+        child: Scaffold(
+          backgroundColor: hideSuggest == false ? Colors.green : Colors.black,
+          appBar: AppBar(
+            title: Text(widget.title, style: textSize18,),
+            actions: [
 
-            //Icon open web
-            IconButton(
-              onPressed: (){
-                _launchInBrowser(Uri.parse(widget.linkUrl));
-              },
-              icon: Icon(Icons.zoom_out_map, size: 20),
-            ),
-          ],
-        ),
+              //Icon open web
+              IconButton(
+                onPressed: (){
+                  _launchInBrowser(Uri.parse(widget.linkUrl));
+                },
+                icon: Icon(Icons.zoom_out_map, size: 20),
+              ),
+            ],
+          ),
       
-        body: Column(
-          children: [
-            if (hideSuggest == false)
-            Padding(
-              padding: EdgeInsets.all(8),
-              child: Center(child: Text('Lưu ý: ${widget.textHuongDan}', style: textSize16, textAlign: TextAlign.center,)),
-            ),
-            Expanded(child: Stack(
-              alignment: Alignment.center,
-              children: [
-                loadProgress <= 20 ? CircularProgressIndicator()
-                : WebViewWidget(controller: _controller),
-              ],
-            )),
-            rowBottom(),
-          ],
-        ),
+          body: Column(
+            children: [
+              if (hideSuggest == false)
+              Padding(
+                padding: EdgeInsets.all(8),
+                child: Center(child: Text('Lưu ý: ${widget.textHuongDan}', style: textSize16, textAlign: TextAlign.center,)),
+              ),
+              Expanded(child: Stack(
+                alignment: Alignment.center,
+                children: [
+                  loadProgress <= 20 ? CircularProgressIndicator()
+                  : WebViewWidget(controller: _controller),
+                ],
+              )),
+              rowBottom(),
+            ],
+          ),
       
+        ),
       ),
     );
   }

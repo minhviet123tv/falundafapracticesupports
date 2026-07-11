@@ -9,6 +9,7 @@ import 'player_widget.dart';
 import 'player_widget_9baigiang.dart';
 
 import 'menu/chuyen_phap_luan_webview.dart';
+import 'common/swipe_to_back.dart';
 import 'menu_huongdan_page.dart';
 import 'common/memory_config.dart';
 import 'common/memory_monitor.dart';
@@ -235,20 +236,7 @@ class _FalunDafaExerciseHomePageState extends State<FalunDafaExerciseHomePage>
   }
 
   void _openBookWebview() {
-    Navigator.push(
-      context,
-      PageRouteBuilder(
-        pageBuilder: (_, __, ___) => ChuyenPhapLuanWebview(),
-        transitionsBuilder: (context, animation, secondaryAnimation, child) {
-          final tween = Tween(begin: const Offset(0.0, 1.0), end: Offset.zero)
-              .chain(CurveTween(curve: Curves.ease));
-          return SlideTransition(
-            position: animation.drive(tween),
-            child: child,
-          );
-        },
-      ),
-    );
+    AppNavigator.push(context, ChuyenPhapLuanWebview());
   }
 
   //B.1 Load index của menu bottom được lưu trong shared - Tối ưu hóa bộ nhớ

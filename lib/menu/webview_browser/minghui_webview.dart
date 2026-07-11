@@ -85,9 +85,13 @@ class _MinghuiWebviewState extends State<MinghuiWebview>
   }
 
   Future<void> _onPageFinished() async {
-    await AppWebViewConfig.onPageFinishedEnhancements(
-      _controller,
-      nudgeLazyImages: true,
+    // Minghui hay lazy-load ảnh — ép tải + quét lại vài lần sau khi trang sẵn sàng.
+    unawaited(
+      AppWebViewConfig.onPageFinishedEnhancements(
+        _controller,
+        nudgeLazyImages: true,
+        retryImageLoads: true,
+      ),
     );
     await installImmersiveScrollReporter(_controller);
     await onImmersivePageFinished();
