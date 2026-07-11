@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'dart:io';
 
 import 'dart:async';
 import 'package:audioplayers/audioplayers.dart';
@@ -7,6 +6,7 @@ import 'package:audio_session/audio_session.dart' as audio_session;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:falun_dafa_practice_supports/common/downloaded_audio_store.dart';
+import 'package:falun_dafa_practice_supports/common/offline_audio_helper.dart';
 
 import 'menu/play_audio_webview.dart';
 import 'download_from_url.dart';
@@ -184,8 +184,11 @@ class _PlayerWidgetState extends State<PlayerWidget> {
       return;
     }
     final url = listInternetSource[index].linkUrl;
-    final path = _downloadedPathMap[url];
-    if (path == null || !await File(path).exists()) return;
+    final path = await DownloadedAudioStore.resolvePlayablePath(
+      url,
+      memoryMap: _downloadedPathMap,
+    );
+    if (path == null) return;
     await _recoverStalledIfNeeded(
       stillValid: () => mounted && _offlinePlayingIndex == index,
       devicePath: path,
@@ -202,9 +205,11 @@ class _PlayerWidgetState extends State<PlayerWidget> {
   }
 
   Future<void> _startSingleOfflinePlaybackWithFocusRetry(String path, int index) async {
+    final devicePath = OfflineAudioHelper.normalizeLocalPath(path);
+
     Future<void> playOnce() async {
       await _ensurePlaybackSessionActive();
-      await _audioPlayer.play(DeviceFileSource(path));
+      await _audioPlayer.play(DeviceFileSource(devicePath));
     }
 
     await _ensurePlaybackSessionActive();
@@ -222,7 +227,7 @@ class _PlayerWidgetState extends State<PlayerWidget> {
     unawaited(
       _recoverStalledIfNeeded(
         stillValid: () => mounted && _offlinePlayingIndex == index,
-        devicePath: path,
+        devicePath: devicePath,
       ),
     );
   }
@@ -320,31 +325,31 @@ class _PlayerWidgetState extends State<PlayerWidget> {
                     Container(
                       alignment: Alignment.center,
                       width: 60, height: 50,
-                      child: InkWell(
-                        onTap: (){
-                          indexCurrent = index;
-                          _setIndexCurrentShared(index);
-                          setState(() {});
-                        },
-                        child: DownloadFromUrl(
+                      child: DownloadFromUrl(
                           key: ValueKey(
-                            '${listInternetSource[index].linkUrl}_${_downloadedPathMap[listInternetSource[index].linkUrl] ?? ''}',
+                            '${listInternetSource[index].linkUrl}_${_downloadedPathMap[DownloadedAudioStore.normalizeUrl(listInternetSource[index].linkUrl)] ?? ''}',
                           ),
                           url: listInternetSource[index].linkUrl,
                           onDownloadCompleted: (path) {
-                            _downloadedPathMap[listInternetSource[index].linkUrl] = path;
+                            final key = DownloadedAudioStore.normalizeUrl(
+                              listInternetSource[index].linkUrl,
+                            );
+                            _downloadedPathMap[key] =
+                                OfflineAudioHelper.normalizeLocalPath(path);
                             if (mounted) setState(() {});
                           },
                           onDownloadStateChanged: (isDone) {
+                            final key = DownloadedAudioStore.normalizeUrl(
+                              listInternetSource[index].linkUrl,
+                            );
                             if (!isDone) {
-                              _downloadedPathMap.remove(listInternetSource[index].linkUrl);
+                              _downloadedPathMap.remove(key);
                             }
                             if (mounted) {
                               setState(() {});
                             }
                           },
                         ),
-                      ),
                     ),
                     IconButton(
                       onPressed: (){
@@ -406,28 +411,42 @@ class _PlayerWidgetState extends State<PlayerWidget> {
 
   Future<void> _playAudio(int index) async {
     final onlineUrl = listInternetSource[index].linkUrl;
-    final localPathFromMap = _downloadedPathMap[onlineUrl];
+    final localPath = await DownloadedAudioStore.resolvePlayablePath(
+      onlineUrl,
+      memoryMap: _downloadedPathMap,
+    );
 
-    if (localPathFromMap != null) {
-      final file = File(localPathFromMap);
-      if (await file.exists()) {
+    if (localPath != null) {
+      if (!mounted) return;
+      setState(() {
+        _offlinePlayingIndex = index;
+        _position = Duration.zero;
+        _duration = Duration.zero;
+      });
+      try {
+        await _startSingleOfflinePlaybackWithFocusRetry(localPath, index);
+      } catch (e) {
+        debugPrint('Practice audio play failed: $e');
         if (!mounted) return;
-        setState(() {
-          _offlinePlayingIndex = index;
-          _position = Duration.zero;
-          _duration = Duration.zero;
-        });
-        await _startSingleOfflinePlaybackWithFocusRetry(localPathFromMap, index);
-        return;
-      } else {
-        await DownloadedAudioStore.remove(onlineUrl);
-        _downloadedPathMap.remove(onlineUrl);
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text("File offline không còn tồn tại, chuyển sang phát online.")),
-          );
-          setState(() {});
-        }
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Không phát được file offline: $e')),
+        );
+      }
+      return;
+    }
+
+    final staleKey = DownloadedAudioStore.normalizeUrl(onlineUrl);
+    if (_downloadedPathMap.containsKey(staleKey)) {
+      _downloadedPathMap.remove(staleKey);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text(
+              'File offline không còn tồn tại, chuyển sang phát online.',
+            ),
+          ),
+        );
+        setState(() {});
       }
     }
 

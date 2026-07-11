@@ -12,6 +12,7 @@ import '../common/book_webview_scroll_helper.dart';
 import '../common/book_webview_state_store.dart';
 import '../common/browser_helper.dart';
 import '../common/compact_web_url_bar.dart';
+import '../common/book_reading_placement_dialog.dart';
 import '../common/webview_immersive_mixin.dart';
 
 /// Trang Book: đọc Chuyển Pháp Luân online theo [LanguageNameOfChuyenPhapLuan].
@@ -43,6 +44,13 @@ class _ChuyenPhapLuanWebviewState extends State<ChuyenPhapLuanWebview>
   bool _restoreScrollAfterFinish = false;
 
   String get _languageCode => _language.name;
+
+  /// Tab Book: cần cuộn nhiều hơn trước khi ẩn/hiện thanh trình duyệt.
+  @override
+  double get immersiveScrollDownHideThresholdPx => 96;
+
+  @override
+  double get immersiveScrollUpRevealThresholdPx => 96;
 
   @override
   void initState() {
@@ -118,6 +126,7 @@ class _ChuyenPhapLuanWebviewState extends State<ChuyenPhapLuanWebview>
     _controller = controller;
     WidgetsBinding.instance.addPostFrameCallback((_) {
       unawaited(_loadSavedLanguageAndOpen());
+      unawaited(BookReadingPlacementDialog.showIfNeeded(context));
     });
   }
 

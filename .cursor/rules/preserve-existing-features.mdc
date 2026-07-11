@@ -1,0 +1,21 @@
+---
+description: Không làm hỏng tính năng cũ khi thêm tính năng mới; phải hỏi trước khi thay đổi hành vi hiện có
+alwaysApply: true
+---
+
+# Bảo toàn tính năng hiện có
+
+<span style="color:red">**CẢNH BÁO:** Khi làm tính năng mới hoặc chỉnh sửa code, **không được làm hỏng hoặc thay đổi ngầm** các tính năng đã hoạt động (audio offline, download/reset, đọc sách WebView, scroll ẩn/hiện chrome, v.v.).</span>
+
+## Bắt buộc
+
+1. **Tối thiểu phạm vi** — Chỉ sửa đúng phần được yêu cầu; không refactor lan sang module khác nếu không được nhờ.
+2. **Kiểm tra tính năng liên quan** — Sau khi sửa, xác nhận các luồng cũ vẫn chạy (đặc biệt: tải audio → phát offline → reset; mở Book → dialog hướng dẫn → đọc → cuộn ẩn/hiện thanh trình duyệt).
+3. **Hỏi lại user trước khi đổi hành vi** — Nếu thay đổi có thể ảnh hưởng UX/API/lưu trữ cũ (SharedPreferences key, URL map audio offline, đường dẫn file tải về, scroll threshold, dialog nhắc nhở…), **dừng và hỏi user** thay vì tự quyết định. Trong chat, nhắc bằng **chữ đỏ** khi cảnh báo.
+
+## Ví dụ cần hỏi trước
+
+- Đổi key SharedPreferences → mất dữ liệu tải về / vị trí đọc
+- Tăng/giảm ngưỡng scroll ẩn/hiện chrome
+- Gộp/refactor player audio hoặc download widget
+- Đổi thư viện download hoặc audioplayers

@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
-import 'dart:io';
 
 import 'dart:async';
 import 'package:audioplayers/audioplayers.dart';
+import 'package:audio_session/audio_session.dart' as audio_session;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:falun_dafa_practice_supports/common/downloaded_audio_store.dart';
+import 'package:falun_dafa_practice_supports/common/offline_audio_helper.dart';
 
 import 'controller_app/link_internet_list_baigiang_quocte.dart';
 import 'menu/play_audio_webview.dart';
@@ -40,6 +41,7 @@ class _PlayerWidgetState extends State<PlayerWidget9Baigiang> {
   StreamSubscription<Duration>? _positionSub;
   StreamSubscription<Duration>? _durationSub;
   StreamSubscription<PlayerState>? _stateSub;
+  StreamSubscription<audio_session.AudioInterruptionEvent>? _interruptionSub;
 
   //A.2 list ban đầu (chứa source trong assets hoặc source internet)
   List<AudioSourceModelInternet> listInternetSource = [
@@ -59,8 +61,8 @@ class _PlayerWidgetState extends State<PlayerWidget9Baigiang> {
   void initState() {
     super.initState();
 
-    //1. Cài đặt cơ bản ban đầu cho player
-    _getIndexCurrent(); // Lấy indexCurrent lưu shared
+    unawaited(_configureAudioSession());
+    _getIndexCurrent();
     _loadDownloadedPathMap();
     _positionSub = _audioPlayer.onPositionChanged.listen((value) {
       if (!mounted) return;
@@ -76,8 +78,54 @@ class _PlayerWidgetState extends State<PlayerWidget9Baigiang> {
     });
 
     //2. Khởi tạo ngôn ngữ được chọn
-    languageNameAndCode = LanguageNameAndCode.english; // Tạo sẵn phục vụ load khi chưa lấy xong từ shared
-    _getLanguageEnum(); // cập nhật ngôn ngữ theo như lưu trong shared
+    languageNameAndCode = LanguageNameAndCode.english;
+    _getLanguageEnum();
+  }
+
+  Future<void> _configureAudioSession() async {
+    try {
+      final session = await audio_session.AudioSession.instance;
+      await session.configure(audio_session.AudioSessionConfiguration.music());
+      await _audioPlayer.setAudioContext(
+        AudioContext(
+          android: AudioContextAndroid(
+            isSpeakerphoneOn: false,
+            stayAwake: true,
+            contentType: AndroidContentType.music,
+            usageType: AndroidUsageType.media,
+            audioFocus: AndroidAudioFocus.gain,
+          ),
+          iOS: AudioContextIOS(
+            category: AVAudioSessionCategory.playback,
+            options: <AVAudioSessionOptions>{
+              AVAudioSessionOptions.mixWithOthers,
+            },
+          ),
+        ),
+      );
+      await _audioPlayer.setReleaseMode(ReleaseMode.stop);
+
+      await _interruptionSub?.cancel();
+      _interruptionSub = session.interruptionEventStream.listen((event) {
+        if (event.begin) return;
+        unawaited(_resumeAfterInterruption());
+      });
+    } catch (e) {
+      debugPrint('Lesson audio session config error: $e');
+    }
+  }
+
+  Future<void> _resumeAfterInterruption() async {
+    try {
+      final session = await audio_session.AudioSession.instance;
+      await session.setActive(true);
+    } catch (_) {}
+    if (!mounted || _offlinePlayingIndex == null) return;
+    try {
+      await _audioPlayer.resume();
+    } catch (e) {
+      debugPrint('Lesson audio resume after interruption: $e');
+    }
   }
 
   //B.1.1 Lấy indexCurrent (bài xem cuối trong trang) lưu shared
@@ -110,6 +158,9 @@ class _PlayerWidgetState extends State<PlayerWidget9Baigiang> {
 
   @override
   void dispose() {
+    final interruptionCancel = _interruptionSub?.cancel();
+    _interruptionSub = null;
+    if (interruptionCancel != null) unawaited(interruptionCancel);
     _positionSub?.cancel();
     _durationSub?.cancel();
     _stateSub?.cancel();
@@ -384,28 +435,29 @@ class _PlayerWidgetState extends State<PlayerWidget9Baigiang> {
                     Container(
                       alignment: Alignment.center,
                       width: 60, height: 50,
-                      child: InkWell(
-                        onTap: (){
-                          indexCurrent = index; // Cập nhật index cho Provider
-                          _setIndexCurrentShared(index); // Lưu index vào shared
-                          setState(() {}); // Cập nhật cho giao diện
-                        },
-                        child: DownloadFromUrl(
+                      child: DownloadFromUrl(
                           key: ValueKey(
-                            '${listInternetSource[index].linkUrl}_${_downloadedPathMap[listInternetSource[index].linkUrl] ?? ''}',
+                            '${listInternetSource[index].linkUrl}_${_downloadedPathMap[DownloadedAudioStore.normalizeUrl(listInternetSource[index].linkUrl)] ?? ''}',
                           ),
                           url: listInternetSource[index].linkUrl,
                           onDownloadCompleted: (path) {
-                            _downloadedPathMap[listInternetSource[index].linkUrl] = path;
+                            final key = DownloadedAudioStore.normalizeUrl(
+                              listInternetSource[index].linkUrl,
+                            );
+                            _downloadedPathMap[key] =
+                                OfflineAudioHelper.normalizeLocalPath(path);
                             if (mounted) setState(() {});
                           },
                           onDownloadStateChanged: (isDone) {
+                            final key = DownloadedAudioStore.normalizeUrl(
+                              listInternetSource[index].linkUrl,
+                            );
                             if (!isDone) {
-                              _downloadedPathMap.remove(listInternetSource[index].linkUrl);
+                              _downloadedPathMap.remove(key);
                             }
+                            if (mounted) setState(() {});
                           },
-                        )
-                      ),
+                        ),
                     ),
 
                     //3. Icon mở bên ngoài app bằng trình duyệt
@@ -469,28 +521,42 @@ class _PlayerWidgetState extends State<PlayerWidget9Baigiang> {
 
   Future<void> _playAudio(int index) async {
     final onlineUrl = listInternetSource[index].linkUrl;
-    final localPathFromMap = _downloadedPathMap[onlineUrl];
+    final localPath = await DownloadedAudioStore.resolvePlayablePath(
+      onlineUrl,
+      memoryMap: _downloadedPathMap,
+    );
 
-    if (localPathFromMap != null) {
-      final file = File(localPathFromMap);
-      if (await file.exists()) {
-        await _audioPlayer.stop();
-        await _audioPlayer.play(DeviceFileSource(localPathFromMap));
+    if (localPath != null) {
+      if (!mounted) return;
+      setState(() {
+        _offlinePlayingIndex = index;
+        _position = Duration.zero;
+        _duration = Duration.zero;
+      });
+      try {
+        await OfflineAudioHelper.playLocalFile(_audioPlayer, localPath);
+      } catch (e) {
+        debugPrint('Lesson audio play failed: $e');
         if (!mounted) return;
-        setState(() {
-          _offlinePlayingIndex = index;
-          _position = Duration.zero;
-        });
-        return;
-      } else {
-        await DownloadedAudioStore.remove(onlineUrl);
-        _downloadedPathMap.remove(onlineUrl);
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text("File offline không còn tồn tại, chuyển sang phát online.")),
-          );
-          setState(() {});
-        }
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Không phát được file offline: $e')),
+        );
+      }
+      return;
+    }
+
+    final staleKey = DownloadedAudioStore.normalizeUrl(onlineUrl);
+    if (_downloadedPathMap.containsKey(staleKey)) {
+      _downloadedPathMap.remove(staleKey);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text(
+              'File offline không còn tồn tại, chuyển sang phát online.',
+            ),
+          ),
+        );
+        setState(() {});
       }
     }
 

@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'dart:async';
 import 'dart:io';
 import 'package:flutter_file_downloader/flutter_file_downloader.dart';
 import 'package:falun_dafa_practice_supports/common/downloaded_audio_store.dart';
+import 'package:falun_dafa_practice_supports/common/offline_audio_helper.dart';
 
 /*
 Tạo Widget hiện nút tải -> loading chờ tải -> hiện % download -> Báo download xong
@@ -73,7 +75,8 @@ class _DownloadFromUrlState extends State<DownloadFromUrl> {
           //3. Hiện thông báo sau khi download xong
           if(downloadDone == true)
             IconButton(
-              onPressed: _confirmResetDownload,
+              onPressed: () => unawaited(_confirmResetDownload()),
+              tooltip: 'Reset bản tải về',
               icon: const Icon(Icons.check, color: Colors.green),
             ),
         ],
@@ -101,16 +104,18 @@ class _DownloadFromUrlState extends State<DownloadFromUrl> {
 
       // Sự kiện sau khi hoàn thành (tải xong)
       onDownloadCompleted: (path) async {
-        _localPath = path;
-        await DownloadedAudioStore.save(widget.url.trim(), path);
+        _localPath = OfflineAudioHelper.normalizeLocalPath(path);
+        await DownloadedAudioStore.save(widget.url.trim(), _localPath!);
         if (!mounted) return;
         setState(() {
-          _progress = 0.0; // Trả lại tiến trình (progress) về điểm bắt đầu
-          downloadDone = true; // Xác nhận tình trạng download
+          _progress = 0.0;
+          downloadDone = true;
         });
         widget.onDownloadStateChanged?.call(true);
-        widget.onDownloadCompleted?.call(path);
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(path)));
+        widget.onDownloadCompleted?.call(_localPath!);
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Đã tải xong — có thể phát offline.')),
+        );
       },
       onDownloadError: (message) {
         if (!mounted) return;
@@ -125,13 +130,17 @@ class _DownloadFromUrlState extends State<DownloadFromUrl> {
   }
 
   Future<void> _syncDownloadStatus() async {
-    final localPath = await DownloadedAudioStore.resolveExistingLocalPath(widget.url.trim());
+    final localPath =
+        await DownloadedAudioStore.resolveExistingLocalPath(widget.url.trim());
     if (!mounted) return;
     setState(() {
       _localPath = localPath;
       downloadDone = localPath != null;
     });
     widget.onDownloadStateChanged?.call(downloadDone);
+    if (localPath != null) {
+      widget.onDownloadCompleted?.call(localPath);
+    }
   }
 
   Future<void> _confirmResetDownload() async {
@@ -198,11 +207,16 @@ class _DownloadFromUrlState extends State<DownloadFromUrl> {
   }
 
   Future<void> _resetDownloadedFile() async {
-    final targetPath = _localPath ?? await DownloadedAudioStore.resolveExistingLocalPath(widget.url.trim());
+    final targetPath = _localPath ??
+        await DownloadedAudioStore.resolveExistingLocalPath(widget.url.trim());
     if (targetPath != null && targetPath.isNotEmpty) {
-      final file = File(targetPath);
+      final file = File(OfflineAudioHelper.normalizeLocalPath(targetPath));
       if (await file.exists()) {
-        await file.delete();
+        try {
+          await file.delete();
+        } catch (e) {
+          debugPrint('Reset audio delete failed: $e');
+        }
       }
     }
 
@@ -217,5 +231,8 @@ class _DownloadFromUrlState extends State<DownloadFromUrl> {
       _fileName = "";
     });
     widget.onDownloadStateChanged?.call(false);
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Đã reset bản tải về.')),
+    );
   }
 }

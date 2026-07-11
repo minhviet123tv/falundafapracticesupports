@@ -30,7 +30,7 @@ mixin WebviewImmersiveMixin<T extends StatefulWidget> on State<T>, SingleTickerP
 
   static const double _revealChromeAtTopScrollPx = 6;
 
-  static const double _scrollUpRevealThreshold = 24;
+  static const double _scrollUpRevealThreshold = 56;
 
   static const Duration _immersiveToggleCooldown = Duration(milliseconds: 280);
 
