@@ -73,27 +73,45 @@ class _DownloadFromUrlState extends State<DownloadFromUrl> {
     if (_isDownloading) return;
     _isDownloading = true;
 
+    final client = http.Client();
+    IOSink? sink;
+    String? tempPath;
+
     try {
       final uri = Uri.parse(url);
       if (!uri.hasScheme || !(uri.isScheme('http') || uri.isScheme('https'))) {
         throw Exception('URL không hợp lệ');
       }
 
-      final request = http.Request('GET', uri);
-      final response = await http.Client().send(request);
+      final response = await client.send(http.Request('GET', uri));
 
       if (response.statusCode < 200 || response.statusCode >= 300) {
         throw Exception('HTTP ${response.statusCode}');
       }
 
       final total = response.contentLength ?? 0;
-      final bytes = <int>[];
       var received = 0;
 
+      // Stream thẳng ra đĩa — tránh OOM với file lớn (vd. exercise 5 ~137MB).
+      final savePath = await _buildSavePath(url);
+      tempPath = '$savePath.part';
+      final tempFile = File(tempPath);
+      await tempFile.parent.create(recursive: true);
+      if (await tempFile.exists()) {
+        await tempFile.delete();
+      }
+      final fileSink = tempFile.openWrite();
+      sink = fileSink;
+
       await for (final chunk in response.stream) {
-        bytes.addAll(chunk);
+        fileSink.add(chunk);
         received += chunk.length;
-        if (!mounted) return;
+        if (!mounted) {
+          await fileSink.close();
+          sink = null;
+          if (await tempFile.exists()) await tempFile.delete();
+          return;
+        }
         if (total > 0) {
           final percent = (received / total) * 100;
           setState(() {
@@ -105,10 +123,15 @@ class _DownloadFromUrlState extends State<DownloadFromUrl> {
         }
       }
 
-      final savePath = await _buildSavePath(url);
+      await fileSink.flush();
+      await fileSink.close();
+      sink = null;
+
       final file = File(savePath);
-      await file.parent.create(recursive: true);
-      await file.writeAsBytes(bytes, flush: true);
+      if (await file.exists()) {
+        await file.delete();
+      }
+      await tempFile.rename(savePath);
 
       _localPath = savePath;
       await DownloadedAudioStore.save(url, savePath);
@@ -125,6 +148,16 @@ class _DownloadFromUrlState extends State<DownloadFromUrl> {
         const SnackBar(content: Text('Đã tải xong — có thể nghe offline')),
       );
     } catch (e) {
+      try {
+        await sink?.close();
+      } catch (_) {}
+      sink = null;
+      if (tempPath != null) {
+        final partial = File(tempPath);
+        if (await partial.exists()) {
+          await partial.delete();
+        }
+      }
       if (!mounted) return;
       setState(() {
         showLoading = false;
@@ -135,6 +168,7 @@ class _DownloadFromUrlState extends State<DownloadFromUrl> {
         SnackBar(content: Text('Tải xuống thất bại: $e')),
       );
     } finally {
+      client.close();
       _isDownloading = false;
     }
   }

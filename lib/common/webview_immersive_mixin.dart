@@ -127,10 +127,11 @@ mixin WebviewImmersiveMixin<T extends StatefulWidget> on State<T>, SingleTickerP
   bool get immersiveScrollRevealAtTopInstant => true;
 
   /// Hiện chrome bằng scroll lên khi đang khóa bởi nút Mở rộng.
-  bool get immersiveScrollRevealWhenLockedByButton => false;
+  /// Cần true để iOS (không nút back cứng) vẫn gọi lại được thanh điều khiển.
+  bool get immersiveScrollRevealWhenLockedByButton => true;
 
-  /// Cuộn lên hiện chrome ngay sau khi vừa ẩn (tab Book).
-  bool get immersiveScrollRevealIgnoresSuppress => false;
+  /// Hiện chrome ngay sau khi vừa ẩn bằng scroll xuống.
+  bool get immersiveScrollRevealIgnoresSuppress => true;
 
   /// Dùng touch/wheel intent (ẩn/hiện tức thì); tắt khi dùng ngưỡng px.
   bool get immersiveScrollUsesTouchIntent => false;
@@ -316,7 +317,10 @@ mixin WebviewImmersiveMixin<T extends StatefulWidget> on State<T>, SingleTickerP
 
     _lastScrollY = scrollY;
 
-    if (_immersiveLockedByButton) return;
+    if (_immersiveLockedByButton &&
+        !(intent == 'up' && immersiveScrollRevealWhenLockedByButton)) {
+      return;
+    }
 
     if (immersiveAnim.isAnimating && immersiveScrollHandlesDuringAnimation) {
 

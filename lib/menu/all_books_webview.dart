@@ -8,6 +8,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 
 import '../controller_app/link_internet_sachchuyenphapluan_quocte.dart';
+import '../common/app_language_sync.dart';
 import '../common/app_webview_config.dart';
 import '../common/book_webview_scroll_helper.dart';
 import '../common/book_webview_state_store.dart';
@@ -346,6 +347,7 @@ class _AllBooksWebviewState extends State<AllBooksWebview>
     });
 
     await _setLanguageEnumBook(value);
+    await AppLanguageSync.onUserSelected(value.name);
     await _loadReadingStateAndOpenUrl();
   }
 

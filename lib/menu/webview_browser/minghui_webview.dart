@@ -6,6 +6,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 
 import '../../controller_app/link_all_page_and_api_enum.dart';
+import '../../common/app_language_sync.dart';
 import '../../common/app_webview_config.dart';
 import '../../common/browser_helper.dart';
 import '../../common/compact_web_url_bar.dart';
@@ -142,6 +143,7 @@ class _MinghuiWebviewState extends State<MinghuiWebview>
               _controller.loadRequest(Uri.parse(minghuiEnum.url));
               _saveLanguageLink(minghuiEnum.languageCode);
             });
+            unawaited(AppLanguageSync.onUserSelected(value.languageCode));
           },
           itemBuilder: (context) {
             return MinghuiEnum.values

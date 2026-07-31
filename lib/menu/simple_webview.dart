@@ -9,6 +9,8 @@ import 'package:webview_flutter/webview_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../common/app_webview_config.dart';
+import '../common/new_area_language.dart';
+import '../common/new_area_ui_strings.dart';
 
 /*
 webview_flutter: ^4.8.0
@@ -22,10 +24,17 @@ class WebViewBrowser extends StatefulWidget {
 
   static const String routeName = "WebViewBrowser_routeName";
   final String linkUrl; // Đường dẫn internet của video
-  final String title; // Tiêu đề của video
+  final String title; // Tiêu đề của video (không dịch)
   final String textHuongDan;
+  final NewAreaLang lang;
 
-  WebViewBrowser({required this.linkUrl, required this.title, required this.textHuongDan,  super.key});
+  WebViewBrowser({
+    required this.linkUrl,
+    required this.title,
+    required this.textHuongDan,
+    this.lang = NewAreaLang.english,
+    super.key,
+  });
 
   @override
   State<WebViewBrowser> createState() => _WebViewBrowserState();
@@ -43,6 +52,8 @@ class _WebViewBrowserState extends State<WebViewBrowser> {
   var textSize16 = TextStyle(fontSize: 16);
   var textSize18 = TextStyle(fontSize: 18, fontWeight: FontWeight.w600);
   late int loadProgress = 0;
+
+  NewAreaUiStrings get _ui => NewAreaUiStrings(widget.lang);
 
   //B. Khởi tạo khi mới mở
   @override
@@ -146,6 +157,7 @@ class _WebViewBrowserState extends State<WebViewBrowser> {
   //D. Trang
   @override
   Widget build(BuildContext context) {
+    final ui = _ui;
     return SafeArea(
       child: Scaffold(
         backgroundColor: hideSuggest == false ? Colors.green : Colors.black,
@@ -168,7 +180,13 @@ class _WebViewBrowserState extends State<WebViewBrowser> {
             if (hideSuggest == false)
             Padding(
               padding: EdgeInsets.all(8),
-              child: Center(child: Text('Lưu ý: ${widget.textHuongDan}', style: textSize16, textAlign: TextAlign.center,)),
+              child: Center(
+                child: Text(
+                  '${ui.notePrefix} ${widget.textHuongDan}',
+                  style: textSize16,
+                  textAlign: TextAlign.center,
+                ),
+              ),
             ),
             Expanded(child: Stack(
               alignment: Alignment.center,
@@ -177,7 +195,7 @@ class _WebViewBrowserState extends State<WebViewBrowser> {
                 : WebViewWidget(controller: _controller),
               ],
             )),
-            rowBottom(),
+            rowBottom(ui),
           ],
         ),
       
@@ -186,7 +204,7 @@ class _WebViewBrowserState extends State<WebViewBrowser> {
   }
 
   //D.1
-  Widget rowBottom() {
+  Widget rowBottom(NewAreaUiStrings ui) {
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
@@ -198,9 +216,9 @@ class _WebViewBrowserState extends State<WebViewBrowser> {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Text(" Chọn ", style: textSize16,),
+                Text(ui.chooseToExpandBefore, style: textSize16,),
                 Icon(Icons.zoom_out_map,),
-                Text(" để phóng to", style: textSize16,),
+                Text(ui.chooseToExpandAfter, style: textSize16,),
                 SizedBox(width: 10,),
               ],
             ),
@@ -222,9 +240,11 @@ class _WebViewBrowserState extends State<WebViewBrowser> {
                       onPressed: (){
                         // final key = new GlobalKey<ScaffoldState>();
                         Clipboard.setData(ClipboardData(text: widget.linkUrl));
-                        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Đã sao chép link!"),));
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(content: Text(ui.linkCopied)),
+                        );
                       },
-                      child: Text("copy link video"),
+                      child: Text(ui.copyLinkVideo),
                     ),
                   ),
                 ),
@@ -237,14 +257,9 @@ class _WebViewBrowserState extends State<WebViewBrowser> {
                     onPressed: (){
                       _setHideSuggest(); // Thay đổi tình trạng nút ẩn hiện và lưu shared
                     },
-                    child: (){
-                      if(hideSuggest == false){
-                        return Text("Ẩn lưu ý");
-                      }
-                      if(hideSuggest == true){
-                        return Text("Lưu ý");
-                      }
-                    }(),
+                    child: Text(
+                      hideSuggest == true ? ui.showNotes : ui.hideNotes,
+                    ),
                   ),
                 ),
               )

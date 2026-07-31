@@ -10,8 +10,11 @@ import 'player_widget_9baigiang.dart';
 
 import 'menu/chuyen_phap_luan_webview.dart';
 import 'menu_huongdan_page.dart';
+import 'common/app_language_sync.dart';
+import 'common/app_text_theme.dart';
 import 'common/memory_config.dart';
 import 'common/memory_monitor.dart';
+import 'common/new_area_language.dart';
 
 /*
 audioplayers: ^6.0.0
@@ -25,6 +28,7 @@ void main() async {
   
   // Khởi tạo cấu hình bộ nhớ
   await MemoryConfig.initialize();
+  await AppLanguageSync.bootstrapFromDeviceIfNeeded();
   
   runApp(RunAppFalunDafaExercise());
 }
@@ -143,11 +147,7 @@ class _RunAppFalunDafaExerciseState extends State<RunAppFalunDafaExercise>
       ),
       debugShowCheckedModeBanner: false,
       // Tối ưu hóa bộ nhớ cho MaterialApp
-      theme: ThemeData(
-        useMaterial3: true,
-        // Giảm thiểu việc tạo ra các object không cần thiết
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.blue),
-      ),
+      theme: buildAppTheme(),
     );
   }
 
@@ -155,7 +155,11 @@ class _RunAppFalunDafaExerciseState extends State<RunAppFalunDafaExercise>
   Widget _getHomePage (){
     // return FalunDafaExerciseHomePage();
     if((countLoginNumber ?? 0) < 2){
-      return IntroductionScreenWidget(listPageViewModel: listPageViewModelGioiThieuApp, setPageIntro: SetPageIntro.molandau,);
+      return IntroductionScreenWidget(
+        pagesBuilder: buildAboutAppPages,
+        setPageIntro: SetPageIntro.molandau,
+        languagePrefsKey: NewAreaLanguageKeys.aboutApp,
+      );
     } else {
       return FalunDafaExerciseHomePage();
     }
@@ -179,7 +183,7 @@ class _FalunDafaExerciseHomePageState extends State<FalunDafaExerciseHomePage>
   final Map<int, Widget> _tabWidgets = <int, Widget>{};
   int indexMenu = 0;
   String title = '';
-  final TextStyle styleTextTitle = const TextStyle(color: Colors.white, fontWeight: FontWeight.w700);
+  final TextStyle styleTextTitle = AppTextStyles.title(fontSize: 16);
   
   // Cache SharedPreferences để tối ưu hóa bộ nhớ
   SharedPreferences? _sharedPreferences;
@@ -221,11 +225,11 @@ class _FalunDafaExerciseHomePageState extends State<FalunDafaExerciseHomePage>
       case 0:
         return MenuHome();
       case 1:
-        return PlayerWidget9Baigiang();
+        return const PlayerWidget9Baigiang();
       case 2:
         return PlayerWidget();
       default:
-        return MenuHome();
+        return const MenuHome();
     }
   }
 

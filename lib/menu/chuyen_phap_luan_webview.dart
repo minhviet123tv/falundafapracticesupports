@@ -7,6 +7,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 
 import '../controller_app/link_internet_sachchuyenphapluan_quocte.dart';
+import '../common/app_language_sync.dart';
 import '../common/app_webview_config.dart';
 import '../common/book_reading_placement_dialog.dart';
 import '../common/book_webview_scroll_helper.dart';
@@ -117,9 +118,13 @@ class _ChuyenPhapLuanWebviewState extends State<ChuyenPhapLuanWebview>
       );
 
     _controller = controller;
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      unawaited(_loadSavedLanguageAndOpen());
-      unawaited(BookReadingPlacementDialog.showIfNeeded(context));
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      await _loadSavedLanguageAndOpen();
+      if (!mounted) return;
+      await BookReadingPlacementDialog.showIfNeeded(
+        context,
+        languageCode: _language.name,
+      );
     });
   }
 
@@ -380,6 +385,7 @@ class _ChuyenPhapLuanWebviewState extends State<ChuyenPhapLuanWebview>
     });
 
     await _saveLanguagePreference(value);
+    await AppLanguageSync.onUserSelected(value.name);
     await _loadReadingStateAndOpenUrl();
   }
 

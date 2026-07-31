@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import '../common/app_language_sync.dart';
 import '../controller_app/link_all_page_and_api_enum.dart';
 
 /*
@@ -96,6 +97,9 @@ class _OpenUrlPageState extends State<OpenUrlPage> {
       await shared.setString("languageCodeFalundafa", keyLanguage);
     } else if (trangDichCuaLienKet == TrangDichCuaLienKet.minghui) {
       await shared.setString("languageCodeMinghui", keyLanguage);
+    }
+    if (keyLanguage.isNotEmpty) {
+      await AppLanguageSync.onUserSelected(keyLanguage);
     }
   }
 

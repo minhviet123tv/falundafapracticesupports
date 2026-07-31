@@ -7,6 +7,7 @@ import 'package:audio_session/audio_session.dart' as audio_session;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:falun_dafa_practice_supports/common/downloaded_audio_store.dart';
+import 'package:falun_dafa_practice_supports/common/app_text_theme.dart';
 
 import 'menu/play_audio_webview.dart';
 import 'download_from_url.dart';
@@ -27,7 +28,7 @@ class _PlayerWidgetState extends State<PlayerWidget> {
   //A. Dữ liệu
   late int indexCurrent = 0;
   TextStyle textStyle16 = TextStyle(fontSize: 16, color: Colors.black);
-  TextStyle styleTextTitle = TextStyle(color: Colors.white, fontWeight: FontWeight.w500, fontSize: 20);
+  TextStyle styleTextTitle = AppTextStyles.title(fontSize: 18);
   Map<String, String> _downloadedPathMap = <String, String>{};
   final AudioPlayer _audioPlayer = AudioPlayer();
   Duration _position = Duration.zero;

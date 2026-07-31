@@ -6,6 +6,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 
 import '../../controller_app/link_all_page_and_api_enum.dart';
+import '../../common/app_language_sync.dart';
 import '../../common/app_webview_config.dart';
 import '../../common/browser_helper.dart';
 import '../../common/compact_web_url_bar.dart';
@@ -30,7 +31,7 @@ class _VisaoconhanloaiWebviewState extends State<VisaoconhanloaiWebview>
   void initState() {
     super.initState();
     initImmersive();
-    visaoconhanloaiEnum = VisaoconhanloaiEnum.vietnamese;
+    visaoconhanloaiEnum = VisaoconhanloaiEnum.english;
 
     final WebViewController controller = AppWebViewConfig.createController();
     controller
@@ -94,7 +95,7 @@ class _VisaoconhanloaiWebviewState extends State<VisaoconhanloaiWebview>
   Future<void> _getLanguageLink() async {
     final shared = await SharedPreferences.getInstance();
     final languageCode =
-        shared.getString('languageCodeVisaoconhanloai') ?? 'vietnamese';
+        shared.getString('languageCodeVisaoconhanloai') ?? 'english';
     visaoconhanloaiEnum = VisaoconhanloaiEnum.values.byName(languageCode);
     await _controller.loadRequest(Uri.parse(visaoconhanloaiEnum.url));
     if (mounted) setState(() {});
@@ -139,6 +140,7 @@ class _VisaoconhanloaiWebviewState extends State<VisaoconhanloaiWebview>
               _controller.loadRequest(Uri.parse(visaoconhanloaiEnum.url));
               _saveLanguageLink(visaoconhanloaiEnum.languageCode);
             });
+            unawaited(AppLanguageSync.onUserSelected(value.languageCode));
           },
           itemBuilder: (context) {
             return VisaoconhanloaiEnum.values

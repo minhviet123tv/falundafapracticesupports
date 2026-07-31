@@ -1,6 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'package:falun_dafa_practice_supports/common/app_language_sync.dart';
+import 'package:falun_dafa_practice_supports/common/book_placement_dialog_strings.dart';
+import 'package:falun_dafa_practice_supports/common/new_area_language.dart';
+
 /// Dialog hướng dẫn đặt điện thoại khi đọc sách (tab Book).
 class BookReadingPlacementDialog {
   static const String _prefsKey = 'book_reading_phone_placement_hint_v1';
@@ -15,19 +19,30 @@ class BookReadingPlacementDialog {
     await shared.setBool(_prefsKey, true);
   }
 
-  static Future<void> showIfNeeded(BuildContext context) async {
+  static Future<void> showIfNeeded(
+    BuildContext context, {
+    String? languageCode,
+  }) async {
     if (!await shouldShow()) return;
     if (!context.mounted) return;
+
+    final code = languageCode ?? await AppLanguageSync.preferredOrEnglish();
+    final lang =
+        NewAreaLang.fromCanonical(code) ?? NewAreaLang.english;
+
     await showDialog<void>(
       context: context,
       barrierDismissible: false,
-      builder: (dialogContext) => const _BookReadingPlacementDialogContent(),
+      builder: (dialogContext) =>
+          _BookReadingPlacementDialogContent(lang: lang),
     );
   }
 }
 
 class _BookReadingPlacementDialogContent extends StatelessWidget {
-  const _BookReadingPlacementDialogContent();
+  final NewAreaLang lang;
+
+  const _BookReadingPlacementDialogContent({required this.lang});
 
   static const String _goodImage = 'assets/images/dienthoai_nen_1.jpeg';
   static const String _badImage1 = 'assets/images/dienthoai_khongnen_1.jpg';
@@ -35,11 +50,11 @@ class _BookReadingPlacementDialogContent extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final s = BookPlacementDialogStrings(lang);
     final media = MediaQuery.of(context);
     final screenWidth = media.size.width;
     final screenHeight = media.size.height;
     final dialogWidth = (screenWidth * 0.92).clamp(300.0, 420.0);
-    // Giới hạn chiều cao để máy thấp (Note 9 landscape / notch) vẫn cuộn được.
     final maxDialogHeight = (screenHeight - media.viewPadding.vertical - 48)
         .clamp(280.0, screenHeight * 0.88);
 
@@ -61,7 +76,7 @@ class _BookReadingPlacementDialogContent extends StatelessWidget {
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     Text(
-                      'Lưu ý khi đọc sách',
+                      s.title,
                       textAlign: TextAlign.center,
                       style: Theme.of(context).textTheme.headlineSmall?.copyWith(
                             fontWeight: FontWeight.w700,
@@ -71,14 +86,14 @@ class _BookReadingPlacementDialogContent extends StatelessWidget {
                     ),
                     const SizedBox(height: 20),
                     _section(
-                      title: 'Nên đặt điện thoại trên giá đỡ và ở trên cao',
+                      title: s.goodPlacement,
                       isPositive: true,
                       images: const [_goodImage],
                       imageWidth: dialogWidth * 0.55,
                     ),
                     const SizedBox(height: 18),
                     _section(
-                      title: 'Không nên đặt điện thoại dưới thấp khi đọc',
+                      title: s.badPlacement,
                       isPositive: false,
                       images: const [_badImage1, _badImage2],
                       imageWidth: (dialogWidth - 56) / 2,
@@ -90,7 +105,7 @@ class _BookReadingPlacementDialogContent extends StatelessWidget {
             ),
             Padding(
               padding: const EdgeInsets.fromLTRB(12, 4, 12, 14),
-              child: _actionButtons(context),
+              child: _actionButtons(context, s),
             ),
           ],
         ),
@@ -181,7 +196,7 @@ class _BookReadingPlacementDialogContent extends StatelessWidget {
     );
   }
 
-  Widget _actionButtons(BuildContext context) {
+  Widget _actionButtons(BuildContext context, BookPlacementDialogStrings s) {
     return Wrap(
       alignment: WrapAlignment.center,
       spacing: 8,
@@ -192,11 +207,11 @@ class _BookReadingPlacementDialogContent extends StatelessWidget {
             await BookReadingPlacementDialog.markNeverShowAgain();
             if (context.mounted) Navigator.of(context).pop();
           },
-          child: const Text('Không nhắc lại'),
+          child: Text(s.neverShowAgain),
         ),
         TextButton(
           onPressed: () => Navigator.of(context).pop(),
-          child: const Text('Bỏ qua'),
+          child: Text(s.skip),
         ),
         ElevatedButton(
           style: ElevatedButton.styleFrom(
@@ -204,7 +219,7 @@ class _BookReadingPlacementDialogContent extends StatelessWidget {
             foregroundColor: Colors.white,
           ),
           onPressed: () => Navigator.of(context).pop(),
-          child: const Text('Đã hiểu'),
+          child: Text(s.understood),
         ),
       ],
     );
