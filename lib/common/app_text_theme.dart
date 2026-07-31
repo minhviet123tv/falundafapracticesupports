@@ -1,16 +1,17 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 
-/// Font đứng chung (Noto Sans) — tránh tiêu đề bị bè ngang trên iOS/Android.
+/// Font đứng đóng gói (Roboto Variable) — cùng hướng với CEO Calendar,
+/// chữ Latin/Vietnamese đồng nhất giữa iOS và Android, không tải mạng.
 class AppTextStyles {
-  static String? get fontFamily => GoogleFonts.notoSans().fontFamily;
+  static const String fontFamily = 'AppSans';
 
   static TextStyle title({
     Color color = Colors.white,
     FontWeight fontWeight = FontWeight.w600,
     double fontSize = 18,
   }) {
-    return GoogleFonts.notoSans(
+    return TextStyle(
+      fontFamily: fontFamily,
       color: color,
       fontWeight: fontWeight,
       fontSize: fontSize,
@@ -24,7 +25,8 @@ class AppTextStyles {
     FontWeight fontWeight = FontWeight.w400,
     double fontSize = 15,
   }) {
-    return GoogleFonts.notoSans(
+    return TextStyle(
+      fontFamily: fontFamily,
       color: color,
       fontWeight: fontWeight,
       fontSize: fontSize,
@@ -38,16 +40,18 @@ ThemeData buildAppTheme() {
   final base = ThemeData(
     useMaterial3: true,
     colorScheme: ColorScheme.fromSeed(seedColor: Colors.blue),
-  );
-
-  final textTheme = GoogleFonts.notoSansTextTheme(base.textTheme).apply(
-    bodyColor: Colors.black87,
-    displayColor: Colors.black87,
+    fontFamily: AppTextStyles.fontFamily,
   );
 
   return base.copyWith(
-    textTheme: textTheme,
-    primaryTextTheme: GoogleFonts.notoSansTextTheme(base.primaryTextTheme),
+    textTheme: base.textTheme.apply(
+      fontFamily: AppTextStyles.fontFamily,
+      bodyColor: Colors.black87,
+      displayColor: Colors.black87,
+    ),
+    primaryTextTheme: base.primaryTextTheme.apply(
+      fontFamily: AppTextStyles.fontFamily,
+    ),
     appBarTheme: AppBarTheme(
       titleTextStyle: AppTextStyles.title(fontSize: 18),
       toolbarTextStyle: AppTextStyles.title(fontSize: 16),

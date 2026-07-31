@@ -51,7 +51,6 @@ dependencies:
   # The following adds the Cupertino Icons font to your application.
   # Use with the CupertinoIcons class for iOS style icons.
   cupertino_icons: ^1.0.6
-  google_fonts: ^6.2.1
 
 
 dev_dependencies:
@@ -101,30 +100,11 @@ flutter:
   # For details regarding adding assets from package dependencies, see
   # https://flutter.dev/assets-and-images/#from-packages
 
-  # To add custom fonts to your application, add a fonts section here,
-  # in this "flutter" section. Each entry in this list should have a
-  # "family" key with the font family name, and a "fonts" key with a
-  # list giving the asset and other descriptors for the font. For
-  # example:
-#  fonts:
-#    - family: VNI-HLThufap  #Tự đặt tên cho font, dùng để khai báo cho Text() khi gọi fontFamily
-#      fonts:
-#        - asset: assets/fonts/VNI-HLThufap.ttf #Đường dẫn đến font sẽ dùng trong project (chỉ cần đổi tên file thì sẽ đổi font)
-#
-#    - family: KlarnaText
-#      fonts:
-#        - asset: assets/fonts/KlarnaText-Regular.ttf
-#
-#    - family: JetBrainsMono
-#      fonts:
-#        - asset: assets/fonts/JetBrainsMonoNL-Regular.ttf
-#        - asset: assets/fonts/JetBrainsMono-BoldItalic.ttf
-#          weight: 700
-#        - asset: assets/fonts/JetBrainsMonoNL-Thin.ttf
-#          weight: 500
-  #
-  # For details regarding fonts from package dependencies,
-  # see https://flutter.dev/custom-fonts/#from-packages
+  # Font đóng gói giống CEO Calendar (Roboto Variable) — chữ đứng, đồng nhất iOS/Android.
+  fonts:
+    - family: AppSans
+      fonts:
+        - asset: assets/fonts/Roboto-Variable.ttf
 
 # Mixed-content images (https page + http assets) need webview_flutter_android 4.8+.
 # wakelock_plus 1.3.0 bug: missing messages.g.h on iOS (fixed in 1.3.1+).
