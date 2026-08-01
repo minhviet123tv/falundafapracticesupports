@@ -9,6 +9,7 @@ import 'package:falun_dafa_practice_supports/common/downloaded_audio_store.dart'
 import 'package:falun_dafa_practice_supports/common/app_language_sync.dart';
 import 'package:falun_dafa_practice_supports/common/app_text_theme.dart';
 import 'package:falun_dafa_practice_supports/common/language_menu_order.dart';
+import 'package:falun_dafa_practice_supports/common/swipe_to_back.dart';
 
 import 'controller_app/link_internet_list_baigiang_quocte.dart';
 import 'menu/play_audio_webview.dart';
@@ -512,9 +513,13 @@ class _PlayerWidgetState extends State<PlayerWidget9Baigiang> {
       });
     }
     if (!mounted) return;
-    Navigator.push(context, MaterialPageRoute(builder: (builder){
-      return WebViewBrowserAudio(linkUrl: onlineUrl, title: '${listInternetSource[index].name}',);
-    }));
+    AppNavigator.push(
+      context,
+      WebViewBrowserAudio(
+        linkUrl: onlineUrl,
+        title: '${listInternetSource[index].name}',
+      ),
+    );
   }
 
   Future<void> _onPlayPausePressed(int index) async {

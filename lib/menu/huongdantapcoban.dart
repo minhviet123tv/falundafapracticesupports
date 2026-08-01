@@ -5,6 +5,7 @@ import 'package:falun_dafa_practice_supports/common/app_language_sync.dart';
 import 'package:falun_dafa_practice_supports/common/app_text_theme.dart';
 import 'package:falun_dafa_practice_supports/common/new_area_language.dart';
 import 'package:falun_dafa_practice_supports/common/new_area_ui_strings.dart';
+import 'package:falun_dafa_practice_supports/common/swipe_to_back.dart';
 import 'package:falun_dafa_practice_supports/menu/simple_webview.dart';
 
 import 'intro_list_widget_body.dart';
@@ -85,21 +86,13 @@ class _HuongDanTapCoBanPageState extends State<HuongDanTapCoBanPage> {
     required String title,
     required String textHuongDan,
   }) {
-    Navigator.push(
+    AppNavigator.push(
       context,
-      PageRouteBuilder(
-        pageBuilder: (_, __, ___) => WebViewBrowser(
-          linkUrl: linkUrl,
-          title: title,
-          textHuongDan: textHuongDan,
-          lang: _lang,
-        ),
-        transitionsBuilder: (context, animation, secondaryAnimation, child) {
-          final tween = Tween(begin: const Offset(0.0, 1.0), end: Offset.zero)
-              .chain(CurveTween(curve: Curves.ease));
-          return SlideTransition(
-              position: animation.drive(tween), child: child);
-        },
+      WebViewBrowser(
+        linkUrl: linkUrl,
+        title: title,
+        textHuongDan: textHuongDan,
+        lang: _lang,
       ),
     );
   }
@@ -228,13 +221,12 @@ class _HuongDanTapCoBanPageState extends State<HuongDanTapCoBanPage> {
   }
 
   void _openIntro(BuildContext context) {
-    Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (_) => IntroductionScreenWidget(
-          pagesBuilder: buildHuongDanTapCoBanPages,
-          setPageIntro: SetPageIntro.tapcoban,
-          languagePrefsKey: NewAreaLanguageKeys.huongDanTapCoBan,
-        ),
+    AppNavigator.push(
+      context,
+      IntroductionScreenWidget(
+        pagesBuilder: buildHuongDanTapCoBanPages,
+        setPageIntro: SetPageIntro.tapcoban,
+        languagePrefsKey: NewAreaLanguageKeys.huongDanTapCoBan,
       ),
     );
   }

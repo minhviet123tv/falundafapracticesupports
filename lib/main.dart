@@ -15,6 +15,7 @@ import 'common/app_text_theme.dart';
 import 'common/memory_config.dart';
 import 'common/memory_monitor.dart';
 import 'common/new_area_language.dart';
+import 'common/swipe_to_back.dart';
 
 /*
 audioplayers: ^6.0.0
@@ -241,20 +242,7 @@ class _FalunDafaExerciseHomePageState extends State<FalunDafaExerciseHomePage>
   }
 
   void _openBookWebview() {
-    Navigator.push(
-      context,
-      PageRouteBuilder(
-        pageBuilder: (_, __, ___) => ChuyenPhapLuanWebview(),
-        transitionsBuilder: (context, animation, secondaryAnimation, child) {
-          final tween = Tween(begin: const Offset(0.0, 1.0), end: Offset.zero)
-              .chain(CurveTween(curve: Curves.ease));
-          return SlideTransition(
-            position: animation.drive(tween),
-            child: child,
-          );
-        },
-      ),
-    );
+    AppNavigator.pushFromTop(context, ChuyenPhapLuanWebview());
   }
 
   //B.1 Load index của menu bottom được lưu trong shared - Tối ưu hóa bộ nhớ

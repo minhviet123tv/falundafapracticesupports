@@ -8,6 +8,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:falun_dafa_practice_supports/common/downloaded_audio_store.dart';
 import 'package:falun_dafa_practice_supports/common/app_text_theme.dart';
+import 'package:falun_dafa_practice_supports/common/swipe_to_back.dart';
 
 import 'menu/play_audio_webview.dart';
 import 'download_from_url.dart';
@@ -441,9 +442,13 @@ class _PlayerWidgetState extends State<PlayerWidget> {
       });
     }
     if (!mounted) return;
-    Navigator.push(context, MaterialPageRoute(builder: (builder){
-      return WebViewBrowserAudio(linkUrl: onlineUrl, title: '${listInternetSource[index].name}',);
-    }));
+    AppNavigator.push(
+      context,
+      WebViewBrowserAudio(
+        linkUrl: onlineUrl,
+        title: '${listInternetSource[index].name}',
+      ),
+    );
   }
 
   Future<void> _onPlayPausePressed(int index) async {

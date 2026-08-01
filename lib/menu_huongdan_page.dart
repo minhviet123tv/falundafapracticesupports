@@ -6,6 +6,7 @@ import 'package:falun_dafa_practice_supports/common/app_language_sync.dart';
 import 'package:falun_dafa_practice_supports/common/app_text_theme.dart';
 import 'package:falun_dafa_practice_supports/common/new_area_language.dart';
 import 'package:falun_dafa_practice_supports/common/new_area_ui_strings.dart';
+import 'package:falun_dafa_practice_supports/common/swipe_to_back.dart';
 import 'menu/open_url_language_page.dart';
 import 'menu/privacy_policy_page_html.dart';
 import 'menu/intro_list_widget_body.dart';
@@ -93,12 +94,8 @@ class _MenuHomeState extends State<MenuHome> {
       children: [
         InkWell(
           onTap: () {
-            Navigator.push(
-              context,
-              PageRouteBuilder(
-                pageBuilder: (_, __, ___) => const HuongDanTapCoBanPage(),
-              ),
-            ).then((_) => _loadLanguage(silent: true));
+            AppNavigator.push(context, const HuongDanTapCoBanPage())
+                .then((_) => _loadLanguage(silent: true));
           },
           child: itemMenu(
             'assets/images/menu_item_2.jpg',
@@ -107,22 +104,8 @@ class _MenuHomeState extends State<MenuHome> {
         ),
         InkWell(
           onTap: () {
-            Navigator.push(
-              context,
-              PageRouteBuilder(
-                pageBuilder: (_, __, ___) => VisaoconhanloaiWebview(),
-                transitionsBuilder:
-                    (context, animation, secondaryAnimation, child) {
-                  final tween =
-                      Tween(begin: const Offset(0.0, 1.0), end: Offset.zero)
-                          .chain(CurveTween(curve: Curves.ease));
-                  return SlideTransition(
-                    position: animation.drive(tween),
-                    child: child,
-                  );
-                },
-              ),
-            ).then((_) => _loadLanguage(silent: true));
+            AppNavigator.pushFromTop(context, VisaoconhanloaiWebview())
+                .then((_) => _loadLanguage(silent: true));
           },
           child: itemMenu(
             'assets/images/menu_item_3.jpg',
@@ -131,27 +114,17 @@ class _MenuHomeState extends State<MenuHome> {
         ),
         InkWell(
           onTap: () {
-            Navigator.push(
+            AppNavigator.pushFromTop(
               context,
-              PageRouteBuilder(
-                transitionDuration: Duration.zero,
-                pageBuilder: (_, __, ___) => OpenUrlPage(
-                  trangDichCuaLienKet: TrangDichCuaLienKet.falundafa,
-                ),
-              ),
+              OpenUrlPage(trangDichCuaLienKet: TrangDichCuaLienKet.falundafa),
             ).then((_) => _loadLanguage(silent: true));
           },
           child: itemMenu('assets/images/menu_item_4.jpg', 'Falundafa.org'),
         ),
         InkWell(
           onTap: () {
-            Navigator.push(
-              context,
-              PageRouteBuilder(
-                transitionDuration: Duration.zero,
-                pageBuilder: (_, __, ___) => MinghuiWebview(),
-              ),
-            ).then((_) => _loadLanguage(silent: true));
+            AppNavigator.push(context, MinghuiWebview())
+                .then((_) => _loadLanguage(silent: true));
           },
           child: itemMenu('assets/images/menu_item_5.jpg', 'Minghui.org'),
         ),
@@ -166,22 +139,8 @@ class _MenuHomeState extends State<MenuHome> {
         ),
         InkWell(
           onTap: () {
-            Navigator.push(
-              context,
-              PageRouteBuilder(
-                pageBuilder: (_, __, ___) => const PrivacyPolicyPageHtml(),
-                transitionsBuilder:
-                    (context, animation, secondaryAnimation, child) {
-                  final tween =
-                      Tween(begin: const Offset(0.0, 1.0), end: Offset.zero)
-                          .chain(CurveTween(curve: Curves.ease));
-                  return SlideTransition(
-                    position: animation.drive(tween),
-                    child: child,
-                  );
-                },
-              ),
-            ).then((_) => _loadLanguage(silent: true));
+            AppNavigator.push(context, const PrivacyPolicyPageHtml())
+                .then((_) => _loadLanguage(silent: true));
           },
           child: itemMenu(
             'assets/images/menu_item_6.jpg',
@@ -236,16 +195,13 @@ class _MenuHomeState extends State<MenuHome> {
   }
 
   void _openAboutAppIntro(BuildContext context) {
-    Navigator.of(context)
-        .push(
-          MaterialPageRoute(
-            builder: (_) => IntroductionScreenWidget(
-              pagesBuilder: buildAboutAppPages,
-              setPageIntro: SetPageIntro.gioithieuapp,
-              languagePrefsKey: NewAreaLanguageKeys.aboutApp,
-            ),
-          ),
-        )
-        .then((_) => _loadLanguage(silent: true));
+    AppNavigator.push(
+      context,
+      IntroductionScreenWidget(
+        pagesBuilder: buildAboutAppPages,
+        setPageIntro: SetPageIntro.gioithieuapp,
+        languagePrefsKey: NewAreaLanguageKeys.aboutApp,
+      ),
+    ).then((_) => _loadLanguage(silent: true));
   }
 }

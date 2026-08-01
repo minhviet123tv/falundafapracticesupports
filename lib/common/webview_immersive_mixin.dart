@@ -87,8 +87,9 @@ mixin WebviewImmersiveMixin<T extends StatefulWidget> on State<T>, SingleTickerP
 
   bool _immersiveScrollReady = false;
 
-  /// Vuốt-back từ mép trái — không bọc cả WebView (tránh chặn cuộn dọc).
-  static const double _swipeBackEdgeWidth = 24;
+  /// Vuốt nửa trái → [onPop] / thoát immersive.
+  /// Với [SwipeBackPageRoute], pop có hiệu ứng trượt về.
+  static const double _swipeBackEdgeFraction = 0.5;
   bool _edgeSwipeEligible = false;
   double _edgeSwipeDelta = 0;
 
@@ -876,39 +877,24 @@ mixin WebviewImmersiveMixin<T extends StatefulWidget> on State<T>, SingleTickerP
   }) {
 
     return PopScope(
-
-      canPop: false,
-
+      // Cho phép gesture/route pop khi không immersive; khi immersive thì
+      // hệ thống/vuốt xử lý thoát mở rộng trước rồi mới back trang.
+      canPop: !inImmersiveMode,
       onPopInvokedWithResult: (bool didPop, dynamic result) async {
-
         if (didPop) return;
-
         if (await handleImmersiveSystemBack()) return;
-
         onPop?.call();
-
       },
-
       child: ListenableBuilder(
-
         listenable: Listenable.merge([immersiveAnim, immersiveActive]),
-
         builder: (context, _) =>
-
             _buildImmersiveChrome(
-
               toolbar: toolbar,
-
               urlBar: urlBar,
-
               body: body,
-
               onPop: onPop,
-
             ),
-
       ),
-
     );
 
   }
@@ -1024,7 +1010,8 @@ mixin WebviewImmersiveMixin<T extends StatefulWidget> on State<T>, SingleTickerP
                         left: 0,
                         top: 0,
                         bottom: 0,
-                        width: _swipeBackEdgeWidth,
+                        width: MediaQuery.sizeOf(context).width *
+                            _swipeBackEdgeFraction,
                         child: GestureDetector(
                           behavior: HitTestBehavior.translucent,
                           onHorizontalDragStart: (_) {
@@ -1036,12 +1023,16 @@ mixin WebviewImmersiveMixin<T extends StatefulWidget> on State<T>, SingleTickerP
                               _edgeSwipeDelta += details.delta.dx;
                             }
                           },
-                          onHorizontalDragEnd: (details) {
+                          onHorizontalDragEnd: (details) async {
                             if (!_edgeSwipeEligible) return;
                             _edgeSwipeEligible = false;
                             final velocity = details.primaryVelocity ?? 0;
                             if (velocity > 200 || _edgeSwipeDelta > 72) {
-                              onPop();
+                              if (inImmersiveMode) {
+                                await handleImmersiveSystemBack();
+                              } else {
+                                onPop();
+                              }
                             }
                             _edgeSwipeDelta = 0;
                           },
