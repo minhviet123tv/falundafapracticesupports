@@ -74,7 +74,7 @@ class _MenuHomeState extends State<MenuHome> {
           title: Center(
             child: Text(
               'Home',
-              style: AppTextStyles.title(fontSize: 18),
+              style: AppTextStyles.title(fontSize: 19),
             ),
           ),
           backgroundColor: Colors.blue,
@@ -220,7 +220,7 @@ class _MenuHomeState extends State<MenuHome> {
                   text,
                   style: AppTextStyles.title(
                     color: Colors.white,
-                    fontSize: 14,
+                    fontSize: 15,
                     fontWeight: FontWeight.w600,
                   ),
                   textAlign: TextAlign.center,

@@ -10,6 +10,7 @@ import '../../common/app_language_sync.dart';
 import '../../common/app_webview_config.dart';
 import '../../common/browser_helper.dart';
 import '../../common/compact_web_url_bar.dart';
+import '../../common/language_menu_order.dart';
 import '../../common/webview_immersive_mixin.dart';
 
 class MinghuiWebview extends StatefulWidget {
@@ -146,7 +147,12 @@ class _MinghuiWebviewState extends State<MinghuiWebview>
             unawaited(AppLanguageSync.onUserSelected(value.languageCode));
           },
           itemBuilder: (context) {
-            return MinghuiEnum.values
+            final ordered = LanguageMenuOrder.sort(
+              MinghuiEnum.values,
+              name: (e) => e.name,
+              label: (e) => e.languageName,
+            );
+            return ordered
                 .map(
                   (value) => PopupMenuItem<MinghuiEnum>(
                     value: value,

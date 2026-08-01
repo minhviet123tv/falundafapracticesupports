@@ -5,10 +5,31 @@ import 'package:flutter/material.dart';
 class AppTextStyles {
   static const String fontFamily = 'AppSans';
 
+  /// Mốc thiết bị thử nghiệm: iPhone 11 Pro Max / Pixel 5 / Note 9
+  /// (shortestSide ~390–414 logical px).
+  static const double referenceShortestSide = 400;
+
+  /// Hệ số “dễ đọc” trên máy thử nghiệm (người già / trẻ em).
+  /// 1.0 = cỡ design cũ; 1.16 ≈ to hơn ~16%.
+  static const double comfortScale = 1.16;
+
+  /// Hệ số phóng chữ theo kích thước màn hình (shortestSide).
+  /// Máy thử nghiệm ≈ [comfortScale]; tablet/iPad to hơn, có trần để không vỡ layout.
+  static double deviceTextScaleFactor(double shortestSide) {
+    final relative = shortestSide / referenceShortestSide;
+    if (shortestSide < 600) {
+      // Điện thoại: quanh mốc thử nghiệm, chữ mặc định đã to hơn design cũ.
+      return (comfortScale * relative).clamp(1.06, 1.24);
+    }
+    // Tablet / iPad: to hơn nữa; trần 1.48 để AppBar / lưới / bottom nav không vỡ.
+    final tablet = comfortScale * (1.02 + (shortestSide - 600) / 1000);
+    return tablet.clamp(1.30, 1.48);
+  }
+
   static TextStyle title({
     Color color = Colors.white,
     FontWeight fontWeight = FontWeight.w600,
-    double fontSize = 18,
+    double fontSize = 19,
   }) {
     return TextStyle(
       fontFamily: fontFamily,
@@ -23,7 +44,7 @@ class AppTextStyles {
   static TextStyle body({
     Color color = Colors.black87,
     FontWeight fontWeight = FontWeight.w400,
-    double fontSize = 15,
+    double fontSize = 16,
   }) {
     return TextStyle(
       fontFamily: fontFamily,
@@ -34,6 +55,21 @@ class AppTextStyles {
       height: 1.35,
     );
   }
+}
+
+/// Bọc [child] với [TextScaler] theo kích thước thiết bị.
+/// Nhân thêm với hệ số chữ hệ thống (accessibility) nếu người dùng đã chỉnh.
+Widget wrapWithDeviceTextScale(BuildContext context, Widget? child) {
+  final shortest = MediaQuery.sizeOf(context).shortestSide;
+  final device = AppTextStyles.deviceTextScaleFactor(shortest);
+  final mq = MediaQuery.of(context);
+  final system = mq.textScaler.scale(1.0);
+  return MediaQuery(
+    data: mq.copyWith(
+      textScaler: TextScaler.linear(system * device),
+    ),
+    child: child ?? const SizedBox.shrink(),
+  );
 }
 
 ThemeData buildAppTheme() {
@@ -53,19 +89,19 @@ ThemeData buildAppTheme() {
       fontFamily: AppTextStyles.fontFamily,
     ),
     appBarTheme: AppBarTheme(
-      titleTextStyle: AppTextStyles.title(fontSize: 18),
-      toolbarTextStyle: AppTextStyles.title(fontSize: 16),
+      titleTextStyle: AppTextStyles.title(fontSize: 19),
+      toolbarTextStyle: AppTextStyles.title(fontSize: 17),
     ),
     bottomNavigationBarTheme: BottomNavigationBarThemeData(
       selectedLabelStyle: AppTextStyles.body(
         color: Colors.blue,
         fontWeight: FontWeight.w600,
-        fontSize: 12,
+        fontSize: 13,
       ),
       unselectedLabelStyle: AppTextStyles.body(
         color: const Color.fromARGB(255, 71, 71, 71),
         fontWeight: FontWeight.w500,
-        fontSize: 12,
+        fontSize: 13,
       ),
     ),
   );

@@ -14,6 +14,7 @@ import '../common/book_webview_scroll_helper.dart';
 import '../common/book_webview_state_store.dart';
 import '../common/browser_helper.dart';
 import '../common/compact_web_url_bar.dart';
+import '../common/language_menu_order.dart';
 import '../common/webview_immersive_mixin.dart';
 
 /*
@@ -478,7 +479,12 @@ class _AllBooksWebviewState extends State<AllBooksWebview>
             unawaited(_onLanguageChanged(value));
           },
           itemBuilder: (context) {
-            return LanguageAllPageFalundafa.values
+            final ordered = LanguageMenuOrder.sort(
+              LanguageAllPageFalundafa.values,
+              name: (e) => e.name,
+              label: (e) => e.languageName,
+            );
+            return ordered
                 .map(
                   (value) => PopupMenuItem<LanguageAllPageFalundafa>(
                     value: value,

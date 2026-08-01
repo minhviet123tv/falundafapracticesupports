@@ -3,6 +3,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../common/app_language_sync.dart';
+import '../common/language_menu_order.dart';
 import '../controller_app/link_all_page_and_api_enum.dart';
 
 /*
@@ -45,17 +46,29 @@ class _OpenUrlPageState extends State<OpenUrlPage> {
     trangDichCuaLienKet = widget.trangDichCuaLienKet; // Khai báo theo hàm khởi tạo
 
     if (trangDichCuaLienKet == TrangDichCuaLienKet.visaoconhanloai) {
-      listOpenUrl = VisaoconhanloaiEnum.values.map((element) {
-        return ModelOpenUrl(element.url, element.languageName, element.languageCode);
-      }).toList();
+      listOpenUrl = LanguageMenuOrder.sort(
+        VisaoconhanloaiEnum.values.map((element) {
+          return ModelOpenUrl(element.url, element.languageName, element.languageCode);
+        }),
+        name: (e) => e.languageCode,
+        label: (e) => e.languageName,
+      );
     } else if (trangDichCuaLienKet == TrangDichCuaLienKet.falundafa) {
-      listOpenUrl = FalundafaEnum.values.map((element) {
-        return ModelOpenUrl(element.url, element.languageName, element.languageCode);
-      }).toList();
+      listOpenUrl = LanguageMenuOrder.sort(
+        FalundafaEnum.values.map((element) {
+          return ModelOpenUrl(element.url, element.languageName, element.languageCode);
+        }),
+        name: (e) => e.languageCode,
+        label: (e) => e.languageName,
+      );
     } else if (trangDichCuaLienKet == TrangDichCuaLienKet.minghui) {
-      listOpenUrl = MinghuiEnum.values.map((element) {
-        return ModelOpenUrl(element.url, element.languageName, element.languageCode);
-      }).toList();
+      listOpenUrl = LanguageMenuOrder.sort(
+        MinghuiEnum.values.map((element) {
+          return ModelOpenUrl(element.url, element.languageName, element.languageCode);
+        }),
+        name: (e) => e.languageCode,
+        label: (e) => e.languageName,
+      );
     }
 
     //2. Lấy ngôn ngữ lưu shared của liên kết

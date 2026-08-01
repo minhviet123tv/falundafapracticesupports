@@ -8,6 +8,7 @@ import 'package:url_launcher/url_launcher.dart';
 import 'package:falun_dafa_practice_supports/common/downloaded_audio_store.dart';
 import 'package:falun_dafa_practice_supports/common/app_language_sync.dart';
 import 'package:falun_dafa_practice_supports/common/app_text_theme.dart';
+import 'package:falun_dafa_practice_supports/common/language_menu_order.dart';
 
 import 'controller_app/link_internet_list_baigiang_quocte.dart';
 import 'menu/play_audio_webview.dart';
@@ -28,9 +29,9 @@ class _PlayerWidgetState extends State<PlayerWidget9Baigiang> {
 
   //A.1 Dữ liệu
   late int indexCurrent = 0; // Vị trí đang được lựa chọn để play
-  TextStyle textStyle18 = TextStyle(fontSize: 18, color: Colors.black);
-  TextStyle textStyle16 = TextStyle(fontSize: 16, color: Colors.black);
-  var styleTextTitle = AppTextStyles.title(fontSize: 18);
+  TextStyle textStyle18 = TextStyle(fontSize: 19, color: Colors.black);
+  TextStyle textStyle16 = TextStyle(fontSize: 17, color: Colors.black);
+  var styleTextTitle = AppTextStyles.title(fontSize: 19);
   double border10 = 10.0;
   late LanguageNameAndCode languageNameAndCode; // Xác định ngôn ngữ theo enum tự tạo
   Map<String, String> _downloadedPathMap = <String, String>{};
@@ -296,7 +297,12 @@ class _PlayerWidgetState extends State<PlayerWidget9Baigiang> {
               unawaited(AppLanguageSync.onUserSelected(value.name));
             },
             itemBuilder: (context) {
-              return LanguageNameAndCode.values
+              final ordered = LanguageMenuOrder.sort(
+                LanguageNameAndCode.values,
+                name: (e) => e.name,
+                label: (e) => e.tengoc,
+              );
+              return ordered
                   .map(
                     (value) => PopupMenuItem<LanguageNameAndCode>(
                       value: value,

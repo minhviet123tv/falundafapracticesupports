@@ -148,6 +148,8 @@ class _RunAppFalunDafaExerciseState extends State<RunAppFalunDafaExercise>
       debugShowCheckedModeBanner: false,
       // Tối ưu hóa bộ nhớ cho MaterialApp
       theme: buildAppTheme(),
+      // Phóng chữ theo kích thước thiết bị (điện thoại nhỏ / iPad lớn).
+      builder: (context, child) => wrapWithDeviceTextScale(context, child),
     );
   }
 
@@ -183,7 +185,7 @@ class _FalunDafaExerciseHomePageState extends State<FalunDafaExerciseHomePage>
   final Map<int, Widget> _tabWidgets = <int, Widget>{};
   int indexMenu = 0;
   String title = '';
-  final TextStyle styleTextTitle = AppTextStyles.title(fontSize: 16);
+  final TextStyle styleTextTitle = AppTextStyles.title(fontSize: 17);
   
   // Cache SharedPreferences để tối ưu hóa bộ nhớ
   SharedPreferences? _sharedPreferences;

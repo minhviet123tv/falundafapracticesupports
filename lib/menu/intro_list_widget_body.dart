@@ -10,17 +10,18 @@ import 'package:falun_dafa_practice_supports/common/new_area_ui_strings.dart';
 Nơi chứa dữ liệu sẵn cho intro — Vùng ngôn ngữ mới.
  */
 
-//I. Dữ liệu chung
-var styleTextIntro1 = TextStyle(fontSize: 13.0, color: Colors.black, fontWeight: FontWeight.w700);
-var styleTextBody2 = TextStyle(fontSize: 16.0, color: Colors.black);
-var styleTextNumberPage = TextStyle(fontSize: 16.0, color: Colors.grey);
+//I. Dữ liệu chung — cỡ logical (trước TextScaler thiết bị).
+// Trên máy thử nghiệm (comfortScale 1.16): body ≈ 18→21, title intro ≈ 28→32.
+var styleTextIntro1 = TextStyle(fontSize: 14.0, color: Colors.black, fontWeight: FontWeight.w700);
+var styleTextBody2 = TextStyle(fontSize: 18.0, color: Colors.black);
+var styleTextNumberPage = TextStyle(fontSize: 17.0, color: Colors.grey);
 var colorIconAudioPlay = Colors.deepPurple;
 
 enum SetPageIntro {molandau ,gioithieuapp, tapcoban}
 
 const pageDecoration = PageDecoration(
-  titleTextStyle: TextStyle(fontSize: 26.0, fontWeight: FontWeight.w700, color: Colors.white),
-  bodyTextStyle: TextStyle(fontSize: 19.0),
+  titleTextStyle: TextStyle(fontSize: 28.0, fontWeight: FontWeight.w700, color: Colors.white),
+  bodyTextStyle: TextStyle(fontSize: 21.0),
   bodyPadding: EdgeInsets.fromLTRB(16.0, 0.0, 16.0, 16.0),
   pageColor: Colors.green,
   imagePadding: EdgeInsets.zero,

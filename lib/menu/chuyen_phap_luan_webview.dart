@@ -14,6 +14,7 @@ import '../common/book_webview_scroll_helper.dart';
 import '../common/book_webview_state_store.dart';
 import '../common/browser_helper.dart';
 import '../common/compact_web_url_bar.dart';
+import '../common/language_menu_order.dart';
 import '../common/webview_immersive_mixin.dart';
 
 /// Trang Book: đọc Chuyển Pháp Luân online theo [LanguageNameOfChuyenPhapLuan].
@@ -506,7 +507,12 @@ class _ChuyenPhapLuanWebviewState extends State<ChuyenPhapLuanWebview>
         unawaited(_onLanguageChanged(value));
       },
       itemBuilder: (context) {
-        return LanguageNameOfChuyenPhapLuan.values
+        final ordered = LanguageMenuOrder.sort(
+          LanguageNameOfChuyenPhapLuan.values,
+          name: (e) => e.name,
+          label: (e) => e.tengoc.replaceAll('\n', ' '),
+        );
+        return ordered
             .map(
               (value) => PopupMenuItem<LanguageNameOfChuyenPhapLuan>(
                 value: value,

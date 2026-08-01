@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'language_menu_order.dart';
+
 /// Ngôn ngữ cho "Vùng ngôn ngữ mới".
 /// Tập ngôn ngữ theo Humankind / Minghui (các ngôn ngữ đang dùng trong app).
 enum NewAreaLang {
@@ -134,7 +136,12 @@ class NewAreaLanguageMenu extends StatelessWidget {
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
       onSelected: onChanged,
       itemBuilder: (context) {
-        return available
+        final ordered = LanguageMenuOrder.sort(
+          available,
+          name: (e) => e.name,
+          label: (e) => e.label,
+        );
+        return ordered
             .map(
               (value) => PopupMenuItem<NewAreaLang>(
                 value: value,

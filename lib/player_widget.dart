@@ -27,8 +27,8 @@ class _PlayerWidgetState extends State<PlayerWidget> {
 
   //A. Dữ liệu
   late int indexCurrent = 0;
-  TextStyle textStyle16 = TextStyle(fontSize: 16, color: Colors.black);
-  TextStyle styleTextTitle = AppTextStyles.title(fontSize: 18);
+  TextStyle textStyle16 = TextStyle(fontSize: 17, color: Colors.black);
+  TextStyle styleTextTitle = AppTextStyles.title(fontSize: 19);
   Map<String, String> _downloadedPathMap = <String, String>{};
   final AudioPlayer _audioPlayer = AudioPlayer();
   Duration _position = Duration.zero;

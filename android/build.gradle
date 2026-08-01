@@ -5,19 +5,16 @@ allprojects {
     }
 }
 
+// Đăng ký afterEvaluate TRƯỚC evaluationDependsOn(":app"), nếu không
+// một số subproject đã evaluated → "Cannot run Project.afterEvaluate".
 subprojects {
     afterEvaluate { project ->
-        if (project.hasProperty('android')) {
+        if (project.hasProperty("android")) {
             project.android {
                 compileOptions {
                     sourceCompatibility JavaVersion.VERSION_17
                     targetCompatibility JavaVersion.VERSION_17
                 }
-            }
-        }
-        if (project.hasProperty('kotlin')) {
-            project.kotlin {
-                jvmToolchain(17)
             }
         }
     }

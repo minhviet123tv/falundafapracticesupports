@@ -1,4 +1,4 @@
-import 'package:falun_dafa_practice_supports/common/new_area_language.dart';
+﻿import 'package:falun_dafa_practice_supports/common/new_area_language.dart';
 import 'package:falun_dafa_practice_supports/common/new_area_ui_strings.dart';
 
 /// Long-form New Area content (About, Practice Guide, Privacy).
@@ -277,7 +277,7 @@ Falun Gong (Falun Dafa) hakkında daha fazla bilgi için lütfen ziyaret edin:
 
 
   static String overviewBody1(NewAreaLang lang) => switch (lang) {
-    NewAreaLang.english => '''"Xiu" is a Sino-Vietnamese word meaning to correct or amend. "Lian" means to temper (tempering one's xinxing / character, and tempering the body...). In short, "cultivation practice" means correcting oneself according to a method and maintaining what has been corrected and tempered.
+    NewAreaLang.english => '''"Cultivation practice" consists of two words: "tu" means to correct or amend. "Lian" means to temper (tempering one's xinxing / character, and tempering the body...). In short, "cultivation practice" means correcting oneself according to a method and maintaining what has been corrected and tempered.
 
 Falun Gong is a Buddha-school cultivation practice that allows people to cultivate in ordinary society—at home, at work, at school, and so on. It emphasizes correcting unhealthy mindsets such as jealousy, the desire to show off, the competitive mentality, and more.
 
@@ -301,7 +301,7 @@ Học viên cũng có thể truy cập trang minghui.org để theo dõi các th
 
 Khi đọc sách, kinh văn, học viên nên đặt sách, kinh văn ở những nơi như trên bàn, giá đỡ trên cao, tĩnh. Không nên đặt ở những nơi thấp như dưới đất, sàn nhà, hoặc nơi rung lắc ... Học viên có thể vừa ngồi song bàn vừa đọc.
 ''',
-    NewAreaLang.chinese1 => '''「修」是漢語詞，意思是改正或修正。「煉」是鍛鍊（鍛鍊心性、鍛鍊身體……）。可以說「修煉」就是按照一種方法改正自己，並守住已經改正、已經煉成的東西。
+    NewAreaLang.chinese1 => '''「修煉」由兩個詞組成：「修」意思是改正或修正。「煉」是鍛鍊（鍛鍊心性、鍛鍊身體……）。可以說「修煉」就是按照一種方法改正自己，並守住已經改正、已經煉成的東西。
 
 法輪功是佛家修煉方法，使人能在日常生活中修煉——在家、工作、學校等。它注重改正不好的心性，如妒嫉心、顯示心、爭鬥心等。
 
@@ -313,7 +313,7 @@ Khi đọc sách, kinh văn, học viên nên đặt sách, kinh văn ở nhữn
 
 讀經書時，應放在乾淨、較高的地方，如桌上或支架上。不要放在地面等低處或晃動的地方。學員也可坐在桌前閱讀。
 ''',
-    NewAreaLang.chinese2 => '''「修」是汉语词，意思是改正或修正。「炼」是锻炼（锻炼心性、锻炼身体……）。可以说「修炼」就是按照一种方法改正自己，并守住已经改正、已经炼成的东西。
+    NewAreaLang.chinese2 => '''「修炼」由两个词组成：「修」意思是改正或修正。「炼」是锻炼（锻炼心性、锻炼身体……）。可以说「修炼」就是按照一种方法改正自己，并守住已经改正、已经炼成的东西。
 
 法轮功是佛家修炼方法，使人能在日常生活中修炼——在家、工作、学校等。它注重改正不好的心性，如妒嫉心、显示心、争斗心等。
 
@@ -325,7 +325,7 @@ Khi đọc sách, kinh văn, học viên nên đặt sách, kinh văn ở nhữn
 
 读经书时，应放在干净、较高的地方，如桌上或支架上。不要放在地面等低处或晃动的地方。学员也可坐在桌前阅读。
 ''',
-    NewAreaLang.bosanski => '''« Xiu » znači ispraviti ili popraviti. « Lian » znači kaliti (kaliti xinxing / karakter i tijelo...). Ukratko, « praksa kultivacije » znači ispravljati sebe prema metodi i održavati ono što je ispravljeno i okaljeno.
+    NewAreaLang.bosanski => '''« Praksa kultivacije » sastoji se od dvije riječi: « tu » znači ispraviti ili popraviti. « Lian » znači kaliti (kaliti xinxing / karakter i tijelo...). Ukratko, « praksa kultivacije » znači ispravljati sebe prema metodi i održavati ono što je ispravljeno i okaljeno.
 
 Falun Gong je praksa kultivacije budističke škole koja omogućava kultivaciju u običnom društvu — kod kuće, na poslu, u školi itd. Naglašava ispravljanje nezdravih načina razmišljanja kao što su ljubomora, želja za pokazivanjem, takmičarski mentalitet i drugo.
 
@@ -337,7 +337,7 @@ Vježbači također mogu posjetiti minghui.org za najnovije vijesti i važne čl
 
 Pri čitanju knjiga ili spisa, vježbači ih trebaju staviti na čista, uzdignuta mjesta — na sto ili stalk. Ne stavljati nisko na pod ili na mjesta koja se trese. Mogu i sjediti za stolom dok čitaju.
 ''',
-    NewAreaLang.deutsch => '''„Xiu“ bedeutet berichtigen oder verbessern. „Lian“ bedeutet läutern (Charakter/Xinxing und Körper läutern...). Kurz gesagt bedeutet „Kultivierungspraxis“, sich nach einer Methode zu berichtigen und das Berichtigte und Geläuterte zu bewahren.
+    NewAreaLang.deutsch => '''„Kultivierungspraxis“ besteht aus zwei Wörtern: „Tu“ bedeutet berichtigen oder verbessern. „Lian“ bedeutet läutern (Charakter/Xinxing und Körper läutern...). Kurz gesagt bedeutet „Kultivierungspraxis“, sich nach einer Methode zu berichtigen und das Berichtigte und Geläuterte zu bewahren.
 
 Falun Gong ist eine Kultivierungspraxis der Buddha-Schule, die es Menschen ermöglicht, im gewöhnlichen Leben zu kultivieren — zu Hause, bei der Arbeit, in der Schule usw. Sie betont die Berichtigung ungesunder Denkweisen wie Eifersucht, Prahlsucht, Wettbewerbsdenken und mehr.
 
@@ -349,7 +349,7 @@ Auf der offiziellen Website www.falundafa.org gibt es auch andere Bücher und Sc
 
 Beim Lesen von Büchern oder Schriften sollten Übende sie an sauberen, erhöhten Orten ablegen, etwa auf einem Schreibtisch oder Ständer. Nicht tief auf dem Boden oder an Orten, die wackeln. Übende können auch am Schreibtisch sitzen und lesen.
 ''',
-    NewAreaLang.espanol => '''« Xiu » significa corregir o enmendar. « Lian » significa templar (templar el xinxing / carácter y templar el cuerpo...). En resumen, « práctica de cultivación » significa corregirse según un método y mantener lo corregido y templado.
+    NewAreaLang.espanol => '''« Práctica de cultivación » consta de dos palabras: « tu » significa corregir o enmendar. « Lian » significa templar (templar el xinxing / carácter y templar el cuerpo...). En resumen, « práctica de cultivación » significa corregirse según un método y mantener lo corregido y templado.
 
 Falun Gong es una práctica de cultivación de la escuela de Buda que permite cultivar en la sociedad ordinaria: en casa, en el trabajo, en la escuela, etc. Enfatiza corregir mentalidades poco saludables como los celos, el deseo de exhibirse, la mentalidad competitiva y más.
 
@@ -361,7 +361,7 @@ Los practicantes también pueden visitar minghui.org para las últimas noticias 
 
 Al leer libros o escrituras, los practicantes deben colocarlos en lugares limpios y elevados, como un escritorio o un soporte. No colocarlos bajos en el suelo o en lugares que vibren. También pueden sentarse en un escritorio mientras leen.
 ''',
-    NewAreaLang.farsi => '''«شیو» به معنای اصلاح کردن است. «لیَن» به معنای آبدیده کردن است (آبدیده کردن شین‌شینگ / شخصیت و بدن...). به‌طور خلاصه، «تمرین تزکیه» یعنی اصلاح خود بر اساس یک روش و نگه داشتن آنچه اصلاح و آبدیده شده است.
+    NewAreaLang.farsi => '''«تمرین تزکیه» از دو واژه تشکیل شده است: «tu» به معنای اصلاح کردن است. «لیَن» به معنای آبدیده کردن است (آبدیده کردن شین‌شینگ / شخصیت و بدن...). به‌طور خلاصه، «تمرین تزکیه» یعنی اصلاح خود بر اساس یک روش و نگه داشتن آنچه اصلاح و آبدیده شده است.
 
 فالون گونگ تمرین تزکیه مکتب بودا است که به افراد امکان می‌دهد در جامعهٔ معمولی — در خانه، محل کار، مدرسه و غیره — تزکیه کنند. بر اصلاح ذهنیت‌های ناسالم مانند حسادت، میل به خودنمایی، روحیهٔ رقابت و بیشتر تأکید دارد.
 
@@ -373,7 +373,7 @@ Al leer libros o escrituras, los practicantes deben colocarlos en lugares limpio
 
 هنگام خواندن کتاب یا نوشته‌ها، آن‌ها را در جاهای تمیز و بلند مانند میز یا پایه بگذارید. پایین روی زمین یا در جاهای لرزان نگذارید. می‌توان پشت میز نشست و خواند.
 ''',
-    NewAreaLang.francais => '''« Xiu » signifie corriger ou amender. « Lian » signifie temperer (temperer le xinxing / le caractère, et temperer le corps...). En bref, « la pratique de la cultivation » signifie se corriger selon une méthode et maintenir ce qui a été corrigé et tempéré.
+    NewAreaLang.francais => '''« La pratique de la cultivation » se compose de deux mots : « tu » signifie corriger ou amender. « Lian » signifie temperer (temperer le xinxing / le caractère, et temperer le corps...). En bref, « la pratique de la cultivation » signifie se corriger selon une méthode et maintenir ce qui a été corrigé et tempéré.
 
 Le Falun Gong est une pratique de cultivation de l'école du Bouddha qui permet de cultiver dans la société ordinaire — à la maison, au travail, à l'école, etc. Il met l'accent sur la correction d'états d'esprit malsains comme la jalousie, le désir de se montrer, la mentalité de compétition, et plus encore.
 
@@ -385,7 +385,7 @@ Les pratiquants peuvent aussi consulter minghui.org pour les dernières nouvelle
 
 En lisant livres ou écritures, les pratiquants devraient les placer dans des endroits propres et élevés, comme sur un bureau ou un support. Ne pas les placer bas sur le sol ou dans des endroits qui bougent. Les pratiquants peuvent aussi s'asseoir à un bureau pour lire.
 ''',
-    NewAreaLang.hebrew => '''« Xiu » פירושו לתקן או לשפר. « Lian » פירושו לצרוף (לצרוף את הסינסינג / האופי ואת הגוף...). בקצרה, « תרגול הקולטיבציה » פירושו לתקן את עצמך לפי שיטה ולשמור על מה שתוקן ונצרף.
+    NewAreaLang.hebrew => '''« תרגול הקולטיבציה » מורכב משתי מילים: « tu » פירושו לתקן או לשפר. « Lian » פירושו לצרוף (לצרוף את הסינסינג / האופי ואת הגוף...). בקצרה, « תרגול הקולטיבציה » פירושו לתקן את עצמך לפי שיטה ולשמור על מה שתוקן ונצרף.
 
 פאלון גונג הוא תרגול קולטיבציה של אסכולת הבודהה המאפשר לקולטיבציה בחברה הרגילה — בבית, בעבודה, בבית הספר וכו'. הוא מדגיש תיקון הלכי רוח לא בריאים כמו קנאה, רצון להתרברב, תחרותיות ועוד.
 
@@ -397,7 +397,7 @@ En lisant livres ou écritures, les pratiquants devraient les placer dans des en
 
 בקריאת ספרים או כתבים יש להניחם במקומות נקיים וגבוהים — על שולחן או מעמד. אל תניחו נמוך על הרצפה או במקומות רועדים. אפשר גם לשבת ליד שולחן בזמן הקריאה.
 ''',
-    NewAreaLang.hrvatski => '''« Xiu » znači ispraviti ili popraviti. « Lian » znači kaliti (kaliti xinxing / karakter i tijelo...). Ukratko, « praksa kultivacije » znači ispravljati sebe prema metodi i održavati ono što je ispravljeno i okaljeno.
+    NewAreaLang.hrvatski => '''« Praksa kultivacije » sastoji se od dvije riječi: « tu » znači ispraviti ili popraviti. « Lian » znači kaliti (kaliti xinxing / karakter i tijelo...). Ukratko, « praksa kultivacije » znači ispravljati sebe prema metodi i održavati ono što je ispravljeno i okaljeno.
 
 Falun Gong je praksa kultivacije budističke škole koja omogućava kultivaciju u običnom društvu — kod kuće, na poslu, u školi itd. Naglašava ispravljanje nezdravih načina razmišljanja kao što su ljubomora, želja za pokazivanjem, takmičarski mentalitet i drugo.
 
@@ -409,7 +409,7 @@ Vježbači također mogu posjetiti minghui.org za najnovije vijesti i važne čl
 
 Pri čitanju knjiga ili spisa, vježbači ih trebaju staviti na čista, uzdignuta mjesta — na sto ili stalk. Ne stavljati nisko na pod ili na mjesta koja se trese. Mogu i sjediti za stolom dok čitaju.
 ''',
-    NewAreaLang.indonesia => '''« Xiu » berarti memperbaiki atau mengoreksi. « Lian » berarti menempa (menempa xinxing / karakter, dan menempa tubuh...). Singkatnya, « praktik kultivasi » berarti memperbaiki diri menurut suatu metode dan menjaga apa yang telah diperbaiki dan ditempa.
+    NewAreaLang.indonesia => '''« Praktik kultivasi » terdiri dari dua kata: « tu » berarti memperbaiki atau mengoreksi. « Lian » berarti menempa (menempa xinxing / karakter, dan menempa tubuh...). Singkatnya, « praktik kultivasi » berarti memperbaiki diri menurut suatu metode dan menjaga apa yang telah diperbaiki dan ditempa.
 
 Falun Gong adalah praktik kultivasi aliran Buddha yang memungkinkan orang berkultivasi dalam masyarakat biasa—di rumah, di tempat kerja, di sekolah, dan sebagainya. Ia menekankan koreksi pola pikir yang tidak sehat seperti kecemburuan, keinginan pamer, mentalitas bersaing, dan lainnya.
 
@@ -421,7 +421,7 @@ Praktisi juga dapat mengunjungi minghui.org untuk berita terbaru dan artikel pen
 
 Saat membaca buku atau kitab, praktisi harus meletakkannya di tempat bersih dan tinggi, seperti di meja atau rak. Jangan meletakkannya rendah di lantai atau di tempat yang goyang. Praktisi juga boleh duduk di meja sambil membaca.
 ''',
-    NewAreaLang.italiano => '''« Xiu » significa correggere o emendare. « Lian » significa temperare (temperare lo xinxing / il carattere e temperare il corpo...). In breve, « pratica di coltivazione » significa correggersi secondo un metodo e mantenere ciò che è stato corretto e temperato.
+    NewAreaLang.italiano => '''« La pratica di coltivazione » è composta da due parole: « tu » significa correggere o emendare. « Lian » significa temperare (temperare lo xinxing / il carattere e temperare il corpo...). In breve, « pratica di coltivazione » significa correggersi secondo un metodo e mantenere ciò che è stato corretto e temperato.
 
 Il Falun Gong è una pratica di coltivazione della scuola del Buddha che permette di coltivare nella società ordinaria — a casa, al lavoro, a scuola, ecc. Enfatizza la correzione di mentalità malsane come gelosia, desiderio di mettersi in mostra, mentalità competitiva e altro.
 
@@ -433,7 +433,7 @@ I praticanti possono anche visitare minghui.org per le ultime notizie e articoli
 
 Quando si leggono libri o scritture, i praticanti dovrebbero posizionarli in luoghi puliti ed elevati, come su una scrivania o un supporto. Non metterli in basso sul pavimento o in luoghi che vibrano. I praticanti possono anche sedersi a una scrivania mentre leggono.
 ''',
-    NewAreaLang.japan => '''「修」は正す・改めるという意味です。「煉」は鍛えるという意味です（心性を鍛え、体を鍛えるなど）。つまり「修煉」とは、ある方法に従って自分を正し、正したもの・鍛えたものを保つことです。
+    NewAreaLang.japan => '''「修煉」は二つの語から成ります。「修」は正す・改めるという意味です。「煉」は鍛えるという意味です（心性を鍛え、体を鍛えるなど）。つまり「修煉」とは、ある方法に従って自分を正し、正したもの・鍛えたものを保つことです。
 
 法輪功は仏家の修煉法で、家庭・職場・学校など日常社会の中で修煉できます。嫉妬、見せびらかし、争いの心など、良くない心性を正すことを重視します。
 
@@ -445,7 +445,7 @@ Quando si leggono libri o scritture, i praticanti dovrebbero posizionarli in luo
 
 本や経文を読むときは、机や高い台など清潔で高い場所に置いてください。床の低い場所や揺れる場所に置かないでください。机に座って読むこともできます。
 ''',
-    NewAreaLang.korean => '''「수(修)」는 고치거나 바로잡는다는 뜻입니다. 「련(煉)」은 단련한다는 뜻입니다(심성 단련, 몸 단련 등). 즉 「수련」은 어떤 방법에 따라 자신을 바로잡고, 바로잡고 단련한 것을 지키는 것입니다.
+    NewAreaLang.korean => '''「수련」은 두 단어로 이루어져 있습니다. 「수(修)」는 고치거나 바로잡는다는 뜻입니다. 「련(煉)」은 단련한다는 뜻입니다(심성 단련, 몸 단련 등). 즉 「수련」은 어떤 방법에 따라 자신을 바로잡고, 바로잡고 단련한 것을 지키는 것입니다.
 
 파룬궁은 불가의 수련법으로, 가정·직장·학교 등 일상 사회에서 수련할 수 있습니다. 질투심, 과시심, 투쟁심 등 좋지 않은 심성을 바로잡는 것을 중시합니다.
 
@@ -457,7 +457,7 @@ Quando si leggono libri o scritture, i praticanti dovrebbero posizionarli in luo
 
 책이나 경문을 읽을 때는 책상이나 높은 받침대 등 깨끗하고 높은 곳에 두세요. 바닥처럼 낮은 곳이나 흔들리는 곳에 두지 마세요. 책상에 앉아 읽을 수도 있습니다.
 ''',
-    NewAreaLang.polski => '''« Xiu » oznacza poprawiać lub korygować. « Lian » oznacza hartować (hartować xinxing / charakter i ciało...). Krótko mówiąc, « praktyka kultywacji » oznacza poprawianie siebie według metody i utrzymywanie tego, co zostało poprawione i zahartowane.
+    NewAreaLang.polski => '''« Praktyka kultywacji » składa się z dwóch słów: « tu » oznacza poprawiać lub korygować. « Lian » oznacza hartować (hartować xinxing / charakter i ciało...). Krótko mówiąc, « praktyka kultywacji » oznacza poprawianie siebie według metody i utrzymywanie tego, co zostało poprawione i zahartowane.
 
 Falun Gong to praktyka kultywacji szkoły Buddy, która pozwala kultywować w zwykłym społeczeństwie — w domu, w pracy, w szkole itd. Podkreśla korygowanie niezdrowych nastawień, takich jak zazdrość, chęć popisania się, mentalność rywalizacji i inne.
 
@@ -469,7 +469,7 @@ Praktykujący mogą też odwiedzać minghui.org po najnowsze wiadomości i ważn
 
 Czytając książki lub pisma, należy kłaść je w czystych, wyniesionych miejscach — na biurku lub stojaku. Nie kłaść nisko na podłodze ani w miejscach, które się trzęsą. Można też siedzieć przy biurku podczas czytania.
 ''',
-    NewAreaLang.portugues => '''« Xiu » significa corrigir ou emendar. « Lian » significa temperar (temperar o xinxing / caráter e temperar o corpo...). Em resumo, « prática de cultivo » significa corrigir-se segundo um método e manter o que foi corrigido e temperado.
+    NewAreaLang.portugues => '''« Prática de cultivo » é composta por duas palavras: « tu » significa corrigir ou emendar. « Lian » significa temperar (temperar o xinxing / caráter e temperar o corpo...). Em resumo, « prática de cultivo » significa corrigir-se segundo um método e manter o que foi corrigido e temperado.
 
 O Falun Gong é uma prática de cultivo da escola de Buda que permite cultivar na sociedade comum — em casa, no trabalho, na escola, etc. Enfatiza corrigir mentalidades pouco saudáveis como ciúme, desejo de se exibir, mentalidade competitiva e mais.
 
@@ -481,7 +481,7 @@ Os praticantes também podem visitar minghui.org para as últimas notícias e ar
 
 Ao ler livros ou escrituras, os praticantes devem colocá-los em lugares limpos e elevados, como uma mesa ou suporte. Não os coloque baixos no chão ou em lugares que vibrem. Também podem sentar-se à mesa enquanto leem.
 ''',
-    NewAreaLang.russian => '''«Сю» означает исправлять. «Лянь» означает закалять (закалять синьсин / характер и тело...). Короче, «практика совершенствования» — исправлять себя по методу и сохранять исправленное и закалённое.
+    NewAreaLang.russian => '''«Практика совершенствования» состоит из двух слов: «ту» означает исправлять. «Лянь» означает закалять (закалять синьсин / характер и тело...). Короче, «практика совершенствования» — исправлять себя по методу и сохранять исправленное и закалённое.
 
 Фалуньгун — практика совершенствования буддийской школы, позволяющая совершенствоваться в обычной жизни — дома, на работе, в школе и т.д. Она подчёркивает исправление нездоровых состояний ума: зависти, желания показать себя, соперничества и др.
 
@@ -493,7 +493,7 @@ Ao ler livros ou escrituras, os praticantes devem colocá-los em lugares limpos 
 
 Читая книги или писания, практикующие должны класть их в чистые, возвышенные места — на стол или подставку. Не класть низко на пол или в места, которые трясутся. Можно также сидеть за столом во время чтения.
 ''',
-    NewAreaLang.slovencina => '''« Xiu » znamená opravovať alebo napraviť. « Lian » znamená kaliť (kaliť xinxing / charakter a telo...). Stručne, « prax kultivácie » znamená napravovať sa podľa metódy a udržiavať to, čo bolo napravené a okalené.
+    NewAreaLang.slovencina => '''« Prax kultivácie » pozostáva z dvoch slov: « tu » znamená opravovať alebo napraviť. « Lian » znamená kaliť (kaliť xinxing / charakter a telo...). Stručne, « prax kultivácie » znamená napravovať sa podľa metódy a udržiavať to, čo bolo napravené a okalené.
 
 Falun Gong je prax kultivácie budhistickej školy, ktorá umožňuje kultivovať v bežnej spoločnosti — doma, v práci, v škole atď. Zdôrazňuje naprávanie nezdravých postojov, ako sú žiarlivosť, túžba predvádzať sa, súťaživá mentalita a ďalšie.
 
@@ -505,7 +505,7 @@ Cvičiaci môžu navštíviť aj minghui.org pre najnovšie správy a dôležit�
 
 Pri čítaní kníh alebo spisov ich treba klásť na čisté, vyvýšené miesta — na stôl alebo stojan. Neklásť nízko na podlahu ani na miesta, ktoré sa trasú. Možno aj sedieť pri stole počas čítania.
 ''',
-    NewAreaLang.srpski => '''«Сју» значи исправити или поправити. «Љен» значи калити (калити синсинг / карактер и тело...). Укратко, «пракса култивације» значи исправљати себе према методи и одржавати оно што је исправљено и окаљено.
+    NewAreaLang.srpski => '''«Пракса култивације» састоји се од две речи: «ту» значи исправити или поправити. «Љен» значи калити (калити синсинг / карактер и тело...). Укратко, «пракса култивације» значи исправљати себе према методи и одржавати оно што је исправљено и окаљено.
 
 Фалун Гонг је пракса култивације будистичке школе која омогућава култивацију у обичном друштву — код куће, на послу, у школи итд. Наглашава исправљање нездравих начинâ мишљења као што су љубомора, жеља за показивањем, такмичарски менталитет и друго.
 
@@ -517,7 +517,7 @@ Pri čítaní kníh alebo spisov ich treba klásť na čisté, vyvýšené miest
 
 При читању књига или списа, вежбачи их требају ставити на чиста, уздигнута места — на сто или сталак. Не стављати ниско на под или на места која се тресу. Могу и седети за столом док читају.
 ''',
-    NewAreaLang.thai => '''「ซิว」หมายถึงแก้ไขหรือปรับปรุง 「เหลียน」หมายถึงฝึกฝน (ฝึกฝนจิตใจ/ซินซิง และฝึกฝนร่างกาย...) โดยสรุป 「การบำเพ็ญ」คือการแก้ไขตนเองตามวิธีหนึ่ง และรักษาสิ่งที่แก้ไขและฝึกฝนแล้วไว้
+    NewAreaLang.thai => '''「การบำเพ็ญ」 ประกอบด้วยสองคำ：「ซิว」หมายถึงแก้ไขหรือปรับปรุง 「เหลียน」หมายถึงฝึกฝน (ฝึกฝนจิตใจ/ซินซิง และฝึกฝนร่างกาย...) โดยสรุป 「การบำเพ็ญ」คือการแก้ไขตนเองตามวิธีหนึ่ง และรักษาสิ่งที่แก้ไขและฝึกฝนแล้วไว้
 
 ฝ่าหลุนกงเป็นการบำเพ็ญของสำนักพุทธที่ให้คนบำเพ็ญได้ในสังคมปกติ—ที่บ้าน ที่ทำงาน ที่โรงเรียน ฯลฯ เน้นการแก้ไขจิตใจที่ไม่ดี เช่น ความอิจฉา ความอยากอวด ความคิดแข่งขัน และอื่นๆ
 
@@ -529,7 +529,7 @@ Pri čítaní kníh alebo spisov ich treba klásť na čisté, vyvýšené miest
 
 เมื่ออ่านหนังสือหรือคัมภีร์ ควรวางไว้ในที่สะอาดและสูง เช่น บนโต๊ะหรือขาตั้ง อย่าวางต่ำบนพื้นหรือที่สั่น สามารถนั่งที่โต๊ะขณะอ่านได้
 ''',
-    NewAreaLang.turkce => '''« Xiu » düzeltmek veya ıslah etmek demektir. « Lian » temperlemek demektir (xinxing / karakteri ve bedeni temperlemek...). Kısaca « yetiştirme uygulaması », bir yönteme göre kendini düzeltmek ve düzeltileni, temperleneni korumak demektir.
+    NewAreaLang.turkce => '''« Yetiştirme uygulaması » iki sözcükten oluşur: « tu » düzeltmek veya ıslah etmek demektir. « Lian » temperlemek demektir (xinxing / karakteri ve bedeni temperlemek...). Kısaca « yetiştirme uygulaması », bir yönteme göre kendini düzeltmek ve düzeltileni, temperleneni korumak demektir.
 
 Falun Gong, sıradan toplumda — evde, işte, okulda vb. — yetiştirmeye olanak tanıyan Budist okul yetiştirme uygulamasıdır. Kıskançlık, gösteriş arzusu, rekabet zihniyeti gibi sağlıksız zihin hallerini düzeltmeyi vurgular.
 
@@ -541,7 +541,7 @@ Uygulayıcılar ayrıca en son haberler ve önemli makaleler için minghui.org a
 
 Kitap veya yazı okurken bunları masa veya stand gibi temiz, yüksek yerlere koyun. Yere düşük yerlere veya sarsılan yerlere koymayın. Okurken masada oturulabilir.
 ''',
-    NewAreaLang.ukrainian => '''«Сю» означає виправляти. «Лянь» означає гартувати (гартувати синьсін / характер і тіло...). Коротко, «практика вдосконалення» — виправляти себе за методом і зберігати виправлене й загартоване.
+    NewAreaLang.ukrainian => '''«Практика вдосконалення» складається з двох слів: «ту» означає виправляти. «Лянь» означає гартувати (гартувати синьсін / характер і тіло...). Коротко, «практика вдосконалення» — виправляти себе за методом і зберігати виправлене й загартоване.
 
 Фалуньгун — практика вдосконалення буддійської школи, що дозволяє вдосконалюватися в звичайному житті — вдома, на роботі, у школі тощо. Вона підкреслює виправлення нездорових станів розуму: заздрості, бажання показати себе, змагальності тощо.
 

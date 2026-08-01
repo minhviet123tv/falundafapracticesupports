@@ -61,7 +61,7 @@ class _HuongDanTapCoBanPageState extends State<HuongDanTapCoBanPage> {
         appBar: AppBar(
           title: Text(
             _ui.basicPracticeGuide,
-            style: AppTextStyles.title(color: Colors.black87, fontSize: 18),
+            style: AppTextStyles.title(color: Colors.black87, fontSize: 19),
           ),
           backgroundColor: Colors.white,
           actions: [
@@ -211,7 +211,7 @@ class _HuongDanTapCoBanPageState extends State<HuongDanTapCoBanPage> {
                     text,
                     style: AppTextStyles.title(
                       color: Colors.white,
-                      fontSize: 14,
+                      fontSize: 15,
                       fontWeight: FontWeight.w600,
                     ),
                     textAlign: TextAlign.center,

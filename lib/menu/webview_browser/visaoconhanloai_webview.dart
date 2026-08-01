@@ -10,6 +10,7 @@ import '../../common/app_language_sync.dart';
 import '../../common/app_webview_config.dart';
 import '../../common/browser_helper.dart';
 import '../../common/compact_web_url_bar.dart';
+import '../../common/language_menu_order.dart';
 import '../../common/webview_immersive_mixin.dart';
 
 class VisaoconhanloaiWebview extends StatefulWidget {
@@ -143,7 +144,12 @@ class _VisaoconhanloaiWebviewState extends State<VisaoconhanloaiWebview>
             unawaited(AppLanguageSync.onUserSelected(value.languageCode));
           },
           itemBuilder: (context) {
-            return VisaoconhanloaiEnum.values
+            final ordered = LanguageMenuOrder.sort(
+              VisaoconhanloaiEnum.values,
+              name: (e) => e.name,
+              label: (e) => e.languageName,
+            );
+            return ordered
                 .map(
                   (value) => PopupMenuItem<VisaoconhanloaiEnum>(
                     value: value,
