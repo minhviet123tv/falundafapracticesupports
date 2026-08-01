@@ -657,6 +657,32 @@ class NewAreaUiStrings {
     NewAreaLang.ukrainian => 'Завантажити на телефон',
   };
 
+  String get listenOffline => switch (lang) {
+    NewAreaLang.english => 'Listen offline',
+    NewAreaLang.vietnamese => 'Nghe offline',
+    NewAreaLang.chinese1 => '離線收聽',
+    NewAreaLang.chinese2 => '离线收听',
+    NewAreaLang.bosanski => 'Slušaj offline',
+    NewAreaLang.deutsch => 'Offline hören',
+    NewAreaLang.espanol => 'Escuchar sin conexión',
+    NewAreaLang.farsi => 'گوش دادن آفلاین',
+    NewAreaLang.francais => 'Écouter hors ligne',
+    NewAreaLang.hebrew => 'האזנה ללא אינטרנט',
+    NewAreaLang.hrvatski => 'Slušaj offline',
+    NewAreaLang.indonesia => 'Dengar offline',
+    NewAreaLang.italiano => 'Ascolta offline',
+    NewAreaLang.japan => 'オフラインで聴く',
+    NewAreaLang.korean => '오프라인 청취',
+    NewAreaLang.polski => 'Słuchaj offline',
+    NewAreaLang.portugues => 'Ouvir offline',
+    NewAreaLang.russian => 'Слушать офлайн',
+    NewAreaLang.slovencina => 'Počúvať offline',
+    NewAreaLang.srpski => 'Слушај офлајн',
+    NewAreaLang.thai => 'ฟังออฟไลน์',
+    NewAreaLang.turkce => 'Çevrimdışı dinle',
+    NewAreaLang.ukrainian => 'Слухати офлайн',
+  };
+
   String get button => switch (lang) {
     NewAreaLang.english => 'Button',
     NewAreaLang.vietnamese => 'Nút',
@@ -735,6 +761,33 @@ class NewAreaUiStrings {
     NewAreaLang.ukrainian => 'Слухати, дивитися онлайн',
   };
 
+  /// Công dụng nút play trên bảng intro (rút gọn hơn [listenViewOnline]).
+  String get listenView => switch (lang) {
+    NewAreaLang.english => 'Listen, view',
+    NewAreaLang.vietnamese => 'Nghe, xem',
+    NewAreaLang.chinese1 => '收聽、觀看',
+    NewAreaLang.chinese2 => '收听、观看',
+    NewAreaLang.bosanski => 'Slušaj, gledaj',
+    NewAreaLang.deutsch => 'Hören und ansehen',
+    NewAreaLang.espanol => 'Escuchar y ver',
+    NewAreaLang.farsi => 'گوش دادن و مشاهده',
+    NewAreaLang.francais => 'Écouter, voir',
+    NewAreaLang.hebrew => 'האזנה וצפייה',
+    NewAreaLang.hrvatski => 'Slušaj, gledaj',
+    NewAreaLang.indonesia => 'Dengar, lihat',
+    NewAreaLang.italiano => 'Ascolta, guarda',
+    NewAreaLang.japan => '聴く・見る',
+    NewAreaLang.korean => '청취·시청',
+    NewAreaLang.polski => 'Słuchaj, oglądaj',
+    NewAreaLang.portugues => 'Ouvir, ver',
+    NewAreaLang.russian => 'Слушать, смотреть',
+    NewAreaLang.slovencina => 'Počúvať, pozerať',
+    NewAreaLang.srpski => 'Слушај, гледај',
+    NewAreaLang.thai => 'ฟัง ดู',
+    NewAreaLang.turkce => 'Dinle, izle',
+    NewAreaLang.ukrainian => 'Слухати, дивитися',
+  };
+
   String get extend => switch (lang) {
     NewAreaLang.english => 'Extend',
     NewAreaLang.vietnamese => 'Mở rộng',
@@ -811,6 +864,33 @@ class NewAreaUiStrings {
     NewAreaLang.thai => 'อ่าน ดาวน์โหลด PDF',
     NewAreaLang.turkce => 'PDF oku, indir',
     NewAreaLang.ukrainian => 'Читати, завантажити PDF',
+  };
+
+  /// Công dụng nút PDF trên bảng intro.
+  String get openReadDownloadPdf => switch (lang) {
+    NewAreaLang.english => 'Open to read, download PDF',
+    NewAreaLang.vietnamese => 'Mở đọc, tải file PDF',
+    NewAreaLang.chinese1 => '打開閱讀、下載 PDF',
+    NewAreaLang.chinese2 => '打开阅读、下载 PDF',
+    NewAreaLang.bosanski => 'Otvori za čitanje, preuzmi PDF',
+    NewAreaLang.deutsch => 'Zum Lesen öffnen, PDF herunterladen',
+    NewAreaLang.espanol => 'Abrir para leer, descargar PDF',
+    NewAreaLang.farsi => 'باز کردن برای خواندن، دانلود PDF',
+    NewAreaLang.francais => 'Ouvrir pour lire, télécharger le PDF',
+    NewAreaLang.hebrew => 'פתיחה לקריאה והורדת PDF',
+    NewAreaLang.hrvatski => 'Otvori za čitanje, preuzmi PDF',
+    NewAreaLang.indonesia => 'Buka untuk baca, unduh PDF',
+    NewAreaLang.italiano => 'Apri per leggere, scarica PDF',
+    NewAreaLang.japan => '開いて読む・PDFをダウンロード',
+    NewAreaLang.korean => '열어 읽기·PDF 다운로드',
+    NewAreaLang.polski => 'Otwórz do czytania, pobierz PDF',
+    NewAreaLang.portugues => 'Abrir para ler, baixar PDF',
+    NewAreaLang.russian => 'Открыть для чтения, скачать PDF',
+    NewAreaLang.slovencina => 'Otvoriť na čítanie, stiahnuť PDF',
+    NewAreaLang.srpski => 'Отвори за читање, преузми PDF',
+    NewAreaLang.thai => 'เปิดอ่าน ดาวน์โหลดไฟล์ PDF',
+    NewAreaLang.turkce => 'Okumak için aç, PDF indir',
+    NewAreaLang.ukrainian => 'Відкрити для читання, завантажити PDF',
   };
 
   String demoPractitioner(int n) => switch (lang) {

@@ -247,7 +247,13 @@ class _WebViewBrowserAudioState extends State<WebViewBrowserAudio> {
       child: Scaffold(
         backgroundColor: Colors.green,
         appBar: AppBar(
-          title: Text(widget.title, style: textSize18,),
+          backgroundColor: Colors.white,
+          foregroundColor: Colors.black87,
+          iconTheme: const IconThemeData(color: Colors.black87),
+          title: Text(
+            widget.title,
+            style: textSize18.copyWith(color: Colors.black87),
+          ),
           actions: [
             //IV. Icon open web (out app)
             FutureBuilder<String?>(
@@ -258,7 +264,7 @@ class _WebViewBrowserAudioState extends State<WebViewBrowserAudio> {
                     onPressed: (){
                       BrowserHelper.launchExternal(Uri.parse(snapshot.data!));
                     },
-                    icon: Icon(Icons.open_in_new, size: 20,),
+                    icon: const Icon(Icons.open_in_new, size: 20, color: Colors.black87),
                   );
                 } else {
                   return SizedBox();

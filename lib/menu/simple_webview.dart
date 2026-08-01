@@ -162,7 +162,13 @@ class _WebViewBrowserState extends State<WebViewBrowser> {
       child: Scaffold(
         backgroundColor: hideSuggest == false ? Colors.green : Colors.black,
         appBar: AppBar(
-          title: Text(widget.title, style: textSize18,),
+          backgroundColor: Colors.white,
+          foregroundColor: Colors.black87,
+          iconTheme: const IconThemeData(color: Colors.black87),
+          title: Text(
+            widget.title,
+            style: textSize18.copyWith(color: Colors.black87),
+          ),
           actions: [
 
             //Icon open web
@@ -170,7 +176,7 @@ class _WebViewBrowserState extends State<WebViewBrowser> {
               onPressed: (){
                 _launchInBrowser(Uri.parse(widget.linkUrl));
               },
-              icon: Icon(Icons.zoom_out_map, size: 20),
+              icon: const Icon(Icons.zoom_out_map, size: 20, color: Colors.black87),
             ),
           ],
         ),

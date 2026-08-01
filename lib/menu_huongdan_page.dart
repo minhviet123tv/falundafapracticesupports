@@ -91,6 +91,7 @@ class _MenuHomeState extends State<MenuHome> {
       crossAxisCount: 2,
       crossAxisSpacing: 10,
       mainAxisSpacing: 10,
+      childAspectRatio: 0.72,
       children: [
         InkWell(
           onTap: () {
@@ -159,32 +160,37 @@ class _MenuHomeState extends State<MenuHome> {
       ),
       semanticContainer: true,
       clipBehavior: Clip.antiAliasWithSaveLayer,
-      child: Stack(
+      child: Column(
         children: [
-          Image.asset(
-            imagePath,
-            fit: BoxFit.cover,
-            height: double.infinity,
-            width: double.infinity,
-          ),
-          Align(
-            alignment: Alignment.bottomCenter,
-            child: Container(
-              color: Colors.blue.withValues(alpha: 0.9),
+          Expanded(
+            flex: 5,
+            child: Image.asset(
+              imagePath,
+              fit: BoxFit.cover,
               width: double.infinity,
-              height: 70,
-              padding: const EdgeInsets.all(8),
-              child: Center(
-                child: Text(
-                  text,
-                  style: AppTextStyles.title(
-                    color: Colors.white,
-                    fontSize: 15,
-                    fontWeight: FontWeight.w600,
+              height: double.infinity,
+            ),
+          ),
+          Expanded(
+            flex: 4,
+            child: Container(
+              color: Colors.blue.withValues(alpha: 0.95),
+              width: double.infinity,
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 5),
+                child: Center(
+                  child: Text(
+                    text,
+                    style: AppTextStyles.title(
+                      color: Colors.white,
+                      fontSize: 15,
+                      fontWeight: FontWeight.w600,
+                    ),
+                    textAlign: TextAlign.center,
+                    maxLines: 4,
+                    softWrap: true,
+                    overflow: TextOverflow.visible,
                   ),
-                  textAlign: TextAlign.center,
-                  maxLines: 3,
-                  overflow: TextOverflow.ellipsis,
                 ),
               ),
             ),

@@ -170,8 +170,8 @@ class _BookReadingPlacementDialogContent extends StatelessWidget {
             ),
           ),
           Positioned(
-            top: -6,
-            right: -6,
+            top: -10,
+            right: -10,
             child: Container(
               decoration: BoxDecoration(
                 color: Colors.white,
@@ -187,7 +187,7 @@ class _BookReadingPlacementDialogContent extends StatelessWidget {
               child: Icon(
                 isPositive ? Icons.check_circle : Icons.cancel,
                 color: isPositive ? Colors.green : Colors.red,
-                size: 26,
+                size: 40,
               ),
             ),
           ),

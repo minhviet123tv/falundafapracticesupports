@@ -190,6 +190,11 @@ PageViewModel _aboutAppPage2Features(NewAreaLang lang) {
                 _tableCellIcon(Icons.check_circle, color: Colors.green),
                 _tableCellIcon(Icons.check_circle, color: Colors.green),
               ]),
+              TableRow(children: [
+                _tableCellText(ui.listenOffline),
+                _tableCellIcon(Icons.check_circle, color: Colors.green),
+                _tableCellIcon(Icons.check_circle, color: Colors.green),
+              ]),
             ],
           ),
         ),
@@ -225,7 +230,7 @@ PageViewModel _aboutAppPage2Features(NewAreaLang lang) {
                   TableRow(children: [
                     _tableCellIcon(Icons.play_circle_fill,
                         color: Colors.orangeAccent),
-                    _tableCellText(ui.listenViewOnline),
+                    _tableCellText(ui.listenView),
                   ]),
                   TableRow(children: [
                     _tableCellIcon(Icons.download, color: colorIconAudioPlay),
@@ -241,7 +246,7 @@ PageViewModel _aboutAppPage2Features(NewAreaLang lang) {
                   ]),
                   TableRow(children: [
                     _tableCellIcon(Icons.picture_as_pdf),
-                    _tableCellText(ui.readDownloadPdf),
+                    _tableCellText(ui.openReadDownloadPdf),
                   ]),
                 ],
               ),
