@@ -1,4 +1,5 @@
 /// Thứ tự menu chọn ngôn ngữ: English + Chinese lên đầu, còn lại theo ABC (label).
+/// "More ..." mặc định luôn ở cuối (trừ khi tắt [pinMoreToBottom]).
 class LanguageMenuOrder {
   LanguageMenuOrder._();
 
@@ -19,6 +20,12 @@ class LanguageMenuOrder {
         l.contains('簡體');
   }
 
+  static bool _isMore(String name, String label) {
+    final n = name.toLowerCase().trim();
+    final l = label.toLowerCase().trim();
+    return n == 'more' || l.startsWith('more');
+  }
+
   /// 0 = traditional, 1 = simplified (và biến thể khác).
   static int _chineseSubOrder(String name, String label) {
     final n = name.toLowerCase();
@@ -34,10 +41,12 @@ class LanguageMenuOrder {
   }
 
   /// [name]: enum `.name`; [label]: chữ hiện trên menu.
+  /// [pinMoreToBottom]: mặc định `true` — đưa mục "More ..." xuống cuối.
   static List<T> sort<T>(
     Iterable<T> items, {
     required String Function(T) name,
     required String Function(T) label,
+    bool pinMoreToBottom = true,
   }) {
     final list = items.toList();
     list.sort((a, b) {
@@ -45,6 +54,12 @@ class LanguageMenuOrder {
       final nb = name(b);
       final la = label(a);
       final lb = label(b);
+
+      if (pinMoreToBottom) {
+        final ma = _isMore(na, la);
+        final mb = _isMore(nb, lb);
+        if (ma != mb) return ma ? 1 : -1;
+      }
 
       final pa = _isEnglish(na, la)
           ? 0

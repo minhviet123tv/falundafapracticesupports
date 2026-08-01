@@ -417,6 +417,52 @@ class _ChuyenPhapLuanWebviewState extends State<ChuyenPhapLuanWebview>
     if (mounted) setState(() {});
   }
 
+  /// Mở trang toàn bộ sách (`LanguageAllPageFalundafa.booksPage`) theo ngôn ngữ đang chọn.
+  Future<void> _goToAllBooksPage() async {
+    await _captureScrollForCurrentPage();
+
+    final booksUrl = AppLanguageSync.booksPageUrlForLanguage(_language.name);
+    _currentUrl = booksUrl;
+    _restoreScrollAfterFinish = false;
+    _preserveScrollForUrlKey = null;
+    _readingState = _readingState.withoutScrollForUrl(
+      BookWebViewScrollHelper.normalizeUrlKey(booksUrl),
+    );
+
+    await _controller.loadRequest(Uri.parse(booksUrl));
+    await _persistReadingState();
+    if (mounted) setState(() {});
+  }
+
+  String get _allBooksTooltip => switch (_language) {
+        LanguageNameOfChuyenPhapLuan.vietnamese => 'Toàn bộ sách',
+        LanguageNameOfChuyenPhapLuan.english => 'All books',
+        LanguageNameOfChuyenPhapLuan.chinese ||
+        LanguageNameOfChuyenPhapLuan.chineseSimplified =>
+          '全部书籍',
+        LanguageNameOfChuyenPhapLuan.ChineseTraditional => '全部書籍',
+        LanguageNameOfChuyenPhapLuan.korean => '전체 서적',
+        LanguageNameOfChuyenPhapLuan.japan => 'すべての書籍',
+        LanguageNameOfChuyenPhapLuan.thai => 'หนังสือทั้งหมด',
+        LanguageNameOfChuyenPhapLuan.deutsch => 'Alle Bücher',
+        LanguageNameOfChuyenPhapLuan.espanol => 'Todos los libros',
+        LanguageNameOfChuyenPhapLuan.italiano => 'Tutti i libri',
+        LanguageNameOfChuyenPhapLuan.portugues => 'Todos os livros',
+        LanguageNameOfChuyenPhapLuan.russian => 'Все книги',
+        LanguageNameOfChuyenPhapLuan.turkce => 'Tüm kitaplar',
+        LanguageNameOfChuyenPhapLuan.ukraina => 'Усі книги',
+        LanguageNameOfChuyenPhapLuan.cesky => 'Všechny knihy',
+        LanguageNameOfChuyenPhapLuan.greek => 'Όλα τα βιβλία',
+        LanguageNameOfChuyenPhapLuan.nederlands => 'Alle boeken',
+        LanguageNameOfChuyenPhapLuan.rumani => 'Toate cărțile',
+        LanguageNameOfChuyenPhapLuan.slovencina => 'Všetky knihy',
+        LanguageNameOfChuyenPhapLuan.suomi => 'Kaikki kirjat',
+        LanguageNameOfChuyenPhapLuan.svenska => 'Alla böcker',
+        LanguageNameOfChuyenPhapLuan.latviski => 'Visas grāmatas',
+        LanguageNameOfChuyenPhapLuan.magyar => 'Összes könyv',
+        _ => 'All books',
+      };
+
   Future<void> _goBack() async {
     await _flushReadingState();
 
@@ -496,6 +542,7 @@ class _ChuyenPhapLuanWebviewState extends State<ChuyenPhapLuanWebview>
   }
 
   Widget _languageMenuButton() {
+    final label = _language.tengoc.replaceAll('\n', ' ');
     return PopupMenuButton<LanguageNameOfChuyenPhapLuan>(
       tooltip: 'Chọn ngôn ngữ',
       position: PopupMenuPosition.under,
@@ -527,14 +574,21 @@ class _ChuyenPhapLuanWebviewState extends State<ChuyenPhapLuanWebview>
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Text(
-              _language.tengoc.replaceAll('\n', ' '),
-              style: const TextStyle(
-                fontWeight: FontWeight.w500,
-                fontSize: 11,
+            ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 108),
+              child: Text(
+                label,
+                maxLines: 1,
+                softWrap: false,
+                overflow: TextOverflow.ellipsis,
+                textAlign: TextAlign.start,
+                style: const TextStyle(
+                  fontWeight: FontWeight.w500,
+                  fontSize: 11,
+                ),
               ),
             ),
-            const SizedBox(width: 4),
+            const SizedBox(width: 2),
             const Icon(Icons.arrow_drop_down, size: 18),
           ],
         ),
@@ -545,29 +599,49 @@ class _ChuyenPhapLuanWebviewState extends State<ChuyenPhapLuanWebview>
   Widget _buildToolbar() {
     return Row(
       children: [
-        IconButton(
-          onPressed: () => unawaited(_popToMainApp()),
-          icon: const Icon(Icons.arrow_back, size: 20),
-          tooltip: 'Về trang chính',
+        Expanded(
+          child: Align(
+            alignment: Alignment.centerLeft,
+            child: SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  IconButton(
+                    onPressed: () => unawaited(_popToMainApp()),
+                    icon: const Icon(Icons.arrow_back, size: 20),
+                    tooltip: 'Về trang chính',
+                  ),
+                  _languageMenuButton(),
+                  IconButton(
+                    onPressed: () => unawaited(_goToAllBooksPage()),
+                    icon: const Icon(Icons.library_books, size: 20),
+                    tooltip: _allBooksTooltip,
+                  ),
+                  IconButton(
+                    onPressed: () => unawaited(_goToZflHomePage()),
+                    icon: const Icon(Icons.menu_book, size: 20),
+                    tooltip: 'Về đầu sách',
+                  ),
+                ],
+              ),
+            ),
+          ),
         ),
-        _languageMenuButton(),
-        IconButton(
-          onPressed: () => unawaited(_goToZflHomePage()),
-          icon: const Icon(Icons.menu_book, size: 20),
-          tooltip: 'Về đầu sách',
-        ),
-        const Spacer(),
         FutureBuilder<dynamic>(
           future: BrowserHelper.getCurrentUrl(_controller),
           builder: (context, snapshot) {
-            if (!snapshot.hasData) return const SizedBox.shrink();
+            if (!snapshot.hasData) {
+              return const SizedBox(width: 48, height: 48);
+            }
             return IconButton(
               onPressed: () {
                 BrowserHelper.launchExternal(
                   Uri.parse(snapshot.data.toString()),
                 );
               },
-              icon: const Icon(Icons.open_in_new, size: 20),
+              icon: const Icon(Icons.picture_as_pdf, size: 20),
+              tooltip: 'Mở PDF trong trình duyệt',
             );
           },
         ),

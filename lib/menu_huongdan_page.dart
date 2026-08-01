@@ -86,12 +86,53 @@ class _MenuHomeState extends State<MenuHome> {
   }
 
   Widget _gridViewMenu(BuildContext context) {
+    const gridPadding = 10.0;
+    const crossSpacing = 10.0;
+    const labelHPad = 6.0;
+    const labelVPad = 10.0;
+
+    final titles = <String>[
+      _ui.basicPracticeGuideMenu,
+      _ui.humankindMenuTitle,
+      'Falundafa.org',
+      'Minghui.org',
+      _ui.aboutAppMenuTitle,
+      _ui.privacyMenuTitle,
+    ];
+
+    final screenWidth = MediaQuery.sizeOf(context).width;
+    final textScaler = MediaQuery.textScalerOf(context);
+    final cellWidth = (screenWidth - gridPadding * 2 - crossSpacing) / 2;
+    final labelMaxWidth = (cellWidth - labelHPad * 2).clamp(40.0, double.infinity);
+
+    final labelStyle = AppTextStyles.title(
+      color: Colors.white,
+      fontSize: 15,
+      fontWeight: FontWeight.w600,
+    );
+
+    var maxTextHeight = 0.0;
+    for (final title in titles) {
+      final painter = TextPainter(
+        text: TextSpan(text: title, style: labelStyle),
+        textAlign: TextAlign.center,
+        maxLines: 4,
+        textDirection: Directionality.of(context),
+        textScaler: textScaler,
+      )..layout(maxWidth: labelMaxWidth);
+      if (painter.height > maxTextHeight) {
+        maxTextHeight = painter.height;
+      }
+    }
+    final labelBarHeight = maxTextHeight + labelVPad * 2;
+
     return GridView.count(
-      padding: const EdgeInsets.all(10),
+      padding: const EdgeInsets.all(gridPadding),
       crossAxisCount: 2,
-      crossAxisSpacing: 10,
+      crossAxisSpacing: crossSpacing,
       mainAxisSpacing: 10,
-      childAspectRatio: 0.72,
+      // Vuông hơn (trước ~0.72), vẫn cao hơn rộng.
+      childAspectRatio: 0.88,
       children: [
         InkWell(
           onTap: () {
@@ -100,7 +141,8 @@ class _MenuHomeState extends State<MenuHome> {
           },
           child: itemMenu(
             'assets/images/menu_item_2.jpg',
-            _ui.basicPracticeGuideMenu,
+            titles[0],
+            labelBarHeight: labelBarHeight,
           ),
         ),
         InkWell(
@@ -110,7 +152,8 @@ class _MenuHomeState extends State<MenuHome> {
           },
           child: itemMenu(
             'assets/images/menu_item_3.jpg',
-            _ui.humankindMenuTitle,
+            titles[1],
+            labelBarHeight: labelBarHeight,
           ),
         ),
         InkWell(
@@ -120,14 +163,22 @@ class _MenuHomeState extends State<MenuHome> {
               OpenUrlPage(trangDichCuaLienKet: TrangDichCuaLienKet.falundafa),
             ).then((_) => _loadLanguage(silent: true));
           },
-          child: itemMenu('assets/images/menu_item_4.jpg', 'Falundafa.org'),
+          child: itemMenu(
+            'assets/images/menu_item_4.jpg',
+            titles[2],
+            labelBarHeight: labelBarHeight,
+          ),
         ),
         InkWell(
           onTap: () {
             AppNavigator.push(context, MinghuiWebview())
                 .then((_) => _loadLanguage(silent: true));
           },
-          child: itemMenu('assets/images/menu_item_5.jpg', 'Minghui.org'),
+          child: itemMenu(
+            'assets/images/menu_item_5.jpg',
+            titles[3],
+            labelBarHeight: labelBarHeight,
+          ),
         ),
         InkWell(
           onTap: () {
@@ -135,7 +186,8 @@ class _MenuHomeState extends State<MenuHome> {
           },
           child: itemMenu(
             'assets/images/menu_item_1.jpg',
-            _ui.aboutAppMenuTitle,
+            titles[4],
+            labelBarHeight: labelBarHeight,
           ),
         ),
         InkWell(
@@ -145,14 +197,19 @@ class _MenuHomeState extends State<MenuHome> {
           },
           child: itemMenu(
             'assets/images/menu_item_6.jpg',
-            _ui.privacyMenuTitle,
+            titles[5],
+            labelBarHeight: labelBarHeight,
           ),
         ),
       ],
     );
   }
 
-  Widget itemMenu(String imagePath, String text) {
+  Widget itemMenu(
+    String imagePath,
+    String text, {
+    required double labelBarHeight,
+  }) {
     return Card(
       elevation: 8,
       shape: RoundedRectangleBorder(
@@ -160,38 +217,34 @@ class _MenuHomeState extends State<MenuHome> {
       ),
       semanticContainer: true,
       clipBehavior: Clip.antiAliasWithSaveLayer,
-      child: Column(
+      child: Stack(
+        fit: StackFit.expand,
         children: [
-          Expanded(
-            flex: 5,
-            child: Image.asset(
-              imagePath,
-              fit: BoxFit.cover,
-              width: double.infinity,
-              height: double.infinity,
-            ),
+          Image.asset(
+            imagePath,
+            fit: BoxFit.cover,
+            width: double.infinity,
+            height: double.infinity,
           ),
-          Expanded(
-            flex: 4,
+          Align(
+            alignment: Alignment.bottomCenter,
             child: Container(
-              color: Colors.blue.withValues(alpha: 0.95),
               width: double.infinity,
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 5),
-                child: Center(
-                  child: Text(
-                    text,
-                    style: AppTextStyles.title(
-                      color: Colors.white,
-                      fontSize: 15,
-                      fontWeight: FontWeight.w600,
-                    ),
-                    textAlign: TextAlign.center,
-                    maxLines: 4,
-                    softWrap: true,
-                    overflow: TextOverflow.visible,
-                  ),
+              height: labelBarHeight,
+              color: Colors.blue.withValues(alpha: 0.85),
+              padding: const EdgeInsets.symmetric(horizontal: 6),
+              alignment: Alignment.center,
+              child: Text(
+                text,
+                style: AppTextStyles.title(
+                  color: Colors.white,
+                  fontSize: 15,
+                  fontWeight: FontWeight.w600,
                 ),
+                textAlign: TextAlign.center,
+                maxLines: 4,
+                softWrap: true,
+                overflow: TextOverflow.visible,
               ),
             ),
           ),

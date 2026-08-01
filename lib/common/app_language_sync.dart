@@ -293,6 +293,13 @@ class AppLanguageSync {
     return null;
   }
 
+  /// Link trang toàn bộ sách (`booksPage`) theo mã ngôn ngữ đang chọn.
+  /// Không khớp → mặc định tiếng Anh.
+  static String booksPageUrlForLanguage(String languageCode) {
+    final matched = _matchAllBooks(canonicalize(languageCode));
+    return matched?.booksPage ?? LanguageAllPageFalundafa.english.booksPage;
+  }
+
   static LanguageAllPageFalundafa? _matchAllBooks(String code) {
     for (final e in LanguageAllPageFalundafa.values) {
       if (canonicalize(e.name) == code || canonicalize(e.languageCode) == code) {

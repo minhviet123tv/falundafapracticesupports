@@ -98,16 +98,62 @@ class _HuongDanTapCoBanPageState extends State<HuongDanTapCoBanPage> {
   }
 
   Widget _gridViewMenu(BuildContext context) {
+    const gridPadding = 10.0;
+    const crossSpacing = 10.0;
+    const labelHPad = 8.0;
+    const labelVPad = 14.0;
+
+    final titles = <String>[
+      _ui.basicPracticeGuide,
+      _ui.demoPractitioner(1),
+      _ui.demoPractitioner(2),
+      _ui.demoPractitioner(3),
+      _ui.demoPractitioner(4),
+      _ui.demoPractitioner(5),
+    ];
+
+    final screenWidth = MediaQuery.sizeOf(context).width;
+    final textScaler = MediaQuery.textScalerOf(context);
+    final cellWidth = (screenWidth - gridPadding * 2 - crossSpacing) / 2;
+    final labelMaxWidth =
+        (cellWidth - labelHPad * 2).clamp(40.0, double.infinity);
+
+    final labelStyle = AppTextStyles.title(
+      color: Colors.white,
+      fontSize: 15,
+      fontWeight: FontWeight.w600,
+    );
+
+    var maxTextHeight = 0.0;
+    for (final title in titles) {
+      final painter = TextPainter(
+        text: TextSpan(text: title, style: labelStyle),
+        textAlign: TextAlign.center,
+        maxLines: 4,
+        textDirection: Directionality.of(context),
+        textScaler: textScaler,
+      )..layout(maxWidth: labelMaxWidth);
+      if (painter.height > maxTextHeight) {
+        maxTextHeight = painter.height;
+      }
+    }
+    final labelBarHeight = maxTextHeight + labelVPad * 2;
+
     return GridView.count(
-      padding: const EdgeInsets.all(10),
+      padding: const EdgeInsets.all(gridPadding),
       crossAxisCount: 2,
-      crossAxisSpacing: 10,
+      crossAxisSpacing: crossSpacing,
       mainAxisSpacing: 10,
-      childAspectRatio: 0.68,
+      // Vuông hơn (trước ~0.68), vẫn cao hơn rộng.
+      childAspectRatio: 0.88,
       children: [
         InkWell(
           onTap: () => _openIntro(context),
-          child: itemMenu('assets/images/menu_item_2.jpg', _ui.basicPracticeGuide),
+          child: itemMenu(
+            'assets/images/menu_item_2.jpg',
+            titles[0],
+            labelBarHeight: labelBarHeight,
+          ),
         ),
         InkWell(
           onTap: () {
@@ -119,7 +165,11 @@ class _HuongDanTapCoBanPageState extends State<HuongDanTapCoBanPage> {
               textHuongDan: _ui.tipMirror,
             );
           },
-          child: itemMenu('assets/images/anh_bai_1.jpg', _ui.demoPractitioner(1)),
+          child: itemMenu(
+            'assets/images/anh_bai_1.jpg',
+            titles[1],
+            labelBarHeight: labelBarHeight,
+          ),
         ),
         InkWell(
           onTap: () {
@@ -131,7 +181,11 @@ class _HuongDanTapCoBanPageState extends State<HuongDanTapCoBanPage> {
               textHuongDan: _ui.tipSame,
             );
           },
-          child: itemMenu('assets/images/anh_bai_2.jpg', _ui.demoPractitioner(2)),
+          child: itemMenu(
+            'assets/images/anh_bai_2.jpg',
+            titles[2],
+            labelBarHeight: labelBarHeight,
+          ),
         ),
         InkWell(
           onTap: () {
@@ -143,7 +197,11 @@ class _HuongDanTapCoBanPageState extends State<HuongDanTapCoBanPage> {
               textHuongDan: _ui.tipMirror,
             );
           },
-          child: itemMenu('assets/images/anh_bai_3.jpg', _ui.demoPractitioner(3)),
+          child: itemMenu(
+            'assets/images/anh_bai_3.jpg',
+            titles[3],
+            labelBarHeight: labelBarHeight,
+          ),
         ),
         InkWell(
           onTap: () {
@@ -155,7 +213,11 @@ class _HuongDanTapCoBanPageState extends State<HuongDanTapCoBanPage> {
               textHuongDan: _ui.tipExercise4,
             );
           },
-          child: itemMenu('assets/images/anh_bai_4.jpg', _ui.demoPractitioner(4)),
+          child: itemMenu(
+            'assets/images/anh_bai_4.jpg',
+            titles[4],
+            labelBarHeight: labelBarHeight,
+          ),
         ),
         InkWell(
           onTap: () {
@@ -167,13 +229,21 @@ class _HuongDanTapCoBanPageState extends State<HuongDanTapCoBanPage> {
               textHuongDan: _ui.tipMirror,
             );
           },
-          child: itemMenu('assets/images/anh_bai_5.jpg', _ui.demoPractitioner(5)),
+          child: itemMenu(
+            'assets/images/anh_bai_5.jpg',
+            titles[5],
+            labelBarHeight: labelBarHeight,
+          ),
         ),
       ],
     );
   }
 
-  Widget itemMenu(String imagePath, String text) {
+  Widget itemMenu(
+    String imagePath,
+    String text, {
+    required double labelBarHeight,
+  }) {
     return Card(
       elevation: 8,
       shape: RoundedRectangleBorder(
@@ -184,7 +254,6 @@ class _HuongDanTapCoBanPageState extends State<HuongDanTapCoBanPage> {
       child: Column(
         children: [
           Expanded(
-            flex: 5,
             child: Image.asset(
               imagePath,
               fit: BoxFit.cover,
@@ -192,27 +261,22 @@ class _HuongDanTapCoBanPageState extends State<HuongDanTapCoBanPage> {
               height: double.infinity,
             ),
           ),
-          Expanded(
-            flex: 4,
-            child: Container(
-              color: Colors.blue,
-              width: double.infinity,
-              child: Padding(
-                padding: const EdgeInsets.all(5),
-                child: Center(
-                  child: Text(
-                    text,
-                    style: AppTextStyles.title(
-                      color: Colors.white,
-                      fontSize: 15,
-                      fontWeight: FontWeight.w600,
-                    ),
-                    textAlign: TextAlign.center,
-                    maxLines: 4,
-                    softWrap: true,
-                  ),
-                ),
+          Container(
+            height: labelBarHeight,
+            width: double.infinity,
+            color: Colors.blue,
+            padding: const EdgeInsets.symmetric(horizontal: 8),
+            alignment: Alignment.center,
+            child: Text(
+              text,
+              style: AppTextStyles.title(
+                color: Colors.white,
+                fontSize: 15,
+                fontWeight: FontWeight.w600,
               ),
+              textAlign: TextAlign.center,
+              maxLines: 4,
+              softWrap: true,
             ),
           ),
         ],

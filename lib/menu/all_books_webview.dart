@@ -523,7 +523,8 @@ class _AllBooksWebviewState extends State<AllBooksWebview>
                 onPressed: () {
                   BrowserHelper.launchExternal(Uri.parse(snapshot.data.toString()));
                 },
-                icon: const Icon(Icons.open_in_new, size: 20),
+                icon: const Icon(Icons.picture_as_pdf, size: 20),
+                tooltip: 'Mở PDF trong trình duyệt',
               );
             }
             return const SizedBox.shrink();
