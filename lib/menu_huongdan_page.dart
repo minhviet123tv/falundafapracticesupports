@@ -171,7 +171,7 @@ class _MenuHomeState extends State<MenuHome> {
         ),
         InkWell(
           onTap: () {
-            AppNavigator.push(context, MinghuiWebview())
+            AppNavigator.pushFromTop(context, MinghuiWebview())
                 .then((_) => _loadLanguage(silent: true));
           },
           child: itemMenu(

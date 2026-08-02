@@ -87,8 +87,8 @@ mixin WebviewImmersiveMixin<T extends StatefulWidget> on State<T>, SingleTickerP
 
   bool _immersiveScrollReady = false;
 
-  /// Vuốt nửa trái → [onPop] / thoát immersive.
-  /// Với [SwipeBackPageRoute], pop có hiệu ứng trượt về.
+  /// Vuốt nửa trái → [onPop] / thoát immersive (khi [enableEdgeSwipeToPop]).
+  /// Tắt trên trang đọc để không tranh gesture với scroll.
   static const double _swipeBackEdgeFraction = 0.5;
   bool _edgeSwipeEligible = false;
   double _edgeSwipeDelta = 0;
@@ -874,6 +874,10 @@ mixin WebviewImmersiveMixin<T extends StatefulWidget> on State<T>, SingleTickerP
 
     VoidCallback? onPop,
 
+    /// Vuốt nửa trái để back. Tắt trên trang đọc (Book / Vì sao / Minghui)
+    /// để không tranh gesture với scroll WebView.
+    bool enableEdgeSwipeToPop = true,
+
   }) {
 
     return PopScope(
@@ -893,6 +897,7 @@ mixin WebviewImmersiveMixin<T extends StatefulWidget> on State<T>, SingleTickerP
               urlBar: urlBar,
               body: body,
               onPop: onPop,
+              enableEdgeSwipeToPop: enableEdgeSwipeToPop,
             ),
       ),
     );
@@ -969,6 +974,8 @@ mixin WebviewImmersiveMixin<T extends StatefulWidget> on State<T>, SingleTickerP
 
     VoidCallback? onPop,
 
+    bool enableEdgeSwipeToPop = true,
+
   }) {
 
     final topInset = MediaQuery.paddingOf(context).top;
@@ -1005,7 +1012,7 @@ mixin WebviewImmersiveMixin<T extends StatefulWidget> on State<T>, SingleTickerP
                   fit: StackFit.expand,
                   children: [
                     body,
-                    if (onPop != null)
+                    if (onPop != null && enableEdgeSwipeToPop)
                       Positioned(
                         left: 0,
                         top: 0,

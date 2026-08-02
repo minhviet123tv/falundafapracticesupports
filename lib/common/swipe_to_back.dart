@@ -23,7 +23,8 @@ class AppNavigator {
   }
 
   /// Mở từ trên hạ xuống; back thì trang trượt lên phía trên.
-  /// Dùng cho: Vì sao có nhân loại, Falundafa.org, tab Book.
+  /// Dùng cho: Vì sao có nhân loại, Falundafa.org, Minghui.org, tab Book
+  /// (không có vuốt mép trái → back, tránh tranh gesture với scroll đọc).
   static Future<T?> pushFromTop<T extends Object?>(
     BuildContext context,
     Widget page, {

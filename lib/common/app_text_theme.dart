@@ -10,26 +10,26 @@ class AppTextStyles {
   static const double referenceShortestSide = 400;
 
   /// Hệ số “dễ đọc” trên máy thử nghiệm (người già / trẻ em).
-  /// 1.0 = cỡ design cũ; 1.16 ≈ to hơn ~16%.
-  static const double comfortScale = 1.16;
+  /// 1.0 = cỡ design cũ; 1.12 ≈ to hơn ~12% (vừa phải, dễ đọc).
+  static const double comfortScale = 1.12;
 
   /// Hệ số phóng chữ theo kích thước màn hình (shortestSide).
   /// Máy thử nghiệm ≈ [comfortScale]; tablet/iPad to hơn, có trần để không vỡ layout.
   static double deviceTextScaleFactor(double shortestSide) {
     final relative = shortestSide / referenceShortestSide;
     if (shortestSide < 600) {
-      // Điện thoại: quanh mốc thử nghiệm, chữ mặc định đã to hơn design cũ.
-      return (comfortScale * relative).clamp(1.06, 1.24);
+      // Điện thoại: quanh mốc thử nghiệm, hơi to hơn design cũ một chút.
+      return (comfortScale * relative).clamp(1.04, 1.20);
     }
     // Tablet / iPad: to hơn nữa; trần 1.48 để AppBar / lưới / bottom nav không vỡ.
     final tablet = comfortScale * (1.02 + (shortestSide - 600) / 1000);
-    return tablet.clamp(1.30, 1.48);
+    return tablet.clamp(1.28, 1.48);
   }
 
   static TextStyle title({
     Color color = Colors.white,
     FontWeight fontWeight = FontWeight.w600,
-    double fontSize = 19,
+    double fontSize = 18,
   }) {
     return TextStyle(
       fontFamily: fontFamily,
@@ -44,7 +44,7 @@ class AppTextStyles {
   static TextStyle body({
     Color color = Colors.black87,
     FontWeight fontWeight = FontWeight.w400,
-    double fontSize = 16,
+    double fontSize = 15.5,
   }) {
     return TextStyle(
       fontFamily: fontFamily,
@@ -89,19 +89,19 @@ ThemeData buildAppTheme() {
       fontFamily: AppTextStyles.fontFamily,
     ),
     appBarTheme: AppBarTheme(
-      titleTextStyle: AppTextStyles.title(fontSize: 19),
-      toolbarTextStyle: AppTextStyles.title(fontSize: 17),
+      titleTextStyle: AppTextStyles.title(fontSize: 18),
+      toolbarTextStyle: AppTextStyles.title(fontSize: 16),
     ),
     bottomNavigationBarTheme: BottomNavigationBarThemeData(
       selectedLabelStyle: AppTextStyles.body(
         color: Colors.blue,
         fontWeight: FontWeight.w600,
-        fontSize: 13,
+        fontSize: 12.5,
       ),
       unselectedLabelStyle: AppTextStyles.body(
         color: const Color.fromARGB(255, 71, 71, 71),
         fontWeight: FontWeight.w500,
-        fontSize: 13,
+        fontSize: 12.5,
       ),
     ),
   );

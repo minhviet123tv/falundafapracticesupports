@@ -31,9 +31,13 @@ class AppWebViewConfig {
   }
 
   /// Gọi sau khi gán delegate/channels, trước [loadRequest].
+  ///
+  /// [allowsBackForwardNavigationGestures]: iOS WKWebView lịch sử qua vuốt.
+  /// Tắt trên trang đọc dài để không tranh gesture với scroll.
   static Future<void> applyPlatformSettings(
     WebViewController controller, {
     bool enableAndroidDebugging = false,
+    bool allowsBackForwardNavigationGestures = true,
   }) async {
     await controller.setUserAgent(chromeMobileUserAgent);
 
@@ -45,7 +49,9 @@ class AppWebViewConfig {
       await platform.setMediaPlaybackRequiresUserGesture(false);
       await platform.setMixedContentMode(MixedContentMode.compatibilityMode);
     } else if (platform is WebKitWebViewController) {
-      await platform.setAllowsBackForwardNavigationGestures(true);
+      await platform.setAllowsBackForwardNavigationGestures(
+        allowsBackForwardNavigationGestures,
+      );
     }
   }
 

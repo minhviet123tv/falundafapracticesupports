@@ -82,7 +82,10 @@ class _MinghuiWebviewState extends State<MinghuiWebview>
   }
 
   Future<void> _bootstrapWebView() async {
-    await AppWebViewConfig.applyPlatformSettings(_controller);
+    await AppWebViewConfig.applyPlatformSettings(
+      _controller,
+      allowsBackForwardNavigationGestures: false,
+    );
     await _getLanguageLink();
   }
 
@@ -210,6 +213,7 @@ class _MinghuiWebviewState extends State<MinghuiWebview>
     return buildImmersiveScaffold(
       toolbar: _buildToolbar(),
       urlBar: _buildUrlBar(),
+      enableEdgeSwipeToPop: false,
       onPop: () => Navigator.pop(context),
       body: progressLoadWeb <= 20
           ? const Center(child: CircularProgressIndicator())

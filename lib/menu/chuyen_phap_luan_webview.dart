@@ -176,7 +176,10 @@ class _ChuyenPhapLuanWebviewState extends State<ChuyenPhapLuanWebview>
   }
 
   Future<void> _loadSavedLanguageAndOpen() async {
-    await AppWebViewConfig.applyPlatformSettings(_controller);
+    await AppWebViewConfig.applyPlatformSettings(
+      _controller,
+      allowsBackForwardNavigationGestures: false,
+    );
     final shared = await SharedPreferences.getInstance();
     final savedName = shared.getString(_prefsLanguageKey) ?? 'vietnamese';
     try {
@@ -615,12 +618,12 @@ class _ChuyenPhapLuanWebviewState extends State<ChuyenPhapLuanWebview>
                   _languageMenuButton(),
                   IconButton(
                     onPressed: () => unawaited(_goToAllBooksPage()),
-                    icon: const Icon(Icons.library_books, size: 20),
+                    icon: const Icon(Icons.menu_book, size: 20),
                     tooltip: _allBooksTooltip,
                   ),
                   IconButton(
                     onPressed: () => unawaited(_goToZflHomePage()),
-                    icon: const Icon(Icons.menu_book, size: 20),
+                    icon: const Icon(Icons.collections_bookmark, size: 20),
                     tooltip: 'Về đầu sách',
                   ),
                 ],
@@ -666,6 +669,7 @@ class _ChuyenPhapLuanWebviewState extends State<ChuyenPhapLuanWebview>
     return buildImmersiveScaffold(
       toolbar: _buildToolbar(),
       urlBar: _buildUrlBar(),
+      enableEdgeSwipeToPop: false,
       onPop: () {
         unawaited(_popToMainApp());
       },
