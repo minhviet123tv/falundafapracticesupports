@@ -5,25 +5,30 @@ import 'package:falun_dafa_practice_supports/common/app_language_sync.dart';
 import 'package:falun_dafa_practice_supports/common/book_placement_dialog_strings.dart';
 import 'package:falun_dafa_practice_supports/common/new_area_language.dart';
 
-/// Dialog hướng dẫn đặt điện thoại khi đọc sách (tab Book).
+/// Dialog hướng dẫn đặt điện thoại khi đọc sách / xem video.
 class BookReadingPlacementDialog {
-  static const String _prefsKey = 'book_reading_phone_placement_hint_v1';
+  static const String prefsKeyBook = 'book_reading_phone_placement_hint_v1';
+  static const String prefsKeyVideoLesson =
+      'video_lesson_phone_placement_hint_v1';
 
-  static Future<bool> shouldShow() async {
+  static Future<bool> shouldShow({String prefsKey = prefsKeyBook}) async {
     final shared = await SharedPreferences.getInstance();
-    return !(shared.getBool(_prefsKey) ?? false);
+    return !(shared.getBool(prefsKey) ?? false);
   }
 
-  static Future<void> markNeverShowAgain() async {
+  static Future<void> markNeverShowAgain({
+    String prefsKey = prefsKeyBook,
+  }) async {
     final shared = await SharedPreferences.getInstance();
-    await shared.setBool(_prefsKey, true);
+    await shared.setBool(prefsKey, true);
   }
 
   static Future<void> showIfNeeded(
     BuildContext context, {
     String? languageCode,
+    String prefsKey = prefsKeyBook,
   }) async {
-    if (!await shouldShow()) return;
+    if (!await shouldShow(prefsKey: prefsKey)) return;
     if (!context.mounted) return;
 
     final code = languageCode ?? await AppLanguageSync.preferredOrEnglish();
@@ -33,16 +38,22 @@ class BookReadingPlacementDialog {
     await showDialog<void>(
       context: context,
       barrierDismissible: false,
-      builder: (dialogContext) =>
-          _BookReadingPlacementDialogContent(lang: lang),
+      builder: (dialogContext) => _BookReadingPlacementDialogContent(
+        lang: lang,
+        prefsKey: prefsKey,
+      ),
     );
   }
 }
 
 class _BookReadingPlacementDialogContent extends StatelessWidget {
   final NewAreaLang lang;
+  final String prefsKey;
 
-  const _BookReadingPlacementDialogContent({required this.lang});
+  const _BookReadingPlacementDialogContent({
+    required this.lang,
+    this.prefsKey = BookReadingPlacementDialog.prefsKeyBook,
+  });
 
   static const String _goodImage = 'assets/images/dienthoai_nen_1.jpeg';
   static const String _badImage1 = 'assets/images/dienthoai_khongnen_1.jpg';
@@ -204,7 +215,9 @@ class _BookReadingPlacementDialogContent extends StatelessWidget {
       children: [
         OutlinedButton(
           onPressed: () async {
-            await BookReadingPlacementDialog.markNeverShowAgain();
+            await BookReadingPlacementDialog.markNeverShowAgain(
+              prefsKey: prefsKey,
+            );
             if (context.mounted) Navigator.of(context).pop();
           },
           child: Text(s.neverShowAgain),

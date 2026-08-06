@@ -34,10 +34,12 @@ class AppWebViewConfig {
   ///
   /// [allowsBackForwardNavigationGestures]: iOS WKWebView lịch sử qua vuốt.
   /// Tắt trên trang đọc dài để không tranh gesture với scroll.
+  /// [optimizeForEmbeddedVideo]: cookie bên thứ 3 + media inline (Ganjing iframe).
   static Future<void> applyPlatformSettings(
     WebViewController controller, {
     bool enableAndroidDebugging = false,
     bool allowsBackForwardNavigationGestures = true,
+    bool optimizeForEmbeddedVideo = false,
   }) async {
     await controller.setUserAgent(chromeMobileUserAgent);
 
@@ -48,6 +50,17 @@ class AppWebViewConfig {
       }
       await platform.setMediaPlaybackRequiresUserGesture(false);
       await platform.setMixedContentMode(MixedContentMode.compatibilityMode);
+      if (optimizeForEmbeddedVideo) {
+        try {
+          final cookieManager = WebViewCookieManager();
+          final cookiePlatform = cookieManager.platform;
+          if (cookiePlatform is AndroidWebViewCookieManager) {
+            await cookiePlatform.setAcceptThirdPartyCookies(platform, true);
+          }
+        } catch (e, st) {
+          debugPrint('AppWebViewConfig third-party cookies: $e\n$st');
+        }
+      }
     } else if (platform is WebKitWebViewController) {
       await platform.setAllowsBackForwardNavigationGestures(
         allowsBackForwardNavigationGestures,

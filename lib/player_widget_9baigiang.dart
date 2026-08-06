@@ -281,64 +281,76 @@ class _PlayerWidgetState extends State<PlayerWidget9Baigiang> {
 
     return Scaffold(
       appBar: AppBar(
-        title: Center(child: Text(listInternetSource[indexCurrent].name, style: styleTextTitle,)),
-        toolbarHeight: 60, // Chiều cao của AppBar
-        actions: [
-          PopupMenuButton<LanguageNameAndCode>(
-            tooltip: 'Select language',
-            position: PopupMenuPosition.under,
-            color: Colors.white,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(border10)),
-            onSelected: (LanguageNameAndCode value) {
-              setState(() {
-                languageNameAndCode = value;
-                _getListInternetSource();
-                _setLanguageEnum(languageNameAndCode);
-              });
-              unawaited(AppLanguageSync.onUserSelected(value.name));
-            },
-            itemBuilder: (context) {
-              final ordered = LanguageMenuOrder.sort(
-                LanguageNameAndCode.values,
-                name: (e) => e.name,
-                label: (e) => e.tengoc,
-              );
-              return ordered
-                  .map(
-                    (value) => PopupMenuItem<LanguageNameAndCode>(
-                      value: value,
-                      height: 44,
-                      child: Text(value.tengoc),
+        leadingWidth: 160,
+        leading: Padding(
+          padding: const EdgeInsets.only(left: 14),
+          child: Align(
+            alignment: Alignment.centerLeft,
+            child: PopupMenuButton<LanguageNameAndCode>(
+              tooltip: 'Select language',
+              position: PopupMenuPosition.under,
+              color: Colors.white,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(border10)),
+              onSelected: (LanguageNameAndCode value) {
+                setState(() {
+                  languageNameAndCode = value;
+                  _getListInternetSource();
+                  _setLanguageEnum(languageNameAndCode);
+                });
+                unawaited(AppLanguageSync.onUserSelected(value.name));
+              },
+              itemBuilder: (context) {
+                final ordered = LanguageMenuOrder.sort(
+                  LanguageNameAndCode.values,
+                  name: (e) => e.name,
+                  label: (e) => e.tengoc,
+                );
+                return ordered
+                    .map(
+                      (value) => PopupMenuItem<LanguageNameAndCode>(
+                        value: value,
+                        height: 44,
+                        child: Text(value.tengoc),
+                      ),
+                    )
+                    .toList();
+              },
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.all(Radius.circular(border10)),
+                  border: Border.all(color: Colors.white70),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Icon(Icons.audiotrack, size: 16, color: Colors.white),
+                    const SizedBox(width: 4),
+                    Flexible(
+                      child: Text(
+                        languageNameAndCode.tengoc,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                          color: Colors.cyanAccent,
+                          fontWeight: FontWeight.w500,
+                          fontSize: 12,
+                        ),
+                      ),
                     ),
-                  )
-                  .toList();
-            },
-            child: Container(
-              margin: const EdgeInsets.only(right: 2),
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.all(Radius.circular(border10)),
-                border: Border.all(color: Colors.white70),
-              ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    languageNameAndCode.tengoc,
-                    style: const TextStyle(color: Colors.cyanAccent, fontWeight: FontWeight.w500),
-                  ),
-                  const SizedBox(width: 4),
-                  const Icon(Icons.arrow_drop_down, size: 18, color: Colors.white),
-                ],
+                    const Icon(Icons.arrow_drop_down, size: 18, color: Colors.white),
+                  ],
+                ),
               ),
             ),
           ),
-        ],
+        ),
+        title: Text(listInternetSource[indexCurrent].name, style: styleTextTitle),
+        centerTitle: true,
+        toolbarHeight: 60,
         backgroundColor: Colors.blue,
       ),
 
       body: listViewItem(),
-      // floatingActionButton: ElevatedButton(onPressed: () {  }, child: Text("Language"),),
     );
   }
 

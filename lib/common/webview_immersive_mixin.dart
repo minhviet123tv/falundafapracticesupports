@@ -115,6 +115,9 @@ mixin WebviewImmersiveMixin<T extends StatefulWidget> on State<T>, SingleTickerP
 
   double get bottomNavReserve => 0;
 
+  /// Cuộn xuống/lên có ẩn/hiện chrome không. Nút mở rộng vẫn luôn dùng được.
+  bool get immersiveScrollHidesChrome => true;
+
   /// Cuộn xuống ẩn chrome không chờ cooldown (tab Book).
   bool get immersiveScrollHideIgnoresCooldown => false;
 
@@ -237,6 +240,18 @@ mixin WebviewImmersiveMixin<T extends StatefulWidget> on State<T>, SingleTickerP
   void handleImmersiveScrollReport(String message) {
 
     if (!mounted) return;
+
+    // Trang tắt ẩn chrome khi scroll (vd. Video Lesson) — vẫn nhận báo cáo
+    // để không lỗi JS channel, nhưng không đổi chrome.
+    if (!immersiveScrollHidesChrome) {
+      try {
+        final decoded = jsonDecode(message);
+        if (decoded is Map && decoded['y'] is num) {
+          _lastScrollY = (decoded['y'] as num).toDouble();
+        }
+      } catch (_) {}
+      return;
+    }
 
     try {
 

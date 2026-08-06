@@ -12,6 +12,7 @@ import 'menu/privacy_policy_page_html.dart';
 import 'menu/intro_list_widget_body.dart';
 import 'menu/introduction_screen.dart';
 import 'menu/huongdantapcoban.dart';
+import 'menu/webview_browser/falundafa_video_webview.dart';
 import 'menu/webview_browser/minghui_webview.dart';
 import 'menu/webview_browser/visaoconhanloai_webview.dart';
 
@@ -56,6 +57,12 @@ class _MenuHomeState extends State<MenuHome> {
     });
   }
 
+  Future<void> _onLanguageChanged(NewAreaLang lang) async {
+    await AppLanguageSync.onUserSelected(lang.name);
+    if (!mounted) return;
+    setState(() => _lang = lang);
+  }
+
   @override
   Widget build(BuildContext context) {
     if (_ready) {
@@ -72,12 +79,24 @@ class _MenuHomeState extends State<MenuHome> {
     return SafeArea(
       child: Scaffold(
         appBar: AppBar(
-          title: Center(
-            child: Text(
-              'Home',
-              style: AppTextStyles.title(fontSize: 19),
+          leadingWidth: 148,
+          leading: Padding(
+            padding: const EdgeInsets.only(left: 14),
+            child: Align(
+              alignment: Alignment.centerLeft,
+              child: NewAreaLanguageMenu(
+                current: _lang,
+                available: NewAreaLang.values,
+                textColor: Colors.white,
+                onChanged: (lang) => unawaited(_onLanguageChanged(lang)),
+              ),
             ),
           ),
+          title: Text(
+            'Home',
+            style: AppTextStyles.title(fontSize: 19),
+          ),
+          centerTitle: true,
           backgroundColor: Colors.blue,
         ),
         body: Center(child: _gridViewMenu(context)),
@@ -92,10 +111,11 @@ class _MenuHomeState extends State<MenuHome> {
     const labelVPad = 10.0;
 
     final titles = <String>[
+      _ui.masterExerciseGuideMenu,
       _ui.basicPracticeGuideMenu,
-      _ui.humankindMenuTitle,
       'Falundafa.org',
       'Minghui.org',
+      _ui.humankindMenuTitle,
       _ui.aboutAppMenuTitle,
       _ui.privacyMenuTitle,
     ];
@@ -134,6 +154,22 @@ class _MenuHomeState extends State<MenuHome> {
       // Vuông hơn (trước ~0.72), vẫn cao hơn rộng.
       childAspectRatio: 0.88,
       children: [
+        // Hàng 1: Sư phụ hướng dẫn tập | Học viên hướng dẫn
+        InkWell(
+          onTap: () {
+            AppNavigator.pushFromTop(context, const FalundafaVideoWebview())
+                .then((_) => _loadLanguage(silent: true));
+          },
+          child: itemMenu(
+            'assets/images/su_phu_tap_bai_5_1_anh.png',
+            titles[0],
+            labelBarHeight: labelBarHeight,
+            imageFit: BoxFit.contain,
+            imageAlignment: const Alignment(0, -0.2),
+            // Thu nhỏ một chút để thấy đủ người trong card.
+            imagePadding: const EdgeInsets.fromLTRB(14, 10, 14, 6),
+          ),
+        ),
         InkWell(
           onTap: () {
             AppNavigator.push(context, const HuongDanTapCoBanPage())
@@ -141,21 +177,11 @@ class _MenuHomeState extends State<MenuHome> {
           },
           child: itemMenu(
             'assets/images/menu_item_2.jpg',
-            titles[0],
-            labelBarHeight: labelBarHeight,
-          ),
-        ),
-        InkWell(
-          onTap: () {
-            AppNavigator.pushFromTop(context, VisaoconhanloaiWebview())
-                .then((_) => _loadLanguage(silent: true));
-          },
-          child: itemMenu(
-            'assets/images/menu_item_3.jpg',
             titles[1],
             labelBarHeight: labelBarHeight,
           ),
         ),
+        // Hàng 2: Falundafa | Minghui
         InkWell(
           onTap: () {
             AppNavigator.pushFromTop(
@@ -180,16 +206,29 @@ class _MenuHomeState extends State<MenuHome> {
             labelBarHeight: labelBarHeight,
           ),
         ),
+        // Hàng 3: Vì sao có nhân loại | Giới thiệu app
+        InkWell(
+          onTap: () {
+            AppNavigator.pushFromTop(context, VisaoconhanloaiWebview())
+                .then((_) => _loadLanguage(silent: true));
+          },
+          child: itemMenu(
+            'assets/images/menu_item_3.jpg',
+            titles[4],
+            labelBarHeight: labelBarHeight,
+          ),
+        ),
         InkWell(
           onTap: () {
             _openAboutAppIntro(context);
           },
           child: itemMenu(
             'assets/images/menu_item_1.jpg',
-            titles[4],
+            titles[5],
             labelBarHeight: labelBarHeight,
           ),
         ),
+        // Hàng 4: Privacy
         InkWell(
           onTap: () {
             AppNavigator.push(context, const PrivacyPolicyPageHtml())
@@ -197,7 +236,7 @@ class _MenuHomeState extends State<MenuHome> {
           },
           child: itemMenu(
             'assets/images/menu_item_6.jpg',
-            titles[5],
+            titles[6],
             labelBarHeight: labelBarHeight,
           ),
         ),
@@ -209,6 +248,9 @@ class _MenuHomeState extends State<MenuHome> {
     String imagePath,
     String text, {
     required double labelBarHeight,
+    AlignmentGeometry imageAlignment = Alignment.center,
+    BoxFit imageFit = BoxFit.cover,
+    EdgeInsetsGeometry? imagePadding,
   }) {
     return Card(
       elevation: 8,
@@ -220,11 +262,18 @@ class _MenuHomeState extends State<MenuHome> {
       child: Stack(
         fit: StackFit.expand,
         children: [
-          Image.asset(
-            imagePath,
-            fit: BoxFit.cover,
-            width: double.infinity,
-            height: double.infinity,
+          ColoredBox(
+            color: Colors.white,
+            child: Padding(
+              padding: imagePadding ?? EdgeInsets.zero,
+              child: Image.asset(
+                imagePath,
+                fit: imageFit,
+                alignment: imageAlignment,
+                width: double.infinity,
+                height: double.infinity,
+              ),
+            ),
           ),
           Align(
             alignment: Alignment.bottomCenter,

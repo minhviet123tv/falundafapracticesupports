@@ -300,6 +300,24 @@ class AppLanguageSync {
     return matched?.booksPage ?? LanguageAllPageFalundafa.english.booksPage;
   }
 
+  /// Link trang video hướng dẫn tập (`videoPage`) theo mã ngôn ngữ đang chọn.
+  static String videoPageUrlForLanguage(String languageCode) {
+    final matched = _matchAllBooks(canonicalize(languageCode));
+    return matched?.videoPage ?? LanguageAllPageFalundafa.english.videoPage;
+  }
+
+  /// Link trang video 9 bài giảng (`video9Lession`) theo mã ngôn ngữ đang chọn.
+  static String video9LessonUrlForLanguage(String languageCode) {
+    final matched = _matchAllBooks(canonicalize(languageCode));
+    return matched?.video9Lession ??
+        LanguageAllPageFalundafa.english.video9Lession;
+  }
+
+  /// Khớp [LanguageAllPageFalundafa] theo mã ngôn ngữ app (có thể null).
+  static LanguageAllPageFalundafa? matchAllBooksLanguage(String languageCode) {
+    return _matchAllBooks(canonicalize(languageCode));
+  }
+
   static LanguageAllPageFalundafa? _matchAllBooks(String code) {
     for (final e in LanguageAllPageFalundafa.values) {
       if (canonicalize(e.name) == code || canonicalize(e.languageCode) == code) {

@@ -266,7 +266,7 @@ PageViewModel _aboutAppPage2Features(NewAreaLang lang) {
 }
 
 // ---------------------------------------------------------------------------
-// Hướng dẫn tập cơ bản
+// Học viên hướng dẫn
 // ---------------------------------------------------------------------------
 
 List<PageViewModel> buildHuongDanTapCoBanPages(NewAreaLang lang) {

@@ -9,6 +9,7 @@ import 'player_widget.dart';
 import 'player_widget_9baigiang.dart';
 
 import 'menu/chuyen_phap_luan_webview.dart';
+import 'menu/webview_browser/falundafa_video_webview.dart';
 import 'menu_huongdan_page.dart';
 import 'common/app_language_sync.dart';
 import 'common/app_text_theme.dart';
@@ -180,7 +181,9 @@ class FalunDafaExerciseHomePage extends StatefulWidget {
 class _FalunDafaExerciseHomePageState extends State<FalunDafaExerciseHomePage> 
     with AutomaticKeepAliveClientMixin {
 
-  static const int _navItemCount = 4;
+  /// Home | Book | Video 9 Lesson | Audio 9 Lesson | 5 Practice
+  static const int _navItemCount = 5;
+  static const String _navMigrateVideo9Key = 'nav_bottom_has_video9_v1';
 
   // Chỉ tạo tab khi người dùng mở lần đầu — tránh khởi tạo WebView + AudioPlayer cùng lúc.
   final Map<int, Widget> _tabWidgets = <int, Widget>{};
@@ -212,13 +215,14 @@ class _FalunDafaExerciseHomePageState extends State<FalunDafaExerciseHomePage>
     _sharedPreferences ??= await SharedPreferences.getInstance();
   }
   
+  /// Nav index → body tab (Book & Video 9 mở trang riêng, không phải tab body).
   int _bodyIndexForNav(int navIndex) {
     switch (navIndex) {
-      case 2:
+      case 3: // 9 Lesson
         return 1;
-      case 3:
+      case 4: // 5 Practice
         return 2;
-      default:
+      default: // Home (và khi đang đứng trên Book/Video 9 vẫn hiện Home)
         return 0;
     }
   }
@@ -245,6 +249,16 @@ class _FalunDafaExerciseHomePageState extends State<FalunDafaExerciseHomePage>
     AppNavigator.pushFromTop(context, ChuyenPhapLuanWebview());
   }
 
+  void _openVideo9Webview() {
+    AppNavigator.pushFromTop(
+      context,
+      const FalundafaVideoWebview(
+        kind: FalundafaVideoKind.nineLectures,
+        showPlacementDialog: true,
+      ),
+    );
+  }
+
   //B.1 Load index của menu bottom được lưu trong shared - Tối ưu hóa bộ nhớ
   Future<void> _getIndexMenu() async {
     // Sử dụng cache SharedPreferences để tránh load lại
@@ -252,11 +266,21 @@ class _FalunDafaExerciseHomePageState extends State<FalunDafaExerciseHomePage>
     
     var indexSelectedHere = _sharedPreferences!.getInt("index_menu_bottom") ?? 0;
 
+    // Migrate từ 4 mục (Home/Book/9 Lesson/5 Practice) → thêm Video 9 ở index 2.
+    final migrated = _sharedPreferences!.getBool(_navMigrateVideo9Key) ?? false;
+    if (!migrated) {
+      if (indexSelectedHere >= 2) {
+        indexSelectedHere += 1;
+      }
+      await _sharedPreferences!.setBool(_navMigrateVideo9Key, true);
+      await _sharedPreferences!.setInt("index_menu_bottom", indexSelectedHere);
+    }
+
     if (indexSelectedHere > _navItemCount - 1) {
       indexSelectedHere = _navItemCount - 1;
     }
-    // Book mở trang riêng — không còn là tab body.
-    if (indexSelectedHere == 1) {
+    // Book / Video 9 mở trang riêng — không còn là tab body.
+    if (indexSelectedHere == 1 || indexSelectedHere == 2) {
       indexSelectedHere = 0;
     }
     indexMenu = indexSelectedHere;
@@ -296,6 +320,11 @@ class _FalunDafaExerciseHomePageState extends State<FalunDafaExerciseHomePage>
           activeIcon: Icon(Icons.menu_book, color: Colors.orange),
         ),
         BottomNavigationBarItem(
+          icon: Icon(Icons.ondemand_video, color: Color.fromARGB(255, 71, 71, 71)),
+          label: '9 Lesson',
+          activeIcon: Icon(Icons.ondemand_video, color: Colors.orange),
+        ),
+        BottomNavigationBarItem(
           icon: Icon(Icons.audiotrack, color: Color.fromARGB(255, 71, 71, 71)),
           label: '9 Lesson',
           activeIcon: Icon(Icons.audiotrack, color: Colors.orange),
@@ -312,6 +341,10 @@ class _FalunDafaExerciseHomePageState extends State<FalunDafaExerciseHomePage>
       onTap: (index) {
         if (index == 1) {
           _openBookWebview();
+          return;
+        }
+        if (index == 2) {
+          _openVideo9Webview();
           return;
         }
         indexMenu = index;
