@@ -567,7 +567,10 @@ class _ChuyenPhapLuanWebviewState extends State<ChuyenPhapLuanWebview>
               (value) => PopupMenuItem<LanguageNameOfChuyenPhapLuan>(
                 value: value,
                 height: 44,
-                child: Text(value.tengoc),
+                child: Text(value.tengoc.replaceAll('\n', ' '),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
               ),
             )
             .toList();

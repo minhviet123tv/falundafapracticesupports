@@ -1064,32 +1064,236 @@ class NewAreaUiStrings {
         _ => 'Practitioner\nGuide',
 };
 
-  /// Home grid label: Master's exercise instruction videos (may wrap).
+  /// Home grid label: Master's exercise instruction videos.
+  /// Không ép xuống dòng trước (1992) — soft-wrap tối đa 2 dòng trên card.
   String get masterExerciseGuideMenu => switch (lang) {
-        NewAreaLang.english => "Master's Guide\n(1992)",
-        NewAreaLang.vietnamese => 'Sư phụ hướng dẫn\n(1992)',
-        NewAreaLang.chinese1 => '師父教功\n(1992)',
-        NewAreaLang.chinese2 => '师父教功\n(1992)',
-        NewAreaLang.bosanski => 'Učiteljeva uputstva\n(1992)',
-        NewAreaLang.deutsch => 'Meister-Anleitung\n(1992)',
-        NewAreaLang.espanol => 'Guía del Maestro\n(1992)',
-        NewAreaLang.farsi => 'راهنمای استاد\n(1992)',
-        NewAreaLang.francais => 'Guide du Maître\n(1992)',
-        NewAreaLang.hebrew => 'הדרכת המורה\n(1992)',
-        NewAreaLang.hrvatski => 'Učiteljeva uputstva\n(1992)',
-        NewAreaLang.indonesia => 'Petunjuk Guru\n(1992)',
-        NewAreaLang.italiano => 'Guida del Maestro\n(1992)',
-        NewAreaLang.japan => '師父の指導\n(1992)',
-        NewAreaLang.korean => '사부님 지도\n(1992)',
-        NewAreaLang.polski => 'Przewodnik Mistrza\n(1992)',
-        NewAreaLang.portugues => 'Guia do Mestre\n(1992)',
-        NewAreaLang.russian => 'Наставление Учителя\n(1992)',
-        NewAreaLang.slovencina => 'Majstrovo cvičenie\n(1992)',
-        NewAreaLang.srpski => 'Учитељева упутства\n(1992)',
-        NewAreaLang.thai => 'คำแนะนำอาจารย์\n(1992)',
-        NewAreaLang.turkce => 'Öğretmen rehberi\n(1992)',
-        NewAreaLang.ukrainian => 'Настанови Вчителя\n(1992)',
-        _ => "Master's Guide\n(1992)",
+        NewAreaLang.english => "Master's Guide (1992)",
+        NewAreaLang.vietnamese => 'Sư phụ hướng dẫn (1992)',
+        NewAreaLang.chinese1 => '師父教功 (1992)',
+        NewAreaLang.chinese2 => '师父教功 (1992)',
+        NewAreaLang.bosanski => 'Učiteljeva uputstva (1992)',
+        NewAreaLang.deutsch => 'Meister-Anleitung (1992)',
+        NewAreaLang.espanol => 'Guía del Maestro (1992)',
+        NewAreaLang.farsi => 'راهنمای استاد (1992)',
+        NewAreaLang.francais => 'Guide du Maître (1992)',
+        NewAreaLang.hebrew => 'הדרכת המורה (1992)',
+        NewAreaLang.hrvatski => 'Učiteljeva uputstva (1992)',
+        NewAreaLang.indonesia => 'Petunjuk Guru (1992)',
+        NewAreaLang.italiano => 'Guida del Maestro (1992)',
+        NewAreaLang.japan => '師父の指導 (1992)',
+        NewAreaLang.korean => '사부님 지도 (1992)',
+        NewAreaLang.polski => 'Przewodnik Mistrza (1992)',
+        NewAreaLang.portugues => 'Guia do Mestre (1992)',
+        NewAreaLang.russian => 'Наставление Учителя (1992)',
+        NewAreaLang.slovencina => 'Majstrovo cvičenie (1992)',
+        NewAreaLang.srpski => 'Учитељева упутства (1992)',
+        NewAreaLang.thai => 'คำแนะนำอาจารย์ (1992)',
+        NewAreaLang.turkce => 'Öğretmen rehberi (1992)',
+        NewAreaLang.ukrainian => 'Настанови Вчителя (1992)',
+        _ => "Master's Guide (1992)",
+};
+
+  String get settingsMenuTitle => switch (lang) {
+        NewAreaLang.english => 'Settings',
+        NewAreaLang.vietnamese => 'Cài đặt',
+        NewAreaLang.chinese1 => '設定',
+        NewAreaLang.chinese2 => '设置',
+        NewAreaLang.bosanski => 'Postavke',
+        NewAreaLang.deutsch => 'Einstellungen',
+        NewAreaLang.espanol => 'Ajustes',
+        NewAreaLang.farsi => 'تنظیمات',
+        NewAreaLang.francais => 'Réglages',
+        NewAreaLang.hebrew => 'הגדרות',
+        NewAreaLang.hrvatski => 'Postavke',
+        NewAreaLang.indonesia => 'Pengaturan',
+        NewAreaLang.italiano => 'Impostazioni',
+        NewAreaLang.japan => '設定',
+        NewAreaLang.korean => '설정',
+        NewAreaLang.polski => 'Ustawienia',
+        NewAreaLang.portugues => 'Configurações',
+        NewAreaLang.russian => 'Настройки',
+        NewAreaLang.slovencina => 'Nastavenia',
+        NewAreaLang.srpski => 'Подешавања',
+        NewAreaLang.thai => 'การตั้งค่า',
+        NewAreaLang.turkce => 'Ayarlar',
+        NewAreaLang.ukrainian => 'Налаштування',
+        _ => 'Settings',
+};
+
+  String get settingsPageTitle => settingsMenuTitle;
+
+  String get fontSizeSettingLabel => switch (lang) {
+        NewAreaLang.english => 'Font size',
+        NewAreaLang.vietnamese => 'Kích thước chữ',
+        NewAreaLang.chinese1 => '文字大小',
+        NewAreaLang.chinese2 => '文字大小',
+        NewAreaLang.bosanski => 'Veličina slova',
+        NewAreaLang.deutsch => 'Schriftgröße',
+        NewAreaLang.espanol => 'Tamaño de letra',
+        NewAreaLang.farsi => 'اندازه متن',
+        NewAreaLang.francais => 'Taille du texte',
+        NewAreaLang.hebrew => 'גודל גופן',
+        NewAreaLang.hrvatski => 'Veličina slova',
+        NewAreaLang.indonesia => 'Ukuran teks',
+        NewAreaLang.italiano => 'Dimensione testo',
+        NewAreaLang.japan => '文字サイズ',
+        NewAreaLang.korean => '글자 크기',
+        NewAreaLang.polski => 'Rozmiar czcionki',
+        NewAreaLang.portugues => 'Tamanho da letra',
+        NewAreaLang.russian => 'Размер шрифта',
+        NewAreaLang.slovencina => 'Veľkosť písma',
+        NewAreaLang.srpski => 'Величина слова',
+        NewAreaLang.thai => 'ขนาดตัวอักษร',
+        NewAreaLang.turkce => 'Yazı boyutu',
+        NewAreaLang.ukrainian => 'Розмір шрифту',
+        _ => 'Font size',
+};
+
+  String get fontSizeSettingHelp => switch (lang) {
+        NewAreaLang.english =>
+          'Adjust text size for the whole app. A size is chosen automatically when you first install.',
+        NewAreaLang.vietnamese =>
+          'Chỉnh kích thước chữ cho toàn ứng dụng. Khi mới cài, app đã tự chọn sẵn theo thiết bị.',
+        NewAreaLang.chinese1 => '調整整個應用的文字大小。首次安裝時會依裝置自動選擇。',
+        NewAreaLang.chinese2 => '调整整个应用的文字大小。首次安装时会按设备自动选择。',
+        NewAreaLang.bosanski =>
+          'Prilagodite veličinu teksta za cijelu aplikaciju. Pri prvoj instalaciji bira se automatski.',
+        NewAreaLang.deutsch =>
+          'Schriftgröße für die gesamte App anpassen. Bei der Erstinstallation wird sie automatisch gewählt.',
+        NewAreaLang.espanol =>
+          'Ajuste el tamaño del texto de toda la aplicación. Al instalarse se elige automáticamente.',
+        NewAreaLang.farsi =>
+          'اندازه متن کل برنامه را تنظیم کنید. در نصب اول به‌صورت خودکار انتخاب می‌شود.',
+        NewAreaLang.francais =>
+          'Ajustez la taille du texte pour toute l’application. Elle est choisie automatiquement à l’installation.',
+        NewAreaLang.hebrew =>
+          'התאימו את גודל הטקסט לכל האפליקציה. בעת ההתקנה נבחר גודל אוטומטית.',
+        NewAreaLang.hrvatski =>
+          'Prilagodite veličinu teksta za cijelu aplikaciju. Pri prvoj instalaciji bira se automatski.',
+        NewAreaLang.indonesia =>
+          'Sesuaikan ukuran teks untuk seluruh aplikasi. Saat pertama dipasang, ukuran dipilih otomatis.',
+        NewAreaLang.italiano =>
+          'Regola la dimensione del testo per tutta l’app. Alla prima installazione viene scelta automaticamente.',
+        NewAreaLang.japan => 'アプリ全体の文字サイズを調整します。初回インストール時は端末に合わせて自動選択されます。',
+        NewAreaLang.korean => '앱 전체 글자 크기를 조정합니다. 처음 설치 시 기기에 맞게 자동 선택됩니다.',
+        NewAreaLang.polski =>
+          'Dostosuj rozmiar tekstu w całej aplikacji. Przy pierwszej instalacji wybierany jest automatycznie.',
+        NewAreaLang.portugues =>
+          'Ajuste o tamanho do texto em todo o aplicativo. Na primeira instalação é escolhido automaticamente.',
+        NewAreaLang.russian =>
+          'Настройте размер текста для всего приложения. При первой установке выбирается автоматически.',
+        NewAreaLang.slovencina =>
+          'Upravte veľkosť textu pre celú aplikáciu. Pri prvej inštalácii sa vyberie automaticky.',
+        NewAreaLang.srpski =>
+          'Подесите величину текста за целу апликацију. При првој инсталацији бира се аутоматски.',
+        NewAreaLang.thai =>
+          'ปรับขนาดตัวอักษรทั้งแอป เมื่อติดตั้งครั้งแรกระบบจะเลือกให้อัตโนมัติตามอุปกรณ์',
+        NewAreaLang.turkce =>
+          'Tüm uygulama için yazı boyutunu ayarlayın. İlk kurulumda otomatik seçilir.',
+        NewAreaLang.ukrainian =>
+          'Налаштуйте розмір тексту для всього додатка. Під час першого встановлення вибирається автоматично.',
+        _ =>
+          'Adjust text size for the whole app. A size is chosen automatically when you first install.',
+};
+
+  String get fontSizeResetTooltip => switch (lang) {
+        NewAreaLang.english => 'Reset to default',
+        NewAreaLang.vietnamese => 'Đặt lại mặc định',
+        NewAreaLang.chinese1 => '重設為預設',
+        NewAreaLang.chinese2 => '重置为默认',
+        NewAreaLang.bosanski => 'Vrati na zadano',
+        NewAreaLang.deutsch => 'Zurücksetzen',
+        NewAreaLang.espanol => 'Restablecer',
+        NewAreaLang.farsi => 'بازگردانی پیش‌فرض',
+        NewAreaLang.francais => 'Réinitialiser',
+        NewAreaLang.hebrew => 'איפוס לברירת מחדל',
+        NewAreaLang.hrvatski => 'Vrati na zadano',
+        NewAreaLang.indonesia => 'Atur ulang',
+        NewAreaLang.italiano => 'Reimposta',
+        NewAreaLang.japan => 'デフォルトに戻す',
+        NewAreaLang.korean => '기본값으로',
+        NewAreaLang.polski => 'Przywróć domyślne',
+        NewAreaLang.portugues => 'Redefinir',
+        NewAreaLang.russian => 'Сбросить',
+        NewAreaLang.slovencina => 'Obnoviť predvolené',
+        NewAreaLang.srpski => 'Врати на подразумевано',
+        NewAreaLang.thai => 'รีเซ็ตเป็นค่าเริ่มต้น',
+        NewAreaLang.turkce => 'Varsayılana dön',
+        NewAreaLang.ukrainian => 'Скинути',
+        _ => 'Reset to default',
+};
+
+  String get fontSizePreviewSample => switch (lang) {
+        NewAreaLang.english => 'Sample text — Aa',
+        NewAreaLang.vietnamese => 'Chữ mẫu — Aa',
+        NewAreaLang.chinese1 => '預覽文字 — Aa',
+        NewAreaLang.chinese2 => '预览文字 — Aa',
+        NewAreaLang.bosanski => 'Primjer teksta — Aa',
+        NewAreaLang.deutsch => 'Beispieltext — Aa',
+        NewAreaLang.espanol => 'Texto de muestra — Aa',
+        NewAreaLang.farsi => 'متن نمونه — Aa',
+        NewAreaLang.francais => 'Texte d’exemple — Aa',
+        NewAreaLang.hebrew => 'טקסט לדוגמה — Aa',
+        NewAreaLang.hrvatski => 'Primjer teksta — Aa',
+        NewAreaLang.indonesia => 'Contoh teks — Aa',
+        NewAreaLang.italiano => 'Testo di esempio — Aa',
+        NewAreaLang.japan => 'サンプル文字 — Aa',
+        NewAreaLang.korean => '미리보기 글자 — Aa',
+        NewAreaLang.polski => 'Przykładowy tekst — Aa',
+        NewAreaLang.portugues => 'Texto de exemplo — Aa',
+        NewAreaLang.russian => 'Пример текста — Aa',
+        NewAreaLang.slovencina => 'Ukážkový text — Aa',
+        NewAreaLang.srpski => 'Пример текста — Aa',
+        NewAreaLang.thai => 'ตัวอย่างข้อความ — Aa',
+        NewAreaLang.turkce => 'Örnek metin — Aa',
+        NewAreaLang.ukrainian => 'Зразок тексту — Aa',
+        _ => 'Sample text — Aa',
+};
+
+  String get fontSizeUltraSmall => switch (lang) {
+        NewAreaLang.english => 'Tiny',
+        NewAreaLang.vietnamese => 'Cực nhỏ',
+        _ => 'Tiny',
+};
+  String get fontSizeExtraSmall => switch (lang) {
+        NewAreaLang.english => 'Extra small',
+        NewAreaLang.vietnamese => 'Rất nhỏ',
+        _ => 'Extra small',
+};
+  String get fontSizeSmall => switch (lang) {
+        NewAreaLang.english => 'Small',
+        NewAreaLang.vietnamese => 'Nhỏ',
+        _ => 'Small',
+};
+  String get fontSizeNormal => switch (lang) {
+        NewAreaLang.english => 'Normal',
+        NewAreaLang.vietnamese => 'Bình thường',
+        _ => 'Normal',
+};
+  String get fontSizeLarge => switch (lang) {
+        NewAreaLang.english => 'Large',
+        NewAreaLang.vietnamese => 'Lớn',
+        _ => 'Large',
+};
+  String get fontSizeExtraLarge => switch (lang) {
+        NewAreaLang.english => 'Extra large',
+        NewAreaLang.vietnamese => 'Rất lớn',
+        _ => 'Extra large',
+};
+  String get fontSizeUltraLarge => switch (lang) {
+        NewAreaLang.english => 'Huge',
+        NewAreaLang.vietnamese => 'Cực lớn',
+        _ => 'Huge',
+};
+  String get fontSizeSuperLarge => switch (lang) {
+        NewAreaLang.english => 'Super large',
+        NewAreaLang.vietnamese => 'Siêu lớn',
+        _ => 'Super large',
+};
+  String get fontSizeMaximum => switch (lang) {
+        NewAreaLang.english => 'Maximum',
+        NewAreaLang.vietnamese => 'Tối đa',
+        _ => 'Maximum',
 };
 }
 

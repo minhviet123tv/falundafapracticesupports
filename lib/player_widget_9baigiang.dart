@@ -310,7 +310,10 @@ class _PlayerWidgetState extends State<PlayerWidget9Baigiang> {
                       (value) => PopupMenuItem<LanguageNameAndCode>(
                         value: value,
                         height: 44,
-                        child: Text(value.tengoc),
+                        child: Text(value.tengoc,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
                       ),
                     )
                     .toList();
@@ -329,6 +332,8 @@ class _PlayerWidgetState extends State<PlayerWidget9Baigiang> {
                     Flexible(
                       child: Text(
                         languageNameAndCode.tengoc,
+                        maxLines: 1,
+                        softWrap: false,
                         overflow: TextOverflow.ellipsis,
                         style: const TextStyle(
                           color: Colors.cyanAccent,

@@ -157,7 +157,11 @@ class _VisaoconhanloaiWebviewState extends State<VisaoconhanloaiWebview>
                   (value) => PopupMenuItem<VisaoconhanloaiEnum>(
                     value: value,
                     height: 44,
-                    child: Text(value.languageName),
+                    child: Text(
+                      value.languageName,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
                   ),
                 )
                 .toList();
@@ -167,11 +171,17 @@ class _VisaoconhanloaiWebviewState extends State<VisaoconhanloaiWebview>
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Text(
-                  visaoconhanloaiEnum.languageName,
-                  style: const TextStyle(
-                    fontWeight: FontWeight.w500,
-                    fontSize: 11,
+                ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 120),
+                  child: Text(
+                    visaoconhanloaiEnum.languageName,
+                    maxLines: 1,
+                    softWrap: false,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      fontWeight: FontWeight.w500,
+                      fontSize: 11,
+                    ),
                   ),
                 ),
                 const SizedBox(width: 4),

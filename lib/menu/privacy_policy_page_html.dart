@@ -63,6 +63,8 @@ class _PrivacyPolicyPageHtmlState extends State<PrivacyPolicyPageHtml> {
         appBar: AppBar(
           title: Text(
             _ui.privacyAppBarTitle,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
             style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w500),
           ),
           backgroundColor: Colors.green,

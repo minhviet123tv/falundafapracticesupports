@@ -209,11 +209,15 @@ class NewAreaLanguageMenu extends StatelessWidget {
   final ValueChanged<NewAreaLang> onChanged;
   final Color? textColor;
 
+  /// Chiều rộng tối đa nhãn ngôn ngữ đang chọn (tránh tràn AppBar khi chữ to).
+  final double maxLabelWidth;
+
   const NewAreaLanguageMenu({
     required this.current,
     required this.onChanged,
     this.available = NewAreaLang.values,
     this.textColor,
+    this.maxLabelWidth = 110,
     super.key,
   });
 
@@ -240,6 +244,9 @@ class NewAreaLanguageMenu extends StatelessWidget {
                 height: 40,
                 child: Text(
                   value.label,
+                  maxLines: 1,
+                  softWrap: false,
+                  overflow: TextOverflow.ellipsis,
                   style: TextStyle(
                     fontWeight:
                         value == current ? FontWeight.w700 : FontWeight.w400,
@@ -256,9 +263,11 @@ class NewAreaLanguageMenu extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 110),
+              constraints: BoxConstraints(maxWidth: maxLabelWidth),
               child: Text(
                 current.label,
+                maxLines: 1,
+                softWrap: false,
                 overflow: TextOverflow.ellipsis,
                 style: TextStyle(
                   fontWeight: FontWeight.w500,

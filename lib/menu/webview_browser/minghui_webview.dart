@@ -160,7 +160,11 @@ class _MinghuiWebviewState extends State<MinghuiWebview>
                   (value) => PopupMenuItem<MinghuiEnum>(
                     value: value,
                     height: 44,
-                    child: Text(value.languageName),
+                    child: Text(
+                      value.languageName,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
                   ),
                 )
                 .toList();
@@ -170,11 +174,17 @@ class _MinghuiWebviewState extends State<MinghuiWebview>
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Text(
-                  minghuiEnum.languageName,
-                  style: const TextStyle(
-                    fontWeight: FontWeight.w500,
-                    fontSize: 11,
+                ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 120),
+                  child: Text(
+                    minghuiEnum.languageName,
+                    maxLines: 1,
+                    softWrap: false,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      fontWeight: FontWeight.w500,
+                      fontSize: 11,
+                    ),
                   ),
                 ),
                 const SizedBox(width: 4),

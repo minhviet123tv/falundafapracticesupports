@@ -12,6 +12,7 @@ import 'menu/privacy_policy_page_html.dart';
 import 'menu/intro_list_widget_body.dart';
 import 'menu/introduction_screen.dart';
 import 'menu/huongdantapcoban.dart';
+import 'menu/settings_page.dart';
 import 'menu/webview_browser/falundafa_video_webview.dart';
 import 'menu/webview_browser/minghui_webview.dart';
 import 'menu/webview_browser/visaoconhanloai_webview.dart';
@@ -94,6 +95,8 @@ class _MenuHomeState extends State<MenuHome> {
           ),
           title: Text(
             'Home',
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
             style: AppTextStyles.title(fontSize: 19),
           ),
           centerTitle: true,
@@ -118,6 +121,7 @@ class _MenuHomeState extends State<MenuHome> {
       _ui.humankindMenuTitle,
       _ui.aboutAppMenuTitle,
       _ui.privacyMenuTitle,
+      _ui.settingsMenuTitle,
     ];
 
     final screenWidth = MediaQuery.sizeOf(context).width;
@@ -136,7 +140,7 @@ class _MenuHomeState extends State<MenuHome> {
       final painter = TextPainter(
         text: TextSpan(text: title, style: labelStyle),
         textAlign: TextAlign.center,
-        maxLines: 4,
+        maxLines: 2,
         textDirection: Directionality.of(context),
         textScaler: textScaler,
       )..layout(maxWidth: labelMaxWidth);
@@ -165,9 +169,10 @@ class _MenuHomeState extends State<MenuHome> {
             titles[0],
             labelBarHeight: labelBarHeight,
             imageFit: BoxFit.contain,
-            imageAlignment: const Alignment(0, -0.2),
-            // Thu nhỏ một chút để thấy đủ người trong card.
-            imagePadding: const EdgeInsets.fromLTRB(14, 10, 14, 6),
+            imageAlignment: const Alignment(0, -0.08),
+            // To hơn một chút so với trước (padding hẹp hơn).
+            imagePadding: const EdgeInsets.fromLTRB(4, 4, 4, 2),
+            imageScale: 1.08,
           ),
         ),
         InkWell(
@@ -179,6 +184,10 @@ class _MenuHomeState extends State<MenuHome> {
             'assets/images/menu_item_2.jpg',
             titles[1],
             labelBarHeight: labelBarHeight,
+            // Zoom vào phần giữa để thấy rõ học viên đang tập.
+            imageFit: BoxFit.cover,
+            imageAlignment: Alignment.center,
+            imageScale: 1.45,
           ),
         ),
         // Hàng 2: Falundafa | Minghui
@@ -193,6 +202,10 @@ class _MenuHomeState extends State<MenuHome> {
             'assets/images/menu_item_4.jpg',
             titles[2],
             labelBarHeight: labelBarHeight,
+            // Hoa sen nằm hơi cao trong ảnh — căn để bông hoa vào giữa vùng hiển thị.
+            imageFit: BoxFit.cover,
+            imageAlignment: const Alignment(0, -0.42),
+            imageScale: 1.12,
           ),
         ),
         InkWell(
@@ -228,7 +241,7 @@ class _MenuHomeState extends State<MenuHome> {
             labelBarHeight: labelBarHeight,
           ),
         ),
-        // Hàng 4: Privacy
+        // Hàng 4: Privacy | Cài đặt
         InkWell(
           onTap: () {
             AppNavigator.push(context, const PrivacyPolicyPageHtml())
@@ -240,7 +253,94 @@ class _MenuHomeState extends State<MenuHome> {
             labelBarHeight: labelBarHeight,
           ),
         ),
+        InkWell(
+          onTap: () {
+            AppNavigator.push(context, const SettingsPage())
+                .then((_) => _loadLanguage(silent: true));
+          },
+          child: itemMenuSettings(
+            titles[7],
+            labelBarHeight: labelBarHeight,
+          ),
+        ),
       ],
+    );
+  }
+
+  Widget itemMenuSettings(String text, {required double labelBarHeight}) {
+    return Card(
+      elevation: 8,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(15),
+      ),
+      semanticContainer: true,
+      clipBehavior: Clip.antiAliasWithSaveLayer,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Expanded(
+            child: DecoratedBox(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [
+                    Colors.blue.shade50,
+                    Colors.blue.shade100,
+                    Colors.lightBlue.shade50,
+                  ],
+                ),
+              ),
+              child: Stack(
+                fit: StackFit.expand,
+                children: [
+                  Positioned(
+                    top: -12,
+                    right: -10,
+                    child: Icon(
+                      Icons.settings_outlined,
+                      size: 96,
+                      color: Colors.blue.withValues(alpha: 0.08),
+                    ),
+                  ),
+                  Positioned(
+                    bottom: -8,
+                    left: -16,
+                    child: Icon(
+                      Icons.tune_rounded,
+                      size: 64,
+                      color: Colors.blue.withValues(alpha: 0.07),
+                    ),
+                  ),
+                  Center(
+                    child: Container(
+                      width: 78,
+                      height: 78,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: Colors.white.withValues(alpha: 0.92),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.blue.withValues(alpha: 0.22),
+                            blurRadius: 12,
+                            offset: const Offset(0, 4),
+                          ),
+                        ],
+                      ),
+                      child: Icon(
+                        Icons.settings_rounded,
+                        size: 42,
+                        color: Colors.blue.shade700,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          _menuLabelBar(text, labelBarHeight),
+        ],
+      ),
     );
   }
 
@@ -251,7 +351,11 @@ class _MenuHomeState extends State<MenuHome> {
     AlignmentGeometry imageAlignment = Alignment.center,
     BoxFit imageFit = BoxFit.cover,
     EdgeInsetsGeometry? imagePadding,
+    double imageScale = 1.0,
   }) {
+    final alignment = imageAlignment is Alignment
+        ? imageAlignment
+        : Alignment.center;
     return Card(
       elevation: 8,
       shape: RoundedRectangleBorder(
@@ -259,45 +363,55 @@ class _MenuHomeState extends State<MenuHome> {
       ),
       semanticContainer: true,
       clipBehavior: Clip.antiAliasWithSaveLayer,
-      child: Stack(
-        fit: StackFit.expand,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          ColoredBox(
-            color: Colors.white,
-            child: Padding(
-              padding: imagePadding ?? EdgeInsets.zero,
-              child: Image.asset(
-                imagePath,
-                fit: imageFit,
-                alignment: imageAlignment,
-                width: double.infinity,
-                height: double.infinity,
-              ),
-            ),
-          ),
-          Align(
-            alignment: Alignment.bottomCenter,
-            child: Container(
-              width: double.infinity,
-              height: labelBarHeight,
-              color: Colors.blue.withValues(alpha: 0.85),
-              padding: const EdgeInsets.symmetric(horizontal: 6),
-              alignment: Alignment.center,
-              child: Text(
-                text,
-                style: AppTextStyles.title(
-                  color: Colors.white,
-                  fontSize: 15,
-                  fontWeight: FontWeight.w600,
+          Expanded(
+            child: ColoredBox(
+              color: Colors.white,
+              child: ClipRect(
+                child: Padding(
+                  padding: imagePadding ?? EdgeInsets.zero,
+                  child: Transform.scale(
+                    scale: imageScale,
+                    alignment: alignment,
+                    child: Image.asset(
+                      imagePath,
+                      fit: imageFit,
+                      alignment: imageAlignment,
+                      width: double.infinity,
+                      height: double.infinity,
+                    ),
+                  ),
                 ),
-                textAlign: TextAlign.center,
-                maxLines: 4,
-                softWrap: true,
-                overflow: TextOverflow.visible,
               ),
             ),
           ),
+          _menuLabelBar(text, labelBarHeight),
         ],
+      ),
+    );
+  }
+
+  /// Thanh tiêu đề xanh — vùng riêng, không chồng lên ảnh/icon phía trên.
+  Widget _menuLabelBar(String text, double labelBarHeight) {
+    return Container(
+      width: double.infinity,
+      height: labelBarHeight,
+      color: Colors.blue.withValues(alpha: 0.85),
+      padding: const EdgeInsets.symmetric(horizontal: 6),
+      alignment: Alignment.center,
+      child: Text(
+        text,
+        style: AppTextStyles.title(
+          color: Colors.white,
+          fontSize: 15,
+          fontWeight: FontWeight.w600,
+        ),
+        textAlign: TextAlign.center,
+        maxLines: 2,
+        softWrap: true,
+        overflow: TextOverflow.ellipsis,
       ),
     );
   }

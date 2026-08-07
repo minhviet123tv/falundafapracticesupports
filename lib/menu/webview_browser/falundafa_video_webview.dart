@@ -312,7 +312,11 @@ class _FalundafaVideoWebviewState extends State<FalundafaVideoWebview>
                   (value) => PopupMenuItem<LanguageAllPageFalundafa>(
                     value: value,
                     height: 44,
-                    child: Text(value.languageName),
+                    child: Text(
+                      value.languageName,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
                   ),
                 )
                 .toList();
@@ -327,6 +331,7 @@ class _FalundafaVideoWebviewState extends State<FalundafaVideoWebview>
                   child: Text(
                     _language.languageName,
                     maxLines: 1,
+                    softWrap: false,
                     overflow: TextOverflow.ellipsis,
                     style: const TextStyle(
                       fontWeight: FontWeight.w500,

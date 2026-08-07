@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import 'package:falun_dafa_practice_supports/common/app_font_size_settings.dart';
+
 /// Font đứng đóng gói (Roboto Variable) — cùng hướng với CEO Calendar,
 /// chữ Latin/Vietnamese đồng nhất giữa iOS và Android, không tải mạng.
 class AppTextStyles {
@@ -57,16 +59,15 @@ class AppTextStyles {
   }
 }
 
-/// Bọc [child] với [TextScaler] theo kích thước thiết bị.
-/// Nhân thêm với hệ số chữ hệ thống (accessibility) nếu người dùng đã chỉnh.
+/// Bọc [child] với [TextScaler]: hệ thống × mức « Kích thước chữ » đã chọn
+/// (lần đầu cài tự chọn nấc gần hệ số theo kích thước máy).
 Widget wrapWithDeviceTextScale(BuildContext context, Widget? child) {
-  final shortest = MediaQuery.sizeOf(context).shortestSide;
-  final device = AppTextStyles.deviceTextScaleFactor(shortest);
   final mq = MediaQuery.of(context);
   final system = mq.textScaler.scale(1.0);
+  final appFactor = AppFontSizeSettings.instance.scaleFactor;
   return MediaQuery(
     data: mq.copyWith(
-      textScaler: TextScaler.linear(system * device),
+      textScaler: TextScaler.linear(system * appFactor),
     ),
     child: child ?? const SizedBox.shrink(),
   );

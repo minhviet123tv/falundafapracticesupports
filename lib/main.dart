@@ -12,6 +12,7 @@ import 'menu/chuyen_phap_luan_webview.dart';
 import 'menu/webview_browser/falundafa_video_webview.dart';
 import 'menu_huongdan_page.dart';
 import 'common/app_language_sync.dart';
+import 'common/app_font_size_settings.dart';
 import 'common/app_text_theme.dart';
 import 'common/memory_config.dart';
 import 'common/memory_monitor.dart';
@@ -31,7 +32,8 @@ void main() async {
   // Khởi tạo cấu hình bộ nhớ
   await MemoryConfig.initialize();
   await AppLanguageSync.bootstrapFromDeviceIfNeeded();
-  
+  await AppFontSizeSettings.instance.hydrate();
+
   runApp(RunAppFalunDafaExercise());
 }
 
@@ -42,34 +44,45 @@ class RunAppFalunDafaExercise extends StatefulWidget {
 }
 
 //*II.2 Run App State: Đếm số lần login để chọn widget khi mới vào app
-class _RunAppFalunDafaExerciseState extends State<RunAppFalunDafaExercise> 
+class _RunAppFalunDafaExerciseState extends State<RunAppFalunDafaExercise>
     with AutomaticKeepAliveClientMixin {
-
   //A. Dữ liệu - Tối ưu hóa bộ nhớ
   int? countLoginNumber = 10; // Đếm số lần login lưu, load trong shared (đặt sẵn số load trang home, tránh hiện intro nhiều lần về sau khi chưa load kịp)
   static const String countKeyName = "countLogin";
-  
+
   // Cache SharedPreferences để tránh load lại nhiều lần
   SharedPreferences? _sharedPreferences;
-  
+
+  late final VoidCallback _fontSizeListener;
+
   @override
   bool get wantKeepAlive => true; // Giữ state để tối ưu hóa bộ nhớ
-
 
   //B. Khởi tạo
   @override
   void initState() {
     super.initState();
     super.build(context); // Cần thiết cho AutomaticKeepAliveClientMixin
-    
+
+    _fontSizeListener = () {
+      if (mounted) setState(() {});
+    };
+    AppFontSizeSettings.instance.addListener(_fontSizeListener);
+
     // Khởi tạo SharedPreferences cache
     _initializeSharedPreferences();
-    
+
     // Tránh tranh chấp main thread lúc khởi động (WebView / Play Core).
     WidgetsBinding.instance.addPostFrameCallback((_) {
       unawaited(_checkForUpdateAll());
     });
     _countLogin(); //Đếm số lần login
+  }
+
+  @override
+  void dispose() {
+    AppFontSizeSettings.instance.removeListener(_fontSizeListener);
+    super.dispose();
   }
   
   // Khởi tạo SharedPreferences cache để tối ưu hóa bộ nhớ

@@ -489,7 +489,11 @@ class _AllBooksWebviewState extends State<AllBooksWebview>
                   (value) => PopupMenuItem<LanguageAllPageFalundafa>(
                     value: value,
                     height: 44,
-                    child: Text(value.languageName),
+                    child: Text(
+                      value.languageName,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
                   ),
                 )
                 .toList();
@@ -499,9 +503,18 @@ class _AllBooksWebviewState extends State<AllBooksWebview>
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Text(
-                  languageAllPageFalundafa.languageName,
-                  style: const TextStyle(fontWeight: FontWeight.w500, fontSize: 11),
+                ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 120),
+                  child: Text(
+                    languageAllPageFalundafa.languageName,
+                    maxLines: 1,
+                    softWrap: false,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      fontWeight: FontWeight.w500,
+                      fontSize: 11,
+                    ),
+                  ),
                 ),
                 const SizedBox(width: 4),
                 const Icon(Icons.arrow_drop_down, size: 18),

@@ -62,6 +62,8 @@ class _HuongDanTapCoBanPageState extends State<HuongDanTapCoBanPage> {
         appBar: AppBar(
           title: Text(
             _ui.basicPracticeGuide,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
             style: AppTextStyles.title(color: Colors.black87, fontSize: 19),
           ),
           backgroundColor: Colors.white,
@@ -129,7 +131,7 @@ class _HuongDanTapCoBanPageState extends State<HuongDanTapCoBanPage> {
       final painter = TextPainter(
         text: TextSpan(text: title, style: labelStyle),
         textAlign: TextAlign.center,
-        maxLines: 4,
+        maxLines: 2,
         textDirection: Directionality.of(context),
         textScaler: textScaler,
       )..layout(maxWidth: labelMaxWidth);
@@ -275,8 +277,9 @@ class _HuongDanTapCoBanPageState extends State<HuongDanTapCoBanPage> {
                 fontWeight: FontWeight.w600,
               ),
               textAlign: TextAlign.center,
-              maxLines: 4,
+              maxLines: 2,
               softWrap: true,
+              overflow: TextOverflow.ellipsis,
             ),
           ),
         ],
