@@ -29,7 +29,8 @@ class BookPlacementDialogStrings {
         NewAreaLang.thai => 'ข้อควรระวังเมื่ออ่าน',
         NewAreaLang.turkce => 'Okurken dikkat edilecekler',
         NewAreaLang.ukrainian => 'Поради під час читання',
-      };
+        _ => 'Notes when reading',
+};
 
   String get goodPlacement => switch (lang) {
         NewAreaLang.english =>
@@ -72,7 +73,8 @@ class BookPlacementDialogStrings {
           'Telefonu bir standa koyun ve yüksekte tutun',
         NewAreaLang.ukrainian =>
           'Поставте телефон на підставку й тримайте вище',
-      };
+        _ => 'Place the phone on a stand and keep it elevated',
+};
 
   String get badPlacement => switch (lang) {
         NewAreaLang.english =>
@@ -114,7 +116,8 @@ class BookPlacementDialogStrings {
           'Okurken telefonu alçak bir yere koymayın',
         NewAreaLang.ukrainian =>
           'Не кладіть телефон низько під час читання',
-      };
+        _ => 'Do not place the phone low when reading',
+};
 
   String get neverShowAgain => switch (lang) {
         NewAreaLang.english => "Don't show again",
@@ -140,7 +143,8 @@ class BookPlacementDialogStrings {
         NewAreaLang.thai => 'ไม่ต้องแสดงอีก',
         NewAreaLang.turkce => 'Bir daha gösterme',
         NewAreaLang.ukrainian => 'Більше не показувати',
-      };
+        _ => "Don't show again",
+};
 
   String get skip => switch (lang) {
         NewAreaLang.english => 'Skip',
@@ -166,7 +170,8 @@ class BookPlacementDialogStrings {
         NewAreaLang.thai => 'ข้าม',
         NewAreaLang.turkce => 'Atla',
         NewAreaLang.ukrainian => 'Пропустити',
-      };
+        _ => 'Skip',
+};
 
   String get understood => switch (lang) {
         NewAreaLang.english => 'Got it',
@@ -192,5 +197,6 @@ class BookPlacementDialogStrings {
         NewAreaLang.thai => 'เข้าใจแล้ว',
         NewAreaLang.turkce => 'Anladım',
         NewAreaLang.ukrainian => 'Зрозуміло',
-      };
+        _ => 'Got it',
+};
 }

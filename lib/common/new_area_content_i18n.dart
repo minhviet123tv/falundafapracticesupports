@@ -23,6 +23,8 @@ This app was created by a Falun Gong practitioner to help other practitioners ac
 
 The app also includes a basic practice guide to help new practitioners get started, and a download button so audio can be used when there is no internet.
 
+Note: When you select a language, some languages available in the app may not yet have original materials translated, so English materials will be used by default instead.
+
 To learn more fully about Falun Gong (Falun Dafa), please visit:
 ''',
     NewAreaLang.vietnamese => '''Hiện nay có rất nhiều người đã biết đến sự tốt đẹp của Pháp Luân Công (Pháp Luân Đại Pháp) và bắt đầu tu luyện.
@@ -32,6 +34,8 @@ To learn more fully about Falun Gong (Falun Dafa), please visit:
 Ứng dụng này được tạo ra bởi học viên Pháp Luân Công nhằm hỗ trợ các học viên khác truy cập dữ liệu học tập trực tuyến trên trang chủ www.falundafa.org
 
 Ngoài ra ứng dụng còn có phần hướng dẫn tập cơ bản nhằm giúp học viên mới tiếp cận môn học, có nút hỗ trợ tải audio về máy để sử dụng khi không dùng internet.
+
+Lưu ý: Khi chọn ngôn ngữ có thể sẽ có ngôn ngữ sử dụng app nhưng chưa có tài liệu gốc được phiên dịch nên sẽ mặc định được sử dụng tài liệu tiếng Anh để thay thế
 
 Để tìm hiểu đầy đủ về Pháp Luân Công (Pháp Luân Đại Pháp) vui lòng truy cập:
 ''',
@@ -43,6 +47,8 @@ Ngoài ra ứng dụng còn có phần hướng dẫn tập cơ bản nhằm gi�
 
 此外還有基本煉功指南，幫助新學員入門，並有下載按鈕以便在無網路時使用音訊。
 
+注意：選擇語言時，應用中可能有部分語言尚無原文譯本，因此將預設以英文資料替代。
+
 若要更完整了解法輪功（法輪大法），請造訪：
 ''',
     NewAreaLang.chinese2 => '''如今许多人已了解法轮功（法轮大法）的美好并开始修炼。
@@ -52,6 +58,8 @@ Ngoài ra ứng dụng còn có phần hướng dẫn tập cơ bản nhằm gi�
 本应用由法轮功学员制作，旨在协助其他学员访问官网 www.falundafa.org 上的在线学习资料。
 
 此外还有基本炼功指南，帮助新学员入门，并有下载按钮以便在无网络时使用音频。
+
+注意：选择语言时，应用中可能有部分语言尚无原文译本，因此将默认以英文资料替代。
 
 若要更完整了解法轮功（法轮大法），请访问：
 ''',
@@ -63,6 +71,8 @@ Ovu aplikaciju je napravio vježbač Falun Gonga kako bi pomogao drugim vježba�
 
 Aplikacija također uključuje osnovni vodič za vježbu za početnike i dugme za preuzimanje kako bi se audio koristio bez interneta.
 
+Napomena: Prilikom odabira jezika može se dogoditi da jezik koji aplikacija podržava još nema prevedene izvorne materijale, pa će se umjesto toga podrazumijevano koristiti materijali na engleskom.
+
 Za potpunije učenje o Falun Gongu (Falun Dafi) posjetite:
 ''',
     NewAreaLang.deutsch => '''Heute haben viele Menschen das Gute des Falun Gong (Falun Dafa) kennengelernt und begonnen zu üben.
@@ -72,6 +82,8 @@ Um die 9 Vorträge zu hören oder die Bücher zu lesen — das Hauptbuch ist „
 Diese App wurde von einem Falun-Gong-Übenden erstellt, um anderen Übenden den Zugang zu Online-Studienmaterialien auf der offiziellen Website www.falundafa.org zu erleichtern.
 
 Die App enthält auch einen grundlegenden Übungsleitfaden für neue Übende sowie eine Download-Taste, damit Audio ohne Internet genutzt werden kann.
+
+Hinweis: Bei der Sprachauswahl kann es vorkommen, dass eine in der App verfügbare Sprache noch keine übersetzten Originalmaterialien hat; in diesem Fall werden standardmäßig englische Materialien verwendet.
 
 Um mehr über Falun Gong (Falun Dafa) zu erfahren, besuchen Sie bitte:
 ''',
@@ -83,6 +95,8 @@ Esta aplicación fue creada por un practicante de Falun Gong para ayudar a otros
 
 La aplicación también incluye una guía de práctica básica para principiantes y un botón de descarga para usar el audio sin Internet.
 
+Nota: Al elegir un idioma, es posible que algunos idiomas disponibles en la aplicación aún no tengan materiales originales traducidos, por lo que se usarán por defecto materiales en inglés.
+
 Para conocer más plenamente Falun Gong (Falun Dafa), visite:
 ''',
     NewAreaLang.farsi => '''امروزه بسیاری از مردم از خوبی فالون گونگ (فالون دافا) آگاه شده‌اند و تمرین را آغاز کرده‌اند.
@@ -92,6 +106,8 @@ Para conocer más plenamente Falun Gong (Falun Dafa), visite:
 این برنامه توسط یک تمرین‌کننده فالون گونگ ساخته شده تا به دیگر تمرین‌کنندگان در دسترسی به مطالب آموزشی آنلاین در وب‌سایت رسمی www.falundafa.org کمک کند.
 
 برنامه همچنین شامل راهنمای تمرین پایه برای مبتدیان و دکمه دانلود است تا بتوان از صدا بدون اینترنت استفاده کرد.
+
+توجه: هنگام انتخاب زبان، ممکن است زبانی در برنامه موجود باشد که هنوز مطالب اصلی آن ترجمه نشده است؛ در این صورت به‌طور پیش‌فرض از مطالب انگلیسی استفاده می‌شود.
 
 برای آشنایی کامل‌تر با فالون گونگ (فالون دافا) لطفاً مراجعه کنید به:
 ''',
@@ -103,6 +119,8 @@ Cette application a été créée par un pratiquant de Falun Gong pour aider d'a
 
 L'application comprend également un guide de pratique de base pour aider les nouveaux pratiquants, et un bouton de téléchargement afin d'utiliser l'audio sans Internet.
 
+Remarque : Lors du choix d'une langue, il se peut qu'une langue disponible dans l'application n'ait pas encore de documents originaux traduits ; les documents en anglais seront alors utilisés par défaut.
+
 Pour en savoir plus sur le Falun Gong (Falun Dafa), veuillez consulter :
 ''',
     NewAreaLang.hebrew => '''כיום אנשים רבים למדו על הטוב שבפאלון גונג (פאלון דאפא) והחלו לתרגל.
@@ -112,6 +130,8 @@ Pour en savoir plus sur le Falun Gong (Falun Dafa), veuillez consulter :
 אפליקציה זו נוצרה על ידי מתרגל פאלון גונג כדי לעזור למתרגלים אחרים לגשת לחומרי לימוד מקוונים באתר הרשמי www.falundafa.org
 
 האפליקציה כוללת גם מדריך תרגול בסיסי למתחילים וכפתור הורדה כדי להשתמש באודיו ללא אינטרנט.
+
+הערה: בעת בחירת שפה, ייתכן שיש שפה הזמינה באפליקציה שעדיין אין לה חומרי מקור מתורגמים, ולכן ייעשה שימוש בחומרים באנגלית כברירת מחדל.
 
 כדי ללמוד יותר על פאלון גונג (פאלון דאפא), אנא בקרו ב:
 ''',
@@ -123,6 +143,8 @@ Ovu aplikaciju je napravio vježbač Falun Gonga kako bi pomogao drugim vježba�
 
 Aplikacija također uključuje osnovni vodič za vježbu za početnike i dugme za preuzimanje kako bi se audio koristio bez interneta.
 
+Napomena: Prilikom odabira jezika može se dogoditi da jezik koji aplikacija podržava još nema prevedene izvorne materijale, pa će se umjesto toga podrazumijevano koristiti materijali na engleskom.
+
 Za potpunije učenje o Falun Gongu (Falun Dafi) posjetite:
 ''',
     NewAreaLang.indonesia => '''Saat ini banyak orang telah mengenal kebaikan Falun Gong (Falun Dafa) dan mulai berlatih.
@@ -132,6 +154,8 @@ Untuk mendengarkan 9 kuliah atau membaca buku — buku utamanya adalah « Zhuan 
 Aplikasi ini dibuat oleh seorang praktisi Falun Gong untuk membantu praktisi lain mengakses materi belajar daring di situs resmi www.falundafa.org
 
 Aplikasi ini juga memiliki panduan latihan dasar untuk membantu praktisi baru, serta tombol unduh agar audio dapat digunakan tanpa internet.
+
+Catatan: Saat memilih bahasa, mungkin ada bahasa yang didukung aplikasi tetapi belum memiliki materi asli yang diterjemahkan, sehingga secara bawaan akan digunakan materi bahasa Inggris sebagai pengganti.
 
 Untuk mempelajari Falun Gong (Falun Dafa) lebih lengkap, silakan kunjungi:
 ''',
@@ -143,6 +167,8 @@ Questa app è stata creata da un praticante di Falun Gong per aiutare altri prat
 
 L'app include anche una guida alla pratica di base per i nuovi praticanti e un pulsante di download per usare l'audio senza Internet.
 
+Nota: Quando si sceglie una lingua, può capitare che una lingua disponibile nell'app non abbia ancora materiali originali tradotti; in tal caso verranno usati per impostazione predefinita i materiali in inglese.
+
 Per approfondire il Falun Gong (Falun Dafa), visitate:
 ''',
     NewAreaLang.japan => '''現在、多くの人が法輪功（法輪大法）の素晴らしさを知り、修煉を始めています。
@@ -152,6 +178,8 @@ Per approfondire il Falun Gong (Falun Dafa), visitate:
 このアプリは法輪功の学習者によって作成され、他の学習者が公式サイト www.falundafa.org のオンライン学習資料にアクセスできるよう支援します。
 
 また、新しい学習者が始めやすいよう基本功法ガイドがあり、インターネットがないときでも使えるよう音声をダウンロードするボタンもあります。
+
+注意：言語を選択する際、アプリで使える言語でも原文の翻訳資料がまだない場合があり、そのときは英語の資料が既定で代用されます。
 
 法輪功（法輪大法）についてさらに詳しく知るには、次をご覧ください：
 ''',
@@ -163,6 +191,8 @@ Per approfondire il Falun Gong (Falun Dafa), visitate:
 
 또한 새 수련생을 위한 기본 연공 안내와 인터넷 없이도 음성을 쓸 수 있도록 다운로드 버튼이 있습니다.
 
+참고: 언어를 선택할 때 앱에서 지원하는 언어라도 원문 번역 자료가 아직 없을 수 있으며, 그런 경우 기본적으로 영어 자료를 대신 사용합니다.
+
 파룬궁(파룬따파)에 대해 더 자세히 알아보려면 다음을 방문하세요:
 ''',
     NewAreaLang.polski => '''Obecnie wiele osób poznało dobroć Falun Gong (Falun Dafa) i rozpoczęło praktykę.
@@ -172,6 +202,8 @@ Aby słuchać 9 wykładów lub czytać książki — główną książką jest �
 Ta aplikacja została stworzona przez praktykującego Falun Gong, aby pomóc innym praktykującym uzyskać dostęp do materiałów do nauki online na oficjalnej stronie www.falundafa.org
 
 Aplikacja zawiera także podstawowy przewodnik ćwiczeń dla początkujących oraz przycisk pobierania, aby używać audio bez internetu.
+
+Uwaga: Przy wyborze języka może się zdarzyć, że język dostępny w aplikacji nie ma jeszcze przetłumaczonych materiałów źródłowych — wtedy domyślnie używane będą materiały angielskie.
 
 Aby dowiedzieć się więcej o Falun Gong (Falun Dafa), odwiedź:
 ''',
@@ -183,6 +215,8 @@ Este aplicativo foi criado por um praticante de Falun Gong para ajudar outros pr
 
 O aplicativo também inclui um guia de prática básica para novos praticantes e um botão de download para usar o áudio sem Internet.
 
+Nota: Ao escolher um idioma, pode haver idiomas disponíveis no aplicativo sem materiais originais traduzidos; nesse caso, serão usados por padrão materiais em inglês.
+
 Para saber mais sobre o Falun Gong (Falun Dafa), visite:
 ''',
     NewAreaLang.russian => '''Сегодня многие люди узнали о благости Фалуньгун (Фалунь Дафа) и начали заниматься.
@@ -192,6 +226,8 @@ Para saber mais sobre o Falun Gong (Falun Dafa), visite:
 Это приложение создано практикующим Фалуньгун, чтобы помочь другим практикующим получать учебные материалы на официальном сайте www.falundafa.org
 
 В приложении также есть базовое руководство по упражнениям для начинающих и кнопка загрузки, чтобы использовать аудио без интернета.
+
+Примечание: При выборе языка может оказаться, что для доступного в приложении языка ещё нет переведённых исходных материалов — тогда по умолчанию будут использоваться материалы на английском.
 
 Чтобы подробнее узнать о Фалуньгун (Фалунь Дафа), посетите:
 ''',
@@ -203,6 +239,8 @@ Túto aplikáciu vytvoril cvičiaci Falun Gongu, aby pomohol iným cvičiacim z�
 
 Aplikácia obsahuje aj základného sprievodcu cvičením pre začiatočníkov a tlačidlo na stiahnutie, aby bolo možné používať audio bez internetu.
 
+Poznámka: Pri výbere jazyka sa môže stať, že jazyk dostupný v aplikácii ešte nemá preložené pôvodné materiály, preto sa predvolene použijú materiály v angličtine.
+
 Ak sa chcete dozvedieť viac o Falun Gongu (Falun Dafa), navštívte:
 ''',
     NewAreaLang.srpski => '''Данас многи људи сазнали су за доброту Фалун Гонга (Фалун Дафе) и почели да вежбају.
@@ -212,6 +250,8 @@ Ak sa chcete dozvedieť viac o Falun Gongu (Falun Dafa), navštívte:
 Ову апликацију је направио вежбач Фалун Гонга како би помогао другим вежбачима да приступе онлајн материјалима на званичном сајту www.falundafa.org
 
 Апликација такође укључује основни водич за вежбу за почетнике и дугме за преузимање како би се аудио користио без интернета.
+
+Напомена: Приликом избора језика може се догодити да језик који апликација подржава још нема преведене изворне материјале, па ће се уместо тога подразумевано користити материјали на енглеском.
 
 За потпуније учење о Фалун Гонгу (Фалун Дафи) посетите:
 ''',
@@ -223,6 +263,8 @@ Ak sa chcete dozvedieť viac o Falun Gongu (Falun Dafa), navštívte:
 
 แอปยังมีคู่มือการฝึกพื้นฐานสำหรับผู้เริ่มต้น และปุ่มดาวน์โหลดเพื่อใช้ไฟล์เสียงเมื่อไม่มีอินเทอร์เน็ต
 
+หมายเหตุ: เมื่อเลือกภาษา อาจมีภาษาที่แอปรองรับแต่ยังไม่มีเอกสารต้นฉบับที่แปลไว้ จึงจะใช้เอกสารภาษาอังกฤษแทนโดยค่าเริ่มต้น
+
 หากต้องการเรียนรู้เกี่ยวกับฝ่าหลุนกง (ฝ่าหลุนต้าฝ่า) อย่างครบถ้วน กรุณาเยี่ยมชม:
 ''',
     NewAreaLang.turkce => '''Günümüzde birçok kişi Falun Gong'un (Falun Dafa) iyiliğini öğrenmiş ve uygulamaya başlamıştır.
@@ -232,6 +274,8 @@ Ak sa chcete dozvedieť viac o Falun Gongu (Falun Dafa), navštívte:
 Bu uygulama, diğer uygulayıcıların resmi site www.falundafa.org üzerindeki çevrimiçi çalışma materyallerine erişmesine yardımcı olmak için bir Falun Gong uygulayıcısı tarafından oluşturulmuştur.
 
 Uygulama ayrıca yeni başlayanlar için temel bir uygulama rehberi ve internet yokken ses kullanmak için bir indirme düğmesi içerir.
+
+Not: Dil seçerken, uygulamada kullanılabilen ancak henüz çevrilmiş özgün belgesi olmayan diller olabilir; bu durumda varsayılan olarak İngilizce belgeler kullanılır.
 
 Falun Gong (Falun Dafa) hakkında daha fazla bilgi için lütfen ziyaret edin:
 ''',
@@ -243,21 +287,38 @@ Falun Gong (Falun Dafa) hakkında daha fazla bilgi için lütfen ziyaret edin:
 
 У додатку також є базовий посібник з вправ для новачків і кнопка завантаження, щоб користуватися аудіо без інтернету.
 
+Примітка: Під час вибору мови може виявитися, що мова, доступна в додатку, ще не має перекладених оригінальних матеріалів — тоді за замовчуванням використовуватимуться матеріали англійською.
+
 Щоб докладніше дізнатися про Фалуньгун (Фалунь Дафа), відвідайте:
 ''',
-  };
+    _ => '''Nowadays many people have learned about the goodness of Falun Gong (Falun Dafa) and have begun to practice.
+
+To listen to the 9 lectures or read the books—the main book being "Zhuan Falun" (with the same content as the 9 lectures)—practitioners can visit www.falundafa.org, print the books, or download audio files for use.
+
+This app was created by a Falun Gong practitioner to help other practitioners access online study materials on the official website www.falundafa.org
+
+The app also includes a basic practice guide to help new practitioners get started, and a download button so audio can be used when there is no internet.
+
+Note: When you select a language, some languages available in the app may not yet have original materials translated, so English materials will be used by default instead.
+
+To learn more fully about Falun Gong (Falun Dafa), please visit:
+''',
+};
 
   /// False only for Vietnamese (source language for About / Practice Guide).
+  /// False for Vietnamese (source) and for langs that fall back to English UI.
   static bool aboutPage1IsTranslated(NewAreaLang lang) =>
-      lang != NewAreaLang.vietnamese;
+      lang != NewAreaLang.vietnamese &&
+      (lang == NewAreaLang.english || lang.hasDedicatedTranslation);
 
   /// False only for Vietnamese (source language for Practice Guide).
   static bool practiceIsTranslated(NewAreaLang lang) =>
-      lang != NewAreaLang.vietnamese;
+      lang != NewAreaLang.vietnamese &&
+      (lang == NewAreaLang.english || lang.hasDedicatedTranslation);
 
-  /// False only for English (source language for Privacy).
+  /// False for English (source) and langs falling back to English privacy HTML.
   static bool privacyIsTranslated(NewAreaLang lang) =>
-      lang != NewAreaLang.english;
+      lang != NewAreaLang.english && lang.hasDedicatedTranslation;
 
   /// Convenience: footer string when content is translated; empty otherwise.
   static String aboutGoogleFooter(NewAreaLang lang) =>
@@ -553,7 +614,19 @@ Kitap veya yazı okurken bunları masa veya stand gibi temiz, yüksek yerlere ko
 
 Читаючи книги чи писання, кладіть їх у чисті, піднесені місця — на стіл чи підставку. Не кладіть низько на підлогу чи в місця, що трясуться. Можна сидіти за столом під час читання.
 ''',
-  };
+    _ => '''"Cultivation practice" consists of two words: "tu" means to correct or amend. "Lian" means to temper (tempering one's xinxing / character, and tempering the body...). In short, "cultivation practice" means correcting oneself according to a method and maintaining what has been corrected and tempered.
+
+Falun Gong is a Buddha-school cultivation practice that allows people to cultivate in ordinary society—at home, at work, at school, and so on. It emphasizes correcting unhealthy mindsets such as jealousy, the desire to show off, the competitive mentality, and more.
+
+Practicing the 5 exercises helps practitioners become healthier through positive changes in the body.
+To cultivate xinxing, practitioners need to study the Fa by listening to Master's 9 lectures or by reading the books—the main book being Zhuan Falun (with the same content as the 9 lectures).
+On the official website www.falundafa.org there are also other books and scriptures, such as The Great Consummation Way, which explains the principles of the movements; other supporting books such as Essentials for Further Advancement; and Master's lectures in various places (with answers to many practitioners' questions)...
+
+Practitioners can also visit minghui.org for the latest news and important articles of the practice, such as the Three Things Dafa disciples should do, the article "How Humankind Came to Be", and more.
+
+When reading books or scriptures, practitioners should place them in clean, elevated places such as on a desk or a stand. Do not place them low on the floor or in places that shake. Practitioners may also sit at a desk while reading.
+''',
+};
 
   static String overviewBody2(NewAreaLang lang) => switch (lang) {
     NewAreaLang.english => '''During study, practitioners can connect with one another to share experiences and gain broader perspectives. Cultivation is a long process, so beginners should be patient and do well in their study.''',
@@ -579,7 +652,8 @@ Kitap veya yazı okurken bunları masa veya stand gibi temiz, yüksek yerlere ko
     NewAreaLang.thai => '''ระหว่างการเรียน ผู้ฝึกสามารถเชื่อมต่อกันเพื่อแบ่งปันประสบการณ์และขยายมุมมอง การบำเพ็ญเป็นกระบวนการยาว ดังนั้นผู้เริ่มต้นควรอดทนและเรียนให้ดี''',
     NewAreaLang.turkce => '''Çalışma sırasında uygulayıcılar birbirine bağlanıp deneyim paylaşabilir ve bakış açılarını genişletebilir. Yetiştirme uzun bir süreçtir; bu yüzden yeni başlayanlar sabırlı olmalı ve çalışmalarını iyi yapmalıdır.''',
     NewAreaLang.ukrainian => '''Під час навчання практикувальники можуть спілкуватися, ділитися досвідом і розширювати погляд. Вдосконалення — довгий процес, тож початківцям варто бути терплячими й добре вчитися.''',
-  };
+    _ => '''During study, practitioners can connect with one another to share experiences and gain broader perspectives. Cultivation is a long process, so beginners should be patient and do well in their study.''',
+};
 
   static String exerciseIntro(NewAreaLang lang) => switch (lang) {
     NewAreaLang.english => '''When just starting, practitioners can simply follow the movements of practitioners who already know the exercises, or follow demo videos.
@@ -628,7 +702,9 @@ Kitap veya yazı okurken bunları masa veya stand gibi temiz, yüksek yerlere ko
 ''',
     NewAreaLang.ukrainian => '''На початку практикувальники можуть просто повторювати рухи тих, хто вже знає вправи, або дивитися демонстраційні відео.
 ''',
-  };
+    _ => '''When just starting, practitioners can simply follow the movements of practitioners who already know the exercises, or follow demo videos.
+''',
+};
 
   static String exerciseBody(NewAreaLang lang) => switch (lang) {
     NewAreaLang.english => '''
@@ -1160,7 +1236,30 @@ Aşağıda bu uygulamanın yeni başlayanlar için rehberi vardır.
  - Вправа 3: Звертати увагу на напрямок долонь.
  - Вправа 4: Руки не торкаються тіла.
  - Вправа 5: Виконувати стільки, скільки можете.''',
-  };
+    _ => '''
+After becoming reasonably familiar over about 1–2 months, practitioners should refine the movements by reading The Great Consummation Way to understand the principles of each movement, or by watching the exercise instruction videos on falundafa.org. They may also ask experienced practitioners for help adjusting the form.
+
+Below is guidance in this app for beginners.
+
+○ When watching and following a demo practitioner:
+- Exercises 1, 3, 5: Male movements mirror female; female movements mirror male.
+- Exercise 2: Male and female movements are the same.
+- Exercise 4: Male/female follow either the male or female demo
+
+○ Preparation posture for all 5 exercises:
+- Feet shoulder-width apart for standing exercises. Knees slightly bent, not locked straight.
+- Tongue against the upper palate; teeth slightly apart; lips closed.
+- Keep the head upright, facing forward, with a calm mind.
+- Close the eyes when practicing (once the movements and rhythm are familiar).
+- For "Holding the Wheel in Front of the Lower Abdomen" (both hands in front of the abdomen): leave about one hand's thickness between the hands, and the same distance from the abdomen (do not touch the abdomen).
+
+○ Notes for each exercise:
+ - Exercise 1: Stretch into the movement, then tense, then suddenly relax.
+ - Exercise 2: Hold each movement for as long as you can.
+ - Exercise 3: Pay attention to the direction of the palms.
+ - Exercise 4: Hands do not touch the body.
+ - Exercise 5: Practice for as long as you can.''',
+};
 
   static String privacyHtml(NewAreaLang lang) => switch (lang) {
     NewAreaLang.english => '''<!DOCTYPE html>
@@ -2290,5 +2389,54 @@ Aşağıda bu uygulamanın yeni başlayanlar için rehberi vardır.
 <p><em>Перекладено Google Перекладачем</em></p>
 </body>
 </html>''',
-  };
+    _ => '''<!DOCTYPE html>
+<html>
+<head>
+  <meta charset='utf-8'>
+  <meta name='viewport' content='width=device-width'>
+  <style> body { font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; padding:1em; } </style>
+</head>
+<body>
+<strong>Privacy Policy Falun Dafa Practice Supports</strong> <p>
+  Falun Dafa Practice Supports built the app as (free / ad-supported / buy in the application) app. This SERVICE is provided by Falun Dafa Practice Supports and is intended for use as is.
+</p> <p>
+  This page is used to inform visitors regarding our policies with the collection, use, and disclosure of Personal Information if anyone decided to use our Service.
+</p> <p>
+  If you choose to use our Service, then you agree to the collection and use of information in relation to this policy.
+  </p>
+ <p><strong>Information Collection and Use</strong></p> <p>
+    We do not collect personal data (full name, address, contact information, email, phone number, image, ... Personal documents any other)
+  <p>
+  The information that we request will be retained on your device and is not collected by us in any way.</p>
+  <p>Applications can collect data used such as: Login time, usage status ...</p>
+</p> <div><p>
+    The app does use third-party services that may collect information used to identify you.
+  </p> <p>
+    Link to the privacy policy of third-party service providers used by the app
+  </p> <ul><li><a href="https://www.google.com/policies/privacy/" target="_blank" rel="noopener noreferrer">Google Play Services</a></li><li><a href="https://support.google.com/admob/answer/6128543?hl=en" target="_blank" rel="noopener noreferrer">AdMob</a></li><li><a href="https://firebase.google.com/support/privacy" target="_blank" rel="noopener noreferrer">Google Analytics for Firebase</a></li><li><a href="https://firebase.google.com/support/privacy/" target="_blank" rel="noopener noreferrer">Firebase Crashlytics</a></li></ul></div> <p><strong>Log Data</strong></p> <p>
+  We want to inform you that whenever you use our Service, in a case of an error in the app We collect data and information (through third-party products) on your phone called Log Data. This Log Data may include information such as your device Internet Protocol (“IP”) address, device name, operating system version, the configuration of the app when utilizing our Service, the time and date of your use of the Service, and other statistics.
+</p>
+
+<p><strong>Service Providers</strong></p> <p>
+  We may employ third-party companies and individuals due to the following reasons:
+</p> <ul><li>To facilitate our Service;</li> <li>To provide the Service on our behalf;</li> <li>To perform Service-related services; or</li> <li>To assist us in analyzing how our Service is used.</li></ul> <p>
+  We want to inform users of this Service that these third parties have access to their Personal Information. The reason is to perform the tasks assigned to them on our behalf. However, they are obligated not to disclose or use the information for any other purpose.
+</p> <p><strong>Security</strong></p> <p>
+  We value your trust in providing us your Personal Information, thus we are striving to use commercially acceptable means of protecting it. But remember that no method of transmission over the internet, or method of electronic storage is 100% secure and reliable, and We cannot guarantee its absolute security.
+</p> <p><strong>Links to Other Sites</strong></p> <p>
+  This Service may contain links to other sites. If you click on a third-party link, you will be directed to that site. Note that these external sites are not operated by us. Therefore, We strongly advise you to review the Privacy Policy of these websites. We have no control over and assume no responsibility for the content, privacy policies, or practices of any third-party sites or services.
+</p> <p><strong>Children’s Privacy</strong></p> <div><p>
+    These Services do not address anyone under the age of 13. We do not knowingly collect personally identifiable information from children under 13 years of age. In the case We discover that a child under 13 has provided us with personal information, We immediately delete this from our servers. If you are a parent or guardian and you are aware that your child has provided us with personal information, please contact me so that We will be able to do the necessary actions.
+  </p></div> <p><strong>Changes to This Privacy Policy</strong></p> <p>
+    We may update our Privacy Policy from time to time. Thus, you are advised to review this page periodically for any changes. We will notify you of any changes by posting the new Privacy Policy on this page.
+</p>
+<p>This policy is effective as of 2024-06-01</p>
+<p><strong>Contact Us</strong></p>
+<p> If you have any questions or suggestions about our Privacy Policy, do not hesitate to contact me at</p>
+<p>Email: minhviet.dragon@gmail.com</p>
+<p>This privacy policy page was created at <a href="https://privacypolicytemplate.net" target="_blank" rel="noopener noreferrer">privacypolicytemplate.net </a>and modified/generated by <a href="https://app-privacy-policy-generator.nisrulz.com/" target="_blank" rel="noopener noreferrer">App Privacy Policy Generator</a></p>
+
+</body>
+</html>''',
+};
 }

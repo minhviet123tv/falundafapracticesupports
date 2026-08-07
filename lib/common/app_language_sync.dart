@@ -114,6 +114,62 @@ class AppLanguageSync {
       case 'ar':
       case 'arabic':
         return 'arabic';
+      case 'af':
+        return 'afrikaans';
+      case 'bn':
+      case 'bengali':
+        return 'bangla';
+      case 'be':
+      case 'belarusian':
+        return 'belarus';
+      case 'my':
+      case 'myanmar':
+        return 'burmese';
+      case 'da':
+      case 'danish':
+        return 'dansk';
+      case 'et':
+      case 'estonian':
+        return 'eesti';
+      case 'hi':
+        return 'hindi';
+      case 'kn':
+        return 'kannada';
+      case 'km':
+      case 'cambodian':
+        return 'khmer';
+      case 'lv':
+      case 'latvian':
+        return 'latviski';
+      case 'lo':
+      case 'lao':
+        return 'laotian';
+      case 'lt':
+      case 'lithuanian':
+        return 'lietuviu';
+      case 'mk':
+      case 'macedonian':
+        return 'macedonia';
+      case 'mn':
+      case 'mongolian':
+        return 'mongolia';
+      case 'no':
+      case 'nb':
+      case 'nn':
+      case 'norwegian':
+        return 'norsk';
+      case 'si':
+      case 'sinhalese':
+        return 'sinhala';
+      case 'sl':
+      case 'slovenian':
+        return 'slovenscina';
+      case 'sq':
+      case 'albanian':
+        return 'shqip';
+      case 'bo':
+        return 'tibetan';
+
       default:
         return c;
     }

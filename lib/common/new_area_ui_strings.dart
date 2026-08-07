@@ -31,7 +31,8 @@ class NewAreaUiStrings {
     NewAreaLang.thai => 'แปลโดย Google Translate',
     NewAreaLang.turkce => 'Google Çeviri tarafından çevrilmiştir',
     NewAreaLang.ukrainian => 'Перекладено Google Перекладачем',
-  };
+    _ => 'Translated by Google Translate',
+};
 
   String get notePrefix => switch (lang) {
     NewAreaLang.english => 'Note:',
@@ -57,7 +58,8 @@ class NewAreaUiStrings {
     NewAreaLang.thai => 'หมายเหตุ:',
     NewAreaLang.turkce => 'Not:',
     NewAreaLang.ukrainian => 'Примітка:',
-  };
+    _ => 'Note:',
+};
 
   String get chooseToExpandBefore => switch (lang) {
     NewAreaLang.english => 'Tap ',
@@ -83,7 +85,8 @@ class NewAreaUiStrings {
     NewAreaLang.thai => 'แตะ ',
     NewAreaLang.turkce => 'Büyütmek için ',
     NewAreaLang.ukrainian => 'Натисніть ',
-  };
+    _ => 'Tap ',
+};
 
   String get chooseToExpandAfter => switch (lang) {
     NewAreaLang.english => ' to enlarge',
@@ -109,7 +112,8 @@ class NewAreaUiStrings {
     NewAreaLang.thai => ' เพื่อขยาย',
     NewAreaLang.turkce => ' simgesine dokunun',
     NewAreaLang.ukrainian => ', щоб збільшити',
-  };
+    _ => ' to enlarge',
+};
 
   String get copyLinkVideo => switch (lang) {
     NewAreaLang.english => 'Copy video link',
@@ -135,7 +139,8 @@ class NewAreaUiStrings {
     NewAreaLang.thai => 'คัดลอกลิงก์วิดีโอ',
     NewAreaLang.turkce => 'Video bağlantısını kopyala',
     NewAreaLang.ukrainian => 'Копіювати посилання на відео',
-  };
+    _ => 'Copy video link',
+};
 
   String get linkCopied => switch (lang) {
     NewAreaLang.english => 'Link copied!',
@@ -161,7 +166,8 @@ class NewAreaUiStrings {
     NewAreaLang.thai => 'คัดลอกลิงก์แล้ว!',
     NewAreaLang.turkce => 'Bağlantı kopyalandı!',
     NewAreaLang.ukrainian => 'Посилання скопійовано!',
-  };
+    _ => 'Link copied!',
+};
 
   String get hideNotes => switch (lang) {
     NewAreaLang.english => 'Hide notes',
@@ -187,7 +193,8 @@ class NewAreaUiStrings {
     NewAreaLang.thai => 'ซ่อนหมายเหตุ',
     NewAreaLang.turkce => 'Notları gizle',
     NewAreaLang.ukrainian => 'Сховати примітки',
-  };
+    _ => 'Hide notes',
+};
 
   String get showNotes => switch (lang) {
     NewAreaLang.english => 'Show notes',
@@ -213,7 +220,8 @@ class NewAreaUiStrings {
     NewAreaLang.thai => 'แสดงหมายเหตุ',
     NewAreaLang.turkce => 'Notları göster',
     NewAreaLang.ukrainian => 'Показати примітки',
-  };
+    _ => 'Show notes',
+};
 
   String get skip => switch (lang) {
     NewAreaLang.english => 'Skip',
@@ -239,7 +247,8 @@ class NewAreaUiStrings {
     NewAreaLang.thai => 'ข้าม',
     NewAreaLang.turkce => 'Atla',
     NewAreaLang.ukrainian => 'Пропустити',
-  };
+    _ => 'Skip',
+};
 
   String get done => switch (lang) {
     NewAreaLang.english => 'Done',
@@ -265,7 +274,8 @@ class NewAreaUiStrings {
     NewAreaLang.thai => 'เสร็จสิ้น',
     NewAreaLang.turkce => 'Bitti',
     NewAreaLang.ukrainian => 'Готово',
-  };
+    _ => 'Done',
+};
 
   String get privacyAppBarTitle => switch (lang) {
     NewAreaLang.english => 'Privacy Policy',
@@ -291,7 +301,8 @@ class NewAreaUiStrings {
     NewAreaLang.thai => 'นโยบายความเป็นส่วนตัว',
     NewAreaLang.turkce => 'Gizlilik politikası',
     NewAreaLang.ukrainian => 'Політика конфіденційності',
-  };
+    _ => 'Privacy Policy',
+};
 
   String get aboutAppTitle => switch (lang) {
     NewAreaLang.english => 'About app',
@@ -317,7 +328,8 @@ class NewAreaUiStrings {
     NewAreaLang.thai => 'เกี่ยวกับแอป',
     NewAreaLang.turkce => 'Uygulama hakkında',
     NewAreaLang.ukrainian => 'Про додаток',
-  };
+    _ => 'About app',
+};
 
   String get featuresTitle => switch (lang) {
     NewAreaLang.english => 'Features and buttons',
@@ -343,7 +355,8 @@ class NewAreaUiStrings {
     NewAreaLang.thai => 'ฟีเจอร์และปุ่ม',
     NewAreaLang.turkce => 'Özellikler ve düğmeler',
     NewAreaLang.ukrainian => 'Функції та кнопки',
-  };
+    _ => 'Features and buttons',
+};
 
   String get overviewGuideTitle => switch (lang) {
     NewAreaLang.english => 'Overview guide',
@@ -369,7 +382,8 @@ class NewAreaUiStrings {
     NewAreaLang.thai => 'คู่มือภาพรวม',
     NewAreaLang.turkce => 'Genel bakış rehberi',
     NewAreaLang.ukrainian => 'Оглядовий посібник',
-  };
+    _ => 'Overview guide',
+};
 
   String get exercisesTitle => switch (lang) {
     NewAreaLang.english => 'The exercises',
@@ -395,7 +409,8 @@ class NewAreaUiStrings {
     NewAreaLang.thai => 'ท่าฝึก',
     NewAreaLang.turkce => 'Egzersizler',
     NewAreaLang.ukrainian => 'Вправи',
-  };
+    _ => 'The exercises',
+};
 
   String get basicPracticeGuide => switch (lang) {
     NewAreaLang.english => 'Practitioner Guide',
@@ -421,7 +436,8 @@ class NewAreaUiStrings {
     NewAreaLang.thai => 'คู่มือสำหรับศิษย์',
     NewAreaLang.turkce => 'Öğrenci rehberi',
     NewAreaLang.ukrainian => 'Посібник для учнів',
-  };
+    _ => 'Practitioner Guide',
+};
 
   String get tipMirror => switch (lang) {
     NewAreaLang.english => 'Male movements mirror female | Female movements mirror male.',
@@ -447,7 +463,8 @@ class NewAreaUiStrings {
     NewAreaLang.thai => 'ท่าของผู้ชายสมมาตรกับผู้หญิง | ท่าของผู้หญิงสมมาตรกับผู้ชาย',
     NewAreaLang.turkce => 'Erkek hareketleri kadın hareketlerinin aynasıdır | Kadın hareketleri erkek hareketlerinin aynasıdır.',
     NewAreaLang.ukrainian => 'Чоловічі рухи дзеркальні до жіночих | Жіночі — до чоловічих.',
-  };
+    _ => 'Male movements mirror female | Female movements mirror male.',
+};
 
   String get tipSame => switch (lang) {
     NewAreaLang.english => 'Male and female movements are the same.',
@@ -473,7 +490,8 @@ class NewAreaUiStrings {
     NewAreaLang.thai => 'ท่าของผู้ชายและผู้หญิงเหมือนกัน',
     NewAreaLang.turkce => 'Erkek ve kadın hareketleri aynıdır.',
     NewAreaLang.ukrainian => 'Чоловічі та жіночі рухи однакові.',
-  };
+    _ => 'Male and female movements are the same.',
+};
 
   String get tipExercise4 => switch (lang) {
     NewAreaLang.english => 'Male/female follow male or female demo. Hands do not touch the body.',
@@ -499,7 +517,8 @@ class NewAreaUiStrings {
     NewAreaLang.thai => 'ชาย/หญิงตามแบบชายหรือหญิงได้ มือไม่สัมผัสร่างกาย',
     NewAreaLang.turkce => 'Erkek/kadın erkek veya kadın demoyu takip eder. Eller bedene değmez.',
     NewAreaLang.ukrainian => 'Чоловіки/жінки йдуть за чоловічою або жіночою демонстрацією. Руки не торкаються тіла.',
-  };
+    _ => 'Male/female follow male or female demo. Hands do not touch the body.',
+};
 
   String get feature => switch (lang) {
     NewAreaLang.english => 'Feature',
@@ -525,7 +544,8 @@ class NewAreaUiStrings {
     NewAreaLang.thai => 'ฟีเจอร์',
     NewAreaLang.turkce => 'Özellik',
     NewAreaLang.ukrainian => 'Функція',
-  };
+    _ => 'Feature',
+};
 
   String get lesson => switch (lang) {
     NewAreaLang.english => 'Lesson',
@@ -551,7 +571,8 @@ class NewAreaUiStrings {
     NewAreaLang.thai => 'บทเรียน',
     NewAreaLang.turkce => 'Ders',
     NewAreaLang.ukrainian => 'Урок',
-  };
+    _ => 'Lesson',
+};
 
   String get practiceMusic => switch (lang) {
     NewAreaLang.english => 'Practice music',
@@ -577,7 +598,8 @@ class NewAreaUiStrings {
     NewAreaLang.thai => 'เพลงฝึก',
     NewAreaLang.turkce => 'Egzersiz müziği',
     NewAreaLang.ukrainian => 'Музика для вправ',
-  };
+    _ => 'Practice music',
+};
 
   String get useInternet => switch (lang) {
     NewAreaLang.english => 'Use internet',
@@ -603,7 +625,8 @@ class NewAreaUiStrings {
     NewAreaLang.thai => 'ใช้อินเทอร์เน็ต',
     NewAreaLang.turkce => 'İnternet kullan',
     NewAreaLang.ukrainian => 'Використовувати інтернет',
-  };
+    _ => 'Use internet',
+};
 
   String get saveLatest => switch (lang) {
     NewAreaLang.english => 'Save latest',
@@ -629,7 +652,8 @@ class NewAreaUiStrings {
     NewAreaLang.thai => 'บันทึกล่าสุด',
     NewAreaLang.turkce => 'En yeniyi kaydet',
     NewAreaLang.ukrainian => 'Зберегти останнє',
-  };
+    _ => 'Save latest',
+};
 
   String get downloadToPhone => switch (lang) {
     NewAreaLang.english => 'Download to phone',
@@ -655,7 +679,8 @@ class NewAreaUiStrings {
     NewAreaLang.thai => 'ดาวน์โหลดลงโทรศัพท์',
     NewAreaLang.turkce => 'Telefona indir',
     NewAreaLang.ukrainian => 'Завантажити на телефон',
-  };
+    _ => 'Download to phone',
+};
 
   String get listenOffline => switch (lang) {
     NewAreaLang.english => 'Listen offline',
@@ -681,7 +706,8 @@ class NewAreaUiStrings {
     NewAreaLang.thai => 'ฟังออฟไลน์',
     NewAreaLang.turkce => 'Çevrimdışı dinle',
     NewAreaLang.ukrainian => 'Слухати офлайн',
-  };
+    _ => 'Listen offline',
+};
 
   String get button => switch (lang) {
     NewAreaLang.english => 'Button',
@@ -707,7 +733,8 @@ class NewAreaUiStrings {
     NewAreaLang.thai => 'ปุ่ม',
     NewAreaLang.turkce => 'Düğme',
     NewAreaLang.ukrainian => 'Кнопка',
-  };
+    _ => 'Button',
+};
 
   String get uses => switch (lang) {
     NewAreaLang.english => 'Uses',
@@ -733,7 +760,8 @@ class NewAreaUiStrings {
     NewAreaLang.thai => 'การใช้งาน',
     NewAreaLang.turkce => 'Kullanımlar',
     NewAreaLang.ukrainian => 'Призначення',
-  };
+    _ => 'Uses',
+};
 
   String get listenViewOnline => switch (lang) {
     NewAreaLang.english => 'Listen, view online',
@@ -759,7 +787,8 @@ class NewAreaUiStrings {
     NewAreaLang.thai => 'ฟัง ดูออนไลน์',
     NewAreaLang.turkce => 'Çevrimiçi dinle, izle',
     NewAreaLang.ukrainian => 'Слухати, дивитися онлайн',
-  };
+    _ => 'Listen, view online',
+};
 
   /// Công dụng nút play trên bảng intro (rút gọn hơn [listenViewOnline]).
   String get listenView => switch (lang) {
@@ -786,7 +815,8 @@ class NewAreaUiStrings {
     NewAreaLang.thai => 'ฟัง ดู',
     NewAreaLang.turkce => 'Dinle, izle',
     NewAreaLang.ukrainian => 'Слухати, дивитися',
-  };
+    _ => 'Listen, view',
+};
 
   String get extend => switch (lang) {
     NewAreaLang.english => 'Extend',
@@ -812,7 +842,8 @@ class NewAreaUiStrings {
     NewAreaLang.thai => 'ขยาย',
     NewAreaLang.turkce => 'Genişlet',
     NewAreaLang.ukrainian => 'Розширити',
-  };
+    _ => 'Extend',
+};
 
   String get openInBrowser => switch (lang) {
     NewAreaLang.english => 'Open in browser',
@@ -838,7 +869,8 @@ class NewAreaUiStrings {
     NewAreaLang.thai => 'เปิดในเบราว์เซอร์',
     NewAreaLang.turkce => 'Tarayıcıda aç',
     NewAreaLang.ukrainian => 'Відкрити в браузері',
-  };
+    _ => 'Open in browser',
+};
 
   String get readDownloadPdf => switch (lang) {
     NewAreaLang.english => 'Read, download PDF',
@@ -864,7 +896,8 @@ class NewAreaUiStrings {
     NewAreaLang.thai => 'อ่าน ดาวน์โหลด PDF',
     NewAreaLang.turkce => 'PDF oku, indir',
     NewAreaLang.ukrainian => 'Читати, завантажити PDF',
-  };
+    _ => 'Read, download PDF',
+};
 
   /// Công dụng nút PDF trên bảng intro.
   String get openReadDownloadPdf => switch (lang) {
@@ -891,7 +924,8 @@ class NewAreaUiStrings {
     NewAreaLang.thai => 'เปิดอ่าน ดาวน์โหลดไฟล์ PDF',
     NewAreaLang.turkce => 'Okumak için aç, PDF indir',
     NewAreaLang.ukrainian => 'Відкрити для читання, завантажити PDF',
-  };
+    _ => 'Open to read, download PDF',
+};
 
   String demoPractitioner(int n) => switch (lang) {
     NewAreaLang.english => 'Demo practitioner — Exercise $n',
@@ -917,7 +951,8 @@ class NewAreaUiStrings {
     NewAreaLang.thai => 'ผู้ฝึกสาธิต — ท่าที่ $n',
     NewAreaLang.turkce => 'Örnek uygulayıcı — Egzersiz $n',
     NewAreaLang.ukrainian => 'Демонстрація — Вправа $n',
-  };
+    _ => 'Demo practitioner — Exercise $n',
+};
 
   /// Home grid: How Humankind Came To Be
   String get humankindMenuTitle => switch (lang) {
@@ -944,7 +979,8 @@ class NewAreaUiStrings {
         NewAreaLang.thai => 'เหตุใดจึงมี\nมนุษยชาติ?',
         NewAreaLang.turkce => 'İnsanlık neden\nvar?',
         NewAreaLang.ukrainian => 'Чому існує\nлюдство?',
-      };
+        _ => 'How Humankind\nCame To Be?',
+};
 
   String get aboutAppMenuTitle => switch (lang) {
         NewAreaLang.english => 'About App',
@@ -970,7 +1006,8 @@ class NewAreaUiStrings {
         NewAreaLang.thai => 'เกี่ยวกับแอป',
         NewAreaLang.turkce => 'Uygulama Hakkında',
         NewAreaLang.ukrainian => 'Про додаток',
-      };
+        _ => 'About App',
+};
 
   String get privacyMenuTitle => switch (lang) {
         NewAreaLang.english => 'Privacy policy',
@@ -996,7 +1033,8 @@ class NewAreaUiStrings {
         NewAreaLang.thai => 'นโยบายความเป็นส่วนตัว',
         NewAreaLang.turkce => 'Gizlilik',
         NewAreaLang.ukrainian => 'Конфіденційність',
-      };
+        _ => 'Privacy policy',
+};
 
   /// Home grid label for Practitioner Guide (may wrap).
   String get basicPracticeGuideMenu => switch (lang) {
@@ -1023,7 +1061,8 @@ class NewAreaUiStrings {
         NewAreaLang.thai => 'คู่มือ\nสำหรับศิษย์',
         NewAreaLang.turkce => 'Öğrenci\nrehberi',
         NewAreaLang.ukrainian => 'Посібник\nдля учнів',
-      };
+        _ => 'Practitioner\nGuide',
+};
 
   /// Home grid label: Master's exercise instruction videos (may wrap).
   String get masterExerciseGuideMenu => switch (lang) {
@@ -1050,7 +1089,8 @@ class NewAreaUiStrings {
         NewAreaLang.thai => 'คำแนะนำอาจารย์\n(1992)',
         NewAreaLang.turkce => 'Öğretmen rehberi\n(1992)',
         NewAreaLang.ukrainian => 'Настанови Вчителя\n(1992)',
-      };
+        _ => "Master's Guide\n(1992)",
+};
 }
 
 Widget googleTranslateFooterNote(NewAreaLang lang) {

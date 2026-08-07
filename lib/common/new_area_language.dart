@@ -3,8 +3,9 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import 'language_menu_order.dart';
 
-/// Ngôn ngữ cho "Vùng ngôn ngữ mới".
-/// Tập ngôn ngữ theo Humankind / Minghui (các ngôn ngữ đang dùng trong app).
+/// Ngôn ngữ chính (Home / About / hướng dẫn tập / privacy…).
+/// Tập lựa chọn khớp Video 9 Lesson; gộp 3 mục Chinese của video
+/// thành [chinese1] (正體) + [chinese2] (简体).
 enum NewAreaLang {
   english('English'),
   vietnamese('Tiếng Việt'),
@@ -28,10 +29,73 @@ enum NewAreaLang {
   srpski('Српски'),
   thai('ไทย'),
   turkce('Türkçe'),
-  ukrainian('Українська');
+  ukrainian('Українська'),
+
+  afrikaans('Afrikaans'),
+  arabic('Arabic / العربية'),
+  bangla('Bangla'),
+  belarus('Belarus'),
+  bungari('Български'),
+  burmese('Burmese'),
+  cesky('Česky'),
+  dansk('Dansk'),
+  eesti('Eesti'),
+  greek('Ελληνικά'),
+  hindi('Hindi / हिन्दी'),
+  kannada('Kannada'),
+  khmer('Khmer / ខ្មែរ'),
+  latviski('Latviski'),
+  laotian('Laotian / ລາວ'),
+  lietuviu('Lietuvių'),
+  magyar('Magyar'),
+  macedonia('Македонски'),
+  mongolia('Монгол / ᠮᠣᠩᠭᠣᠯ'),
+  nederlands('Nederlands'),
+  norsk('Norsk / Bokmål'),
+  romana('Română'),
+  sinhala('Sinhala / සිංහල'),
+  slovenscina('Slovenščina'),
+  suomi('Suomi'),
+  svenska('Svenska'),
+  shqip('Shqip / Albanian'),
+  tibetan('Tibetan / བོད་ཡིག');
 
   const NewAreaLang(this.label);
   final String label;
+
+  /// Có bản dịch UI/nội dung riêng; ngôn ngữ còn lại dùng tiếng Anh.
+  bool get hasDedicatedTranslation => switch (this) {
+        NewAreaLang.afrikaans ||
+        NewAreaLang.arabic ||
+        NewAreaLang.bangla ||
+        NewAreaLang.belarus ||
+        NewAreaLang.bungari ||
+        NewAreaLang.burmese ||
+        NewAreaLang.cesky ||
+        NewAreaLang.dansk ||
+        NewAreaLang.eesti ||
+        NewAreaLang.greek ||
+        NewAreaLang.hindi ||
+        NewAreaLang.kannada ||
+        NewAreaLang.khmer ||
+        NewAreaLang.latviski ||
+        NewAreaLang.laotian ||
+        NewAreaLang.lietuviu ||
+        NewAreaLang.magyar ||
+        NewAreaLang.macedonia ||
+        NewAreaLang.mongolia ||
+        NewAreaLang.nederlands ||
+        NewAreaLang.norsk ||
+        NewAreaLang.romana ||
+        NewAreaLang.sinhala ||
+        NewAreaLang.slovenscina ||
+        NewAreaLang.suomi ||
+        NewAreaLang.svenska ||
+        NewAreaLang.shqip ||
+        NewAreaLang.tibetan =>
+          false,
+        _ => true,
+      };
 
   static NewAreaLang fromName(String? name) {
     if (name == null || name.isEmpty) return NewAreaLang.english;
@@ -76,6 +140,34 @@ enum NewAreaLang {
       'sk' || 'slovencina' => NewAreaLang.slovencina,
       'sr' || 'srpski' => NewAreaLang.srpski,
       'he' || 'iw' || 'hebrew' => NewAreaLang.hebrew,
+      'af' || 'afrikaans' => NewAreaLang.afrikaans,
+      'ar' || 'arabic' => NewAreaLang.arabic,
+      'bn' || 'bangla' || 'bengali' => NewAreaLang.bangla,
+      'be' || 'belarus' || 'belarusian' => NewAreaLang.belarus,
+      'bg' || 'bungari' || 'bulgarian' => NewAreaLang.bungari,
+      'my' || 'burmese' || 'myanmar' => NewAreaLang.burmese,
+      'cs' || 'cesky' || 'czech' => NewAreaLang.cesky,
+      'da' || 'dansk' || 'danish' => NewAreaLang.dansk,
+      'et' || 'eesti' || 'estonian' => NewAreaLang.eesti,
+      'el' || 'greek' => NewAreaLang.greek,
+      'hi' || 'hindi' => NewAreaLang.hindi,
+      'kn' || 'kannada' => NewAreaLang.kannada,
+      'km' || 'khmer' || 'cambodian' => NewAreaLang.khmer,
+      'lv' || 'latviski' || 'latvian' => NewAreaLang.latviski,
+      'lo' || 'laotian' || 'lao' => NewAreaLang.laotian,
+      'lt' || 'lietuviu' || 'lithuanian' => NewAreaLang.lietuviu,
+      'hu' || 'magyar' || 'hungarian' => NewAreaLang.magyar,
+      'mk' || 'macedonia' || 'macedonian' => NewAreaLang.macedonia,
+      'mn' || 'mongolia' || 'mongolian' => NewAreaLang.mongolia,
+      'nl' || 'nederlands' || 'dutch' => NewAreaLang.nederlands,
+      'no' || 'nb' || 'nn' || 'norsk' || 'norwegian' => NewAreaLang.norsk,
+      'ro' || 'romana' || 'rumani' || 'romanian' => NewAreaLang.romana,
+      'si' || 'sinhala' || 'sinhalese' => NewAreaLang.sinhala,
+      'sl' || 'slovenscina' || 'slovenian' => NewAreaLang.slovenscina,
+      'fi' || 'suomi' || 'finnish' => NewAreaLang.suomi,
+      'sv' || 'svenska' || 'swedish' => NewAreaLang.svenska,
+      'sq' || 'shqip' || 'albanian' => NewAreaLang.shqip,
+      'bo' || 'tibetan' => NewAreaLang.tibetan,
       _ => null,
     };
     if (mapped != null) return mapped;
