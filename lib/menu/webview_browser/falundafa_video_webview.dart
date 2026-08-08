@@ -13,13 +13,19 @@ import '../../common/language_menu_order.dart';
 import '../../common/webview_immersive_mixin.dart';
 import '../../controller_app/link_internet_sachchuyenphapluan_quocte.dart';
 
-/// Loại trang video falundafa.org.
+/// Loại trang falundafa.org mở trong trình duyệt in-app.
 enum FalundafaVideoKind {
   /// Hướng dẫn tập (videoPage) — `#exercise-player`
   exerciseGuide,
 
   /// Video 9 bài giảng (video9Lession) — `#lecture-player` / `#g9day_video`
   nineLectures,
+
+  /// Trang giới thiệu (introduction)
+  introduction,
+
+  /// Liên hệ lớp học địa phương (connect_to_classes)
+  connectToClasses,
 }
 
 /// Trình duyệt in-app cho trang video falundafa; cuộn sẵn tới khối player.
@@ -52,14 +58,21 @@ class _FalundafaVideoWebviewState extends State<FalundafaVideoWebview>
   bool _initialPageReady = false;
   bool _placementDialogShown = false;
 
-  String get _pageUrl => widget.kind == FalundafaVideoKind.nineLectures
-      ? _language.video9Lession
-      : _language.videoPage;
+  String get _pageUrl => switch (widget.kind) {
+        FalundafaVideoKind.exerciseGuide => _language.videoPage,
+        FalundafaVideoKind.nineLectures => _language.video9Lession,
+        FalundafaVideoKind.introduction => _language.introduction,
+        FalundafaVideoKind.connectToClasses => _language.connect_to_classes,
+      };
 
-  /// Video Lesson: không ẩn chrome khi scroll; nút mở rộng vẫn dùng được.
+  bool get _isVideoKind =>
+      widget.kind == FalundafaVideoKind.exerciseGuide ||
+      widget.kind == FalundafaVideoKind.nineLectures;
+
+  /// Video Lesson / trang giới thiệu / liên hệ: không ẩn chrome khi scroll.
   @override
   bool get immersiveScrollHidesChrome =>
-      widget.kind != FalundafaVideoKind.nineLectures;
+      widget.kind == FalundafaVideoKind.exerciseGuide;
 
   @override
   void initState() {
@@ -141,7 +154,7 @@ class _FalundafaVideoWebviewState extends State<FalundafaVideoWebview>
     final preferred = await AppLanguageSync.preferredOrEnglish();
     final matched = AppLanguageSync.matchAllBooksLanguage(preferred);
     _language = matched ?? LanguageAllPageFalundafa.english;
-    _pendingScrollToVideo = true;
+    _pendingScrollToVideo = _isVideoKind;
     _currentUrl = _pageUrl;
     await _controller.loadRequest(Uri.parse(_pageUrl));
     if (mounted) setState(() {});
@@ -155,12 +168,14 @@ class _FalundafaVideoWebviewState extends State<FalundafaVideoWebview>
     await _injectVideoPlaybackHelpers();
     await installImmersiveScrollReporter(_controller);
     await onImmersivePageFinished();
-    if (_pendingScrollToVideo) {
+    if (_pendingScrollToVideo && _isVideoKind) {
       _pendingScrollToVideo = false;
       await Future<void>.delayed(const Duration(milliseconds: 350));
       await _scrollToVideoSection();
       await Future<void>.delayed(const Duration(milliseconds: 500));
       await _scrollToVideoSection();
+    } else {
+      _pendingScrollToVideo = false;
     }
     if (mounted) {
       setState(() => _initialPageReady = true);
@@ -169,6 +184,7 @@ class _FalundafaVideoWebviewState extends State<FalundafaVideoWebview>
 
   /// CSS + iframe allow + quan sát iframe mới khi bấm Play (Ganjing embed).
   Future<void> _injectVideoPlaybackHelpers() async {
+    if (!_isVideoKind) return;
     final chromeOffset = (immersiveChromeBarHeight + 12).round();
     try {
       await _controller.runJavaScript('''
@@ -265,7 +281,7 @@ class _FalundafaVideoWebviewState extends State<FalundafaVideoWebview>
     final shared = await SharedPreferences.getInstance();
     await shared.setString('LanguageAllPageFalundafa', value.name);
     await AppLanguageSync.onUserSelected(value.languageCode);
-    _pendingScrollToVideo = true;
+    _pendingScrollToVideo = _isVideoKind;
     _currentUrl = _pageUrl;
     await _controller.loadRequest(Uri.parse(_pageUrl));
   }

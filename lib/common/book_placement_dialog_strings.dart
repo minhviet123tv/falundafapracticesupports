@@ -32,6 +32,34 @@ class BookPlacementDialogStrings {
         _ => 'Notes when reading',
 };
 
+  /// Tiêu đề dialog khi mở Video 9 Lesson.
+  String get videoTitle => switch (lang) {
+        NewAreaLang.english => 'Notes when watching video',
+        NewAreaLang.vietnamese => 'Lưu ý khi xem video',
+        NewAreaLang.chinese1 => '觀看影片時的注意事項',
+        NewAreaLang.chinese2 => '观看视频时的注意事项',
+        NewAreaLang.bosanski => 'Napomene pri gledanju videa',
+        NewAreaLang.deutsch => 'Hinweise beim Videoanschauen',
+        NewAreaLang.espanol => 'Notas al ver el vídeo',
+        NewAreaLang.farsi => 'نکات هنگام تماشای ویدیو',
+        NewAreaLang.francais => 'Notes pour regarder la vidéo',
+        NewAreaLang.hebrew => 'הערות בעת צפייה בווידאו',
+        NewAreaLang.hrvatski => 'Napomene pri gledanju videa',
+        NewAreaLang.indonesia => 'Catatan saat menonton video',
+        NewAreaLang.italiano => 'Note durante la visione del video',
+        NewAreaLang.japan => '動画視聴時の注意',
+        NewAreaLang.korean => '영상 시청 시 주의사항',
+        NewAreaLang.polski => 'Uwagi podczas oglądania wideo',
+        NewAreaLang.portugues => 'Notas ao assistir ao vídeo',
+        NewAreaLang.russian => 'Замечания при просмотре видео',
+        NewAreaLang.slovencina => 'Poznámky pri sledovaní videa',
+        NewAreaLang.srpski => 'Напомене при гледању видеа',
+        NewAreaLang.thai => 'ข้อควรระวังเมื่อดูวิดีโอ',
+        NewAreaLang.turkce => 'Video izlerken dikkat edilecekler',
+        NewAreaLang.ukrainian => 'Поради під час перегляду відео',
+        _ => 'Notes when watching video',
+};
+
   String get goodPlacement => switch (lang) {
         NewAreaLang.english =>
           'Place the phone on a stand and keep it elevated',
@@ -74,6 +102,54 @@ class BookPlacementDialogStrings {
         NewAreaLang.ukrainian =>
           'Поставте телефон на підставку й тримайте вище',
         _ => 'Place the phone on a stand and keep it elevated',
+};
+
+  /// Mô tả đặt máy khi xem Video 9 Lesson.
+  String get videoGoodPlacement => switch (lang) {
+        NewAreaLang.english =>
+          'Place the phone on a stand and keep it elevated; set aside enough time to watch and listen to the entire video with focus',
+        NewAreaLang.vietnamese =>
+          'Nên đặt điện thoại trên giá đỡ và ở trên cao, dành đủ thời gian để tập trung xem và nghe hết video',
+        NewAreaLang.chinese1 => '請將手機放在支架上並置於較高位置，預留足夠時間專心觀看並聽完整部影片',
+        NewAreaLang.chinese2 => '请将手机放在支架上并置于较高位置，预留足够时间专心观看并听完整部视频',
+        NewAreaLang.bosanski =>
+          'Stavite telefon na stalku i držite ga povišeno; odvojite dovoljno vremena da usredotočeno pogledate i odslušate cijeli video',
+        NewAreaLang.deutsch =>
+          'Legen Sie das Telefon auf einen Ständer und halten Sie es erhöht; nehmen Sie sich genug Zeit, um das gesamte Video konzentriert anzusehen und anzuhören',
+        NewAreaLang.espanol =>
+          'Coloque el teléfono en un soporte y manténgalo elevado; reserve tiempo suficiente para ver y escuchar todo el vídeo con atención',
+        NewAreaLang.farsi =>
+          'گوشی را روی پایه بگذارید و در جای بلند نگه دارید؛ زمان کافی بگذارید تا با تمرکز تمام ویدیو را ببینید و بشنوید',
+        NewAreaLang.francais =>
+          'Placez le téléphone sur un support et gardez-le en hauteur ; prévoyez assez de temps pour regarder et écouter toute la vidéo avec attention',
+        NewAreaLang.hebrew =>
+          'הניחו את הטלפון על מעמד והחזיקו אותו גבוה; הקצו מספיק זמן כדי לצפות ולהאזין לכל הסרטון בריכוז',
+        NewAreaLang.hrvatski =>
+          'Stavite telefon na stalku i držite ga povišeno; odvojite dovoljno vremena da usredotočeno pogledate i odslušate cijeli video',
+        NewAreaLang.indonesia =>
+          'Letakkan ponsel di dudukan dan jaga agar tetap tinggi; sediakan waktu cukup untuk menonton dan mendengarkan seluruh video dengan fokus',
+        NewAreaLang.italiano =>
+          'Metti il telefono su un supporto e tienilo in alto; dedica abbastanza tempo per guardare e ascoltare tutto il video con attenzione',
+        NewAreaLang.japan => 'スマホをスタンドに置き、高めの位置に保ってください。十分な時間をとり、集中して動画を最後まで視聴・聴取してください',
+        NewAreaLang.korean => '휴대폰을 거치대에 올려 높은 위치에 두세요. 충분한 시간을 내어 집중해서 영상 전체를 시청하고 들으세요',
+        NewAreaLang.polski =>
+          'Umieść telefon na stojaku i trzymaj go wyżej; przeznacz wystarczająco czasu, aby skupić się na obejrzeniu i wysłuchaniu całego wideo',
+        NewAreaLang.portugues =>
+          'Coloque o telefone num suporte e mantenha-o elevado; reserve tempo suficiente para assistir e ouvir todo o vídeo com atenção',
+        NewAreaLang.russian =>
+          'Поставьте телефон на подставку и держите его выше; выделите достаточно времени, чтобы сосредоточенно посмотреть и прослушать всё видео',
+        NewAreaLang.slovencina =>
+          'Položte telefón na stojan a držte ho vyššie; vyhraďte si dosť času na sústredené pozretie a vypočutie celého videa',
+        NewAreaLang.srpski =>
+          'Ставите телефон на сталак и држите га повишено; издвојите довољно времена да усредсређено погледате и одслушате цео видео',
+        NewAreaLang.thai =>
+          'วางโทรศัพท์บนขาตั้งและให้อยู่ในตำแหน่งสูง สำรองเวลาให้เพียงพอเพื่อตั้งใจดูและฟังวิดีโอจนจบ',
+        NewAreaLang.turkce =>
+          'Telefonu bir standa koyun ve yüksekte tutun; tüm videoyu dikkatle izleyip dinlemek için yeterli zaman ayırın',
+        NewAreaLang.ukrainian =>
+          'Поставте телефон на підставку й тримайте вище; виділіть достатньо часу, щоб зосереджено переглянути й прослухати все відео',
+        _ =>
+          'Place the phone on a stand and keep it elevated; set aside enough time to watch and listen to the entire video with focus',
 };
 
   String get badPlacement => switch (lang) {

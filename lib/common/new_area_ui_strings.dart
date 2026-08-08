@@ -1120,6 +1120,60 @@ class NewAreaUiStrings {
         _ => 'Settings',
 };
 
+  String get introductionAppBarButton => switch (lang) {
+        NewAreaLang.english => 'Introduction',
+        NewAreaLang.vietnamese => 'Giới thiệu',
+        NewAreaLang.chinese1 => '介紹',
+        NewAreaLang.chinese2 => '介绍',
+        NewAreaLang.bosanski => 'Uvod',
+        NewAreaLang.deutsch => 'Einführung',
+        NewAreaLang.espanol => 'Introducción',
+        NewAreaLang.farsi => 'معرفی',
+        NewAreaLang.francais => 'Introduction',
+        NewAreaLang.hebrew => 'מבוא',
+        NewAreaLang.hrvatski => 'Uvod',
+        NewAreaLang.indonesia => 'Pengantar',
+        NewAreaLang.italiano => 'Introduzione',
+        NewAreaLang.japan => '紹介',
+        NewAreaLang.korean => '소개',
+        NewAreaLang.polski => 'Wstęp',
+        NewAreaLang.portugues => 'Introdução',
+        NewAreaLang.russian => 'Введение',
+        NewAreaLang.slovencina => 'Úvod',
+        NewAreaLang.srpski => 'Увод',
+        NewAreaLang.thai => 'แนะนำ',
+        NewAreaLang.turkce => 'Tanıtım',
+        NewAreaLang.ukrainian => 'Вступ',
+        _ => 'Introduction',
+};
+
+  String get localClassesMenuTitle => switch (lang) {
+        NewAreaLang.english => 'Find local\nclasses',
+        NewAreaLang.vietnamese => 'Liên hệ lớp học\nđịa phương',
+        NewAreaLang.chinese1 => '聯絡當地\n煉功點',
+        NewAreaLang.chinese2 => '联系当地\n炼功点',
+        NewAreaLang.bosanski => 'Lokalni\nčasovi',
+        NewAreaLang.deutsch => 'Lokale\nÜbungsorte',
+        NewAreaLang.espanol => 'Clases\nlocales',
+        NewAreaLang.farsi => 'کلاس‌های\nمحلی',
+        NewAreaLang.francais => 'Cours\nlocaux',
+        NewAreaLang.hebrew => 'שיעורים\nמקומיים',
+        NewAreaLang.hrvatski => 'Lokalni\nčasovi',
+        NewAreaLang.indonesia => 'Kelas\nlokal',
+        NewAreaLang.italiano => 'Classi\nlocali',
+        NewAreaLang.japan => '各地の\n学習グループ',
+        NewAreaLang.korean => '지역\n수련장소',
+        NewAreaLang.polski => 'Lokalne\nzajęcia',
+        NewAreaLang.portugues => 'Aulas\nlocais',
+        NewAreaLang.russian => 'Местные\nзанятия',
+        NewAreaLang.slovencina => 'Miestne\ncvičenia',
+        NewAreaLang.srpski => 'Локални\nчасови',
+        NewAreaLang.thai => 'ชั้นเรียน\nในท้องถิ่น',
+        NewAreaLang.turkce => 'Yerel\nsınıflar',
+        NewAreaLang.ukrainian => 'Місцеві\nзаняття',
+        _ => 'Find local\nclasses',
+};
+
   String get settingsPageTitle => settingsMenuTitle;
 
   String get fontSizeSettingLabel => switch (lang) {

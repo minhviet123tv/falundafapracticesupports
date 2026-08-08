@@ -62,6 +62,10 @@ class _BookReadingPlacementDialogContent extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final s = BookPlacementDialogStrings(lang);
+    final isVideo =
+        prefsKey == BookReadingPlacementDialog.prefsKeyVideoLesson;
+    final title = isVideo ? s.videoTitle : s.title;
+    final goodPlacement = isVideo ? s.videoGoodPlacement : s.goodPlacement;
     final media = MediaQuery.of(context);
     final screenWidth = media.size.width;
     final screenHeight = media.size.height;
@@ -87,7 +91,7 @@ class _BookReadingPlacementDialogContent extends StatelessWidget {
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     Text(
-                      s.title,
+                      title,
                       textAlign: TextAlign.center,
                       style: Theme.of(context).textTheme.headlineSmall?.copyWith(
                             fontWeight: FontWeight.w700,
@@ -97,7 +101,7 @@ class _BookReadingPlacementDialogContent extends StatelessWidget {
                     ),
                     const SizedBox(height: 20),
                     _section(
-                      title: s.goodPlacement,
+                      title: goodPlacement,
                       isPositive: true,
                       images: const [_goodImage],
                       imageWidth: dialogWidth * 0.55,

@@ -101,6 +101,25 @@ class _MenuHomeState extends State<MenuHome> {
           ),
           centerTitle: true,
           backgroundColor: Colors.blue,
+          actions: [
+            TextButton(
+              onPressed: () {
+                AppNavigator.pushFromTop(
+                  context,
+                  const FalundafaVideoWebview(
+                    kind: FalundafaVideoKind.introduction,
+                  ),
+                ).then((_) => _loadLanguage(silent: true));
+              },
+              child: Text(
+                _ui.introductionAppBarButton,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: AppTextStyles.title(fontSize: 13.5),
+              ),
+            ),
+            const SizedBox(width: 4),
+          ],
         ),
         body: Center(child: _gridViewMenu(context)),
       ),
@@ -119,6 +138,7 @@ class _MenuHomeState extends State<MenuHome> {
       'Falundafa.org',
       'Minghui.org',
       _ui.humankindMenuTitle,
+      _ui.localClassesMenuTitle,
       _ui.aboutAppMenuTitle,
       _ui.privacyMenuTitle,
       _ui.settingsMenuTitle,
@@ -202,10 +222,10 @@ class _MenuHomeState extends State<MenuHome> {
             'assets/images/menu_item_4.jpg',
             titles[2],
             labelBarHeight: labelBarHeight,
-            // Hoa sen nằm hơi cao trong ảnh — căn để bông hoa vào giữa vùng hiển thị.
             imageFit: BoxFit.cover,
-            imageAlignment: const Alignment(0, -0.42),
-            imageScale: 1.12,
+            imageAlignment: const Alignment(0, -0.38),
+            imagePadding: const EdgeInsets.all(10),
+            imageScale: 0.92,
           ),
         ),
         InkWell(
@@ -217,9 +237,13 @@ class _MenuHomeState extends State<MenuHome> {
             'assets/images/menu_item_5.jpg',
             titles[3],
             labelBarHeight: labelBarHeight,
+            imageFit: BoxFit.cover,
+            imageAlignment: Alignment.center,
+            imagePadding: const EdgeInsets.all(10),
+            imageScale: 0.90,
           ),
         ),
-        // Hàng 3: Vì sao có nhân loại | Giới thiệu app
+        // Hàng 3: Vì sao có nhân loại | Liên hệ lớp học địa phương
         InkWell(
           onTap: () {
             AppNavigator.pushFromTop(context, VisaoconhanloaiWebview())
@@ -233,15 +257,34 @@ class _MenuHomeState extends State<MenuHome> {
         ),
         InkWell(
           onTap: () {
+            AppNavigator.pushFromTop(
+              context,
+              const FalundafaVideoWebview(
+                kind: FalundafaVideoKind.connectToClasses,
+              ),
+            ).then((_) => _loadLanguage(silent: true));
+          },
+          child: itemMenu(
+            'assets/images/menu_item_world_map.png',
+            titles[5],
+            labelBarHeight: labelBarHeight,
+            imageFit: BoxFit.contain,
+            imageAlignment: Alignment.center,
+            imagePadding: const EdgeInsets.fromLTRB(10, 12, 10, 8),
+            imageScale: 0.95,
+          ),
+        ),
+        // Hàng 4: Giới thiệu app | Chính sách bảo mật
+        InkWell(
+          onTap: () {
             _openAboutAppIntro(context);
           },
           child: itemMenu(
             'assets/images/menu_item_1.jpg',
-            titles[5],
+            titles[6],
             labelBarHeight: labelBarHeight,
           ),
         ),
-        // Hàng 4: Privacy | Cài đặt
         InkWell(
           onTap: () {
             AppNavigator.push(context, const PrivacyPolicyPageHtml())
@@ -249,17 +292,22 @@ class _MenuHomeState extends State<MenuHome> {
           },
           child: itemMenu(
             'assets/images/menu_item_6.jpg',
-            titles[6],
+            titles[7],
             labelBarHeight: labelBarHeight,
+            imageFit: BoxFit.cover,
+            imageAlignment: Alignment.center,
+            imagePadding: const EdgeInsets.all(10),
+            imageScale: 0.90,
           ),
         ),
+        // Hàng 5: Cài đặt
         InkWell(
           onTap: () {
             AppNavigator.push(context, const SettingsPage())
                 .then((_) => _loadLanguage(silent: true));
           },
           child: itemMenuSettings(
-            titles[7],
+            titles[8],
             labelBarHeight: labelBarHeight,
           ),
         ),
