@@ -222,10 +222,9 @@ class _MenuHomeState extends State<MenuHome> {
             'assets/images/menu_item_4.jpg',
             titles[2],
             labelBarHeight: labelBarHeight,
+            // Hoa sen hơi cao trong ảnh — căn giữa vùng hiển thị.
             imageFit: BoxFit.cover,
-            imageAlignment: const Alignment(0, -0.38),
-            imagePadding: const EdgeInsets.all(10),
-            imageScale: 0.92,
+            imageAlignment: const Alignment(0, -0.28),
           ),
         ),
         InkWell(
@@ -239,8 +238,6 @@ class _MenuHomeState extends State<MenuHome> {
             labelBarHeight: labelBarHeight,
             imageFit: BoxFit.cover,
             imageAlignment: Alignment.center,
-            imagePadding: const EdgeInsets.all(10),
-            imageScale: 0.90,
           ),
         ),
         // Hàng 3: Vì sao có nhân loại | Liên hệ lớp học địa phương
@@ -253,6 +250,8 @@ class _MenuHomeState extends State<MenuHome> {
             'assets/images/menu_item_3.jpg',
             titles[4],
             labelBarHeight: labelBarHeight,
+            imageFit: BoxFit.cover,
+            imageAlignment: const Alignment(0, -0.12),
           ),
         ),
         InkWell(
@@ -268,10 +267,10 @@ class _MenuHomeState extends State<MenuHome> {
             'assets/images/menu_item_world_map.png',
             titles[5],
             labelBarHeight: labelBarHeight,
-            imageFit: BoxFit.contain,
+            // Ảnh có nhiều khoảng trống — cover + scale nhẹ để bản đồ đủ lớn, căn giữa.
+            imageFit: BoxFit.cover,
             imageAlignment: Alignment.center,
-            imagePadding: const EdgeInsets.fromLTRB(10, 12, 10, 8),
-            imageScale: 0.95,
+            imageScale: 1.22,
           ),
         ),
         // Hàng 4: Giới thiệu app | Chính sách bảo mật
@@ -283,6 +282,8 @@ class _MenuHomeState extends State<MenuHome> {
             'assets/images/menu_item_1.jpg',
             titles[6],
             labelBarHeight: labelBarHeight,
+            imageFit: BoxFit.cover,
+            imageAlignment: Alignment.center,
           ),
         ),
         InkWell(
@@ -296,8 +297,6 @@ class _MenuHomeState extends State<MenuHome> {
             labelBarHeight: labelBarHeight,
             imageFit: BoxFit.cover,
             imageAlignment: Alignment.center,
-            imagePadding: const EdgeInsets.all(10),
-            imageScale: 0.90,
           ),
         ),
         // Hàng 5: Cài đặt

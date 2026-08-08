@@ -195,6 +195,49 @@ class BookPlacementDialogStrings {
         _ => 'Do not place the phone low when reading',
 };
 
+  String get videoBadPlacement => switch (lang) {
+        NewAreaLang.english =>
+          'Do not place the phone low when watching video',
+        NewAreaLang.vietnamese =>
+          'Không nên đặt điện thoại dưới thấp khi xem video',
+        NewAreaLang.chinese1 => '觀看影片時請勿將手機放得過低',
+        NewAreaLang.chinese2 => '观看视频时请勿将手机放得过低',
+        NewAreaLang.bosanski =>
+          'Ne stavljajte telefon nisko dok gledate video',
+        NewAreaLang.deutsch =>
+          'Legen Sie das Telefon beim Videoanschauen nicht zu niedrig',
+        NewAreaLang.espanol =>
+          'No coloque el teléfono bajo al ver el vídeo',
+        NewAreaLang.farsi => 'هنگام تماشای ویدیو گوشی را پایین نگذارید',
+        NewAreaLang.francais =>
+          'Ne placez pas le téléphone trop bas en regardant la vidéo',
+        NewAreaLang.hebrew => 'אל תניחו את הטלפון נמוך בעת צפייה בווידאו',
+        NewAreaLang.hrvatski =>
+          'Ne stavljajte telefon nisko dok gledate video',
+        NewAreaLang.indonesia =>
+          'Jangan letakkan ponsel terlalu rendah saat menonton video',
+        NewAreaLang.italiano =>
+          'Non mettere il telefono troppo in basso durante la visione del video',
+        NewAreaLang.japan => '動画視聴中にスマホを低い位置に置かないでください',
+        NewAreaLang.korean => '영상을 볼 때 휴대폰을 낮은 곳에 두지 마세요',
+        NewAreaLang.polski =>
+          'Nie kładź telefonu nisko podczas oglądania wideo',
+        NewAreaLang.portugues =>
+          'Não coloque o telefone baixo ao assistir ao vídeo',
+        NewAreaLang.russian =>
+          'Не кладите телефон низко во время просмотра видео',
+        NewAreaLang.slovencina =>
+          'Pri sledovaní videa nedávajte telefón príliš nízko',
+        NewAreaLang.srpski =>
+          'Не стављајте телефон ниско док гледате видео',
+        NewAreaLang.thai => 'อย่าวางโทรศัพท์ในตำแหน่งต่ำเมื่อดูวิดีโอ',
+        NewAreaLang.turkce =>
+          'Video izlerken telefonu alçak bir yere koymayın',
+        NewAreaLang.ukrainian =>
+          'Не кладіть телефон низько під час перегляду відео',
+        _ => 'Do not place the phone low when watching video',
+};
+
   String get neverShowAgain => switch (lang) {
         NewAreaLang.english => "Don't show again",
         NewAreaLang.vietnamese => 'Không nhắc lại',

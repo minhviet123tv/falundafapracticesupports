@@ -66,6 +66,7 @@ class _BookReadingPlacementDialogContent extends StatelessWidget {
         prefsKey == BookReadingPlacementDialog.prefsKeyVideoLesson;
     final title = isVideo ? s.videoTitle : s.title;
     final goodPlacement = isVideo ? s.videoGoodPlacement : s.goodPlacement;
+    final badPlacement = isVideo ? s.videoBadPlacement : s.badPlacement;
     final media = MediaQuery.of(context);
     final screenWidth = media.size.width;
     final screenHeight = media.size.height;
@@ -108,7 +109,7 @@ class _BookReadingPlacementDialogContent extends StatelessWidget {
                     ),
                     const SizedBox(height: 18),
                     _section(
-                      title: s.badPlacement,
+                      title: badPlacement,
                       isPositive: false,
                       images: const [_badImage1, _badImage2],
                       imageWidth: (dialogWidth - 56) / 2,
