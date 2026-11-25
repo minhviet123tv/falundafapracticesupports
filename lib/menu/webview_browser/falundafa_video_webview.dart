@@ -135,6 +135,13 @@ class _FalundafaVideoWebviewState extends State<FalundafaVideoWebview>
     );
     await _loadPreferredLanguageAndOpen();
     if (!mounted) return;
+    // Gắn fullscreen sau frame đầu — lúc WKWebView đã nằm trong cây view.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      unawaited(
+        AppWebViewConfig.enableEmbeddedVideoFullscreen(_controller, context),
+      );
+    });
     // Hiện dialog sau frame đầu (giống tab Book); key riêng để không bị
     // "không hiện lại" của Book chặn Video Lesson.
     if (widget.showPlacementDialog && !_placementDialogShown) {
@@ -165,6 +172,13 @@ class _FalundafaVideoWebviewState extends State<FalundafaVideoWebview>
       _controller,
       nudgeLazyImages: true,
     );
+    // iOS: bật lại Fullscreen API sau khi WKWebView đã gắn vào hierarchy.
+    if (mounted) {
+      await AppWebViewConfig.enableEmbeddedVideoFullscreen(
+        _controller,
+        context,
+      );
+    }
     await _injectVideoPlaybackHelpers();
     await installImmersiveScrollReporter(_controller);
     await onImmersivePageFinished();
@@ -201,8 +215,18 @@ class _FalundafaVideoWebviewState extends State<FalundafaVideoWebview>
             #exercise-player iframe, #lecture-player iframe, .exercise-player iframe {
               width: 100% !important;
               min-height: 220px !important;
-              max-height: 70vh !important;
               border: 0 !important;
+            }
+            /* Không chặn HTML fullscreen / webkit fullscreen của player. */
+            :fullscreen, :-webkit-full-screen,
+            :fullscreen iframe, :-webkit-full-screen iframe,
+            #exercise-player:fullscreen, #exercise-player:-webkit-full-screen,
+            #lecture-player:fullscreen, #lecture-player:-webkit-full-screen {
+              width: 100vw !important;
+              height: 100vh !important;
+              max-width: none !important;
+              max-height: none !important;
+              background: #000 !important;
             }
           `;
           document.head.appendChild(style);
@@ -216,7 +240,11 @@ class _FalundafaVideoWebviewState extends State<FalundafaVideoWebview>
             iframe.setAttribute('allowfullscreen', 'true');
             iframe.setAttribute('playsinline', 'true');
             iframe.setAttribute('webkitallowfullscreen', 'true');
-            try { iframe.style.width = '100%'; } catch (e) {}
+            iframe.setAttribute('mozallowfullscreen', 'true');
+            try {
+              iframe.style.width = '100%';
+              iframe.removeAttribute('height');
+            } catch (e) {}
           }
 
           document.querySelectorAll('iframe').forEach(enhanceIframe);

@@ -365,8 +365,8 @@ class HuongDanTapCoBanStrings {
 
   String demoTile(int n) => _ui.demoPractitioner(n);
 
-  /// Demo WebView titles stay Vietnamese (user request).
-  String exerciseTitle(int n, String chineseName) => 'Bài $n: $chineseName';
+  /// Demo WebView titles: Vietnamese when VI, otherwise English.
+  String exerciseTitle(int n, String chineseName) => _ui.exerciseDemoTitle(n);
 
   String get tipMirror => _ui.tipMirror;
 

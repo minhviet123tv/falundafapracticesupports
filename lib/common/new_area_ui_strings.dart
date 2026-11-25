@@ -89,30 +89,30 @@ class NewAreaUiStrings {
 };
 
   String get chooseToExpandAfter => switch (lang) {
-    NewAreaLang.english => ' to enlarge',
-    NewAreaLang.vietnamese => ' để phóng to',
-    NewAreaLang.chinese1 => ' 以放大',
-    NewAreaLang.chinese2 => ' 以放大',
-    NewAreaLang.bosanski => ' za uvećanje',
-    NewAreaLang.deutsch => ', um zu vergrößern',
-    NewAreaLang.espanol => ' para ampliar',
-    NewAreaLang.farsi => ' ضربه بزنید',
-    NewAreaLang.francais => ' pour agrandir',
-    NewAreaLang.hebrew => ' להגדלה',
-    NewAreaLang.hrvatski => ' za uvećanje',
-    NewAreaLang.indonesia => ' untuk memperbesar',
-    NewAreaLang.italiano => ' per ingrandire',
-    NewAreaLang.japan => ' 拡大',
-    NewAreaLang.korean => ' 확대',
-    NewAreaLang.polski => ', aby powiększyć',
-    NewAreaLang.portugues => ' para ampliar',
-    NewAreaLang.russian => ', чтобы увеличить',
-    NewAreaLang.slovencina => ' na zväčšenie',
-    NewAreaLang.srpski => ' за увећање',
-    NewAreaLang.thai => ' เพื่อขยาย',
-    NewAreaLang.turkce => ' simgesine dokunun',
-    NewAreaLang.ukrainian => ', щоб збільшити',
-    _ => ' to enlarge',
+    NewAreaLang.english => ' to open in browser',
+    NewAreaLang.vietnamese => ' để mở trình duyệt',
+    NewAreaLang.chinese1 => ' 以在瀏覽器開啟',
+    NewAreaLang.chinese2 => ' 以在浏览器打开',
+    NewAreaLang.bosanski => ' za otvaranje u pregledniku',
+    NewAreaLang.deutsch => ', um im Browser zu öffnen',
+    NewAreaLang.espanol => ' para abrir en el navegador',
+    NewAreaLang.farsi => ' برای باز شدن در مرورگر',
+    NewAreaLang.francais => ' pour ouvrir dans le navigateur',
+    NewAreaLang.hebrew => ' לפתיחה בדפדפן',
+    NewAreaLang.hrvatski => ' za otvaranje u pregledniku',
+    NewAreaLang.indonesia => ' untuk membuka di peramban',
+    NewAreaLang.italiano => ' per aprire nel browser',
+    NewAreaLang.japan => ' ブラウザで開く',
+    NewAreaLang.korean => ' 브라우저에서 열기',
+    NewAreaLang.polski => ', aby otworzyć w przeglądarce',
+    NewAreaLang.portugues => ' para abrir no navegador',
+    NewAreaLang.russian => ', чтобы открыть в браузере',
+    NewAreaLang.slovencina => ' na otvorenie v prehliadači',
+    NewAreaLang.srpski => ' да отворите у прегледачу',
+    NewAreaLang.thai => ' เพื่อเปิดในเบราว์เซอร์',
+    NewAreaLang.turkce => ' tarayıcıda açmak için',
+    NewAreaLang.ukrainian => ', щоб відкрити в браузері',
+    _ => ' to open in browser',
 };
 
   String get copyLinkVideo => switch (lang) {
@@ -953,6 +953,28 @@ class NewAreaUiStrings {
     NewAreaLang.ukrainian => 'Демонстрація — Вправа $n',
     _ => 'Demo practitioner — Exercise $n',
 };
+
+  /// Tiêu đề trang video bài 1–5: tiếng Việt khi chọn VI, còn lại dùng tiếng Anh.
+  String exerciseDemoTitle(int n) {
+    const vietnamese = <int, String>{
+      1: 'Bài 1: Phật Triển Thiên Thủ Pháp',
+      2: 'Bài 2: Pháp Luân Trang Pháp',
+      3: 'Bài 3: Quán Thông Lưỡng Cực Pháp',
+      4: 'Bài 4: Pháp Luân Chu Thiên Pháp',
+      5: 'Bài 5: Thần Thông Gia Trì Pháp',
+    };
+    const english = <int, String>{
+      1: 'Exercise 1: Buddha Extending Numerous Arms',
+      2: 'Exercise 2: Falun Standing Meditation',
+      3: 'Exercise 3: Channeling Energy From the Two Cosmic Extremes',
+      4: 'Exercise 4: The Falun Method of Circulating Energy',
+      5: 'Exercise 5: Strengthening Higher Powers',
+    };
+    if (lang == NewAreaLang.vietnamese) {
+      return vietnamese[n] ?? 'Bài $n';
+    }
+    return english[n] ?? 'Exercise $n';
+  }
 
   /// Home grid: How Humankind Came To Be
   String get humankindMenuTitle => switch (lang) {

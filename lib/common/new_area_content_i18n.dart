@@ -343,8 +343,8 @@ To learn more fully about Falun Gong (Falun Dafa), please visit:
 Falun Gong is a Buddha-school cultivation practice that allows people to cultivate in ordinary society—at home, at work, at school, and so on. It emphasizes correcting unhealthy mindsets such as jealousy, the desire to show off, the competitive mentality, and more.
 
 Practicing the 5 exercises helps practitioners become healthier through positive changes in the body.
-To cultivate xinxing, practitioners need to study the Fa by listening to Master's 9 lectures or by reading the books—the main book being Zhuan Falun (with the same content as the 9 lectures).
-On the official website www.falundafa.org there are also other books and scriptures, such as The Great Consummation Way, which explains the principles of the movements; other supporting books such as Essentials for Further Advancement; and Master's lectures in various places (with answers to many practitioners' questions)...
+To cultivate xinxing, practitioners need to study the Fa by listening to Master's 9 lectures or by reading the books—the main book being "Zhuan Falun" (with the same content as the 9 lectures).
+On the official website www.falundafa.org there are also other books and scriptures, such as "The Great Consummation Way", which explains the principles of the movements; other supporting books such as "Essentials for Further Advancement"; and Master's lectures in various places (with answers to many practitioners' questions)...
 
 Practitioners can also visit minghui.org for the latest news and important articles of the practice, such as the Three Things Dafa disciples should do, the article "How Humankind Came to Be", and more.
 
@@ -355,8 +355,8 @@ When reading books or scriptures, practitioners should place them in clean, elev
 Pháp Luân Công là môn tu luyện của Phật Pháp giúp người học có thể tu luyện ngay trong cuộc sống như tại gia đình, nơi làm việc, trường học ... Trong đó chú trọng việc sửa đổi các tâm tính không tốt như tâm tật đố, tâm lý hiển thị, tâm tranh đấu ...
 
 Việc tập luyện 5 bài công pháp giúp học viên trở nên khoẻ mạnh hơn nhờ những thay đổi tích cực của cơ thể.
-Để tu luyện tâm tính, học viên cần học pháp bằng việc lắng nghe 9 bài giảng của sư phụ hoặc đọc sách, trong đó sách chính là Chuyển Pháp Luân (có chung nội dung với 9 bài giảng).
-Tại trang chủ www.falundafa.org còn có các sách và kinh văn như: Sách Đại Viên Mãn Pháp giúp hiểu rõ cơ lý của động tác, sách hỗ trợ khác như Tinh Tấn Yếu Chỉ và giảng pháp tại các nơi của sư phụ (có giải đáp nhiều câu hỏi của học viên) ...
+Để tu luyện tâm tính, học viên cần học pháp bằng việc lắng nghe 9 bài giảng của sư phụ hoặc đọc sách, trong đó sách chính là "Chuyển Pháp Luân" (có chung nội dung với 9 bài giảng).
+Tại trang chủ www.falundafa.org còn có các sách và kinh văn như: sách "Đại Viên Mãn Pháp" giúp hiểu rõ cơ lý của động tác, sách hỗ trợ khác như "Tinh Tấn Yếu Chỉ" và giảng pháp tại các nơi của sư phụ (có giải đáp nhiều câu hỏi của học viên) ...
 
 Học viên cũng có thể truy cập trang minghui.org để theo dõi các thông tin mới và bài viết quan trọng của môn học như: Ba việc nên làm của đệ tử Đại Pháp, bài viết "Vì sao có nhân loại"...
 
@@ -391,8 +391,8 @@ Khi đọc sách, kinh văn, học viên nên đặt sách, kinh văn ở nhữn
 Falun Gong je praksa kultivacije budističke škole koja omogućava kultivaciju u običnom društvu — kod kuće, na poslu, u školi itd. Naglašava ispravljanje nezdravih načina razmišljanja kao što su ljubomora, želja za pokazivanjem, takmičarski mentalitet i drugo.
 
 Vježbanje 5 vježbi pomaže vježbačima da postanu zdraviji kroz pozitivne promjene u tijelu.
-Da bi kultivirali xinxing, vježbači trebaju učiti Fa slušajući 9 predavanja Učitelja ili čitajući knjige — glavna knjiga je Zhuan Falun (isti sadržaj kao 9 predavanja).
-Na službenoj stranici www.falundafa.org postoje i druge knjige i spisi, poput Velikog puta savršenstva, koji objašnjava principe pokreta; pomoćne knjige kao Essentials for Further Advancement; i Učiteljeva predavanja na raznim mjestima (s odgovorima na mnoga pitanja vježbača)...
+Da bi kultivirali xinxing, vježbači trebaju učiti Fa slušajući 9 predavanja Učitelja ili čitajući knjige — glavna knjiga je "Zhuan Falun" (isti sadržaj kao 9 predavanja).
+Na službenoj stranici www.falundafa.org postoje i druge knjige i spisi, poput "Velikog puta savršenstva", koji objašnjava principe pokreta; pomoćne knjige kao "Essentials for Further Advancement"; i Učiteljeva predavanja na raznim mjestima (s odgovorima na mnoga pitanja vježbača)...
 
 Vježbači također mogu posjetiti minghui.org za najnovije vijesti i važne članke prakse, poput Tri stvari koje učenici Dafe trebaju raditi, članak « Kako je nastalo čovječanstvo » itd.
 
@@ -403,8 +403,8 @@ Pri čitanju knjiga ili spisa, vježbači ih trebaju staviti na čista, uzdignut
 Falun Gong ist eine Kultivierungspraxis der Buddha-Schule, die es Menschen ermöglicht, im gewöhnlichen Leben zu kultivieren — zu Hause, bei der Arbeit, in der Schule usw. Sie betont die Berichtigung ungesunder Denkweisen wie Eifersucht, Prahlsucht, Wettbewerbsdenken und mehr.
 
 Das Üben der 5 Übungen hilft Übenden, durch positive Veränderungen im Körper gesünder zu werden.
-Um Xinxing zu kultivieren, müssen Übende das Fa studieren, indem sie die 9 Vorträge des Meisters hören oder Bücher lesen — das Hauptbuch ist Zhuan Falun (mit demselben Inhalt wie die 9 Vorträge).
-Auf der offiziellen Website www.falundafa.org gibt es auch andere Bücher und Schriften, etwa Der Große Vollendungsweg, der die Prinzipien der Bewegungen erklärt; unterstützende Bücher wie Essentials for Further Advancement; und Vorträge des Meisters an verschiedenen Orten (mit Antworten auf viele Fragen von Übenden)...
+Um Xinxing zu kultivieren, müssen Übende das Fa studieren, indem sie die 9 Vorträge des Meisters hören oder Bücher lesen — das Hauptbuch ist "Zhuan Falun" (mit demselben Inhalt wie die 9 Vorträge).
+Auf der offiziellen Website www.falundafa.org gibt es auch andere Bücher und Schriften, etwa "Der Große Vollendungsweg", der die Prinzipien der Bewegungen erklärt; unterstützende Bücher wie "Essentials for Further Advancement"; und Vorträge des Meisters an verschiedenen Orten (mit Antworten auf viele Fragen von Übenden)...
 
 Übende können auch minghui.org besuchen für aktuelle Nachrichten und wichtige Artikel der Praxis, etwa die Drei Dinge, die Dafa-Schüler tun sollten, den Artikel „Wie die Menschheit entstand“ und mehr.
 
@@ -415,8 +415,8 @@ Beim Lesen von Büchern oder Schriften sollten Übende sie an sauberen, erhöhte
 Falun Gong es una práctica de cultivación de la escuela de Buda que permite cultivar en la sociedad ordinaria: en casa, en el trabajo, en la escuela, etc. Enfatiza corregir mentalidades poco saludables como los celos, el deseo de exhibirse, la mentalidad competitiva y más.
 
 Practicar los 5 ejercicios ayuda a los practicantes a volverse más saludables mediante cambios positivos en el cuerpo.
-Para cultivar el xinxing, los practicantes deben estudiar el Fa escuchando las 9 conferencias del Maestro o leyendo los libros — el principal es Zhuan Falun (mismo contenido que las 9 conferencias).
-En el sitio oficial www.falundafa.org también hay otros libros y escrituras, como El Gran Camino de la Consumación, que explica los principios de los movimientos; otros libros de apoyo como Essentials for Further Advancement; y conferencias del Maestro en varios lugares (con respuestas a muchas preguntas de practicantes)...
+Para cultivar el xinxing, los practicantes deben estudiar el Fa escuchando las 9 conferencias del Maestro o leyendo los libros — el principal es "Zhuan Falun" (mismo contenido que las 9 conferencias).
+En el sitio oficial www.falundafa.org también hay otros libros y escrituras, como "El Gran Camino de la Consumación", que explica los principios de los movimientos; otros libros de apoyo como "Essentials for Further Advancement"; y conferencias del Maestro en varios lugares (con respuestas a muchas preguntas de practicantes)...
 
 Los practicantes también pueden visitar minghui.org para las últimas noticias y artículos importantes, como las Tres Cosas que los discípulos de Dafa deberían hacer, el artículo « Cómo surgió la humanidad », etc.
 
@@ -427,8 +427,8 @@ Al leer libros o escrituras, los practicantes deben colocarlos en lugares limpio
 فالون گونگ تمرین تزکیه مکتب بودا است که به افراد امکان می‌دهد در جامعهٔ معمولی — در خانه، محل کار، مدرسه و غیره — تزکیه کنند. بر اصلاح ذهنیت‌های ناسالم مانند حسادت، میل به خودنمایی، روحیهٔ رقابت و بیشتر تأکید دارد.
 
 انجام ۵ تمرین به تمرین‌کنندگان کمک می‌کند از طریق تغییرات مثبت در بدن سالم‌تر شوند.
-برای تزکیهٔ شین‌شینگ، تمرین‌کنندگان باید با گوش دادن به ۹ سخنرانی استاد یا خواندن کتاب‌ها فا را بیاموزند — کتاب اصلی ژوان فالون است (همان محتوای ۹ سخنرانی).
-در وب‌سایت رسمی www.falundafa.org کتاب‌ها و نوشته‌های دیگری نیز هست، مانند راه کمال عظیم که اصول حرکات را توضیح می‌دهد؛ کتاب‌های کمکی مانند Essentials for Further Advancement؛ و سخنرانی‌های استاد در جاهای مختلف (با پاسخ به بسیاری از پرسش‌های تمرین‌کنندگان)...
+برای تزکیهٔ شین‌شینگ، تمرین‌کنندگان باید با گوش دادن به ۹ سخنرانی استاد یا خواندن کتاب‌ها فا را بیاموزند — کتاب اصلی "ژوان فالون" است (همان محتوای ۹ سخنرانی).
+در وب‌سایت رسمی www.falundafa.org کتاب‌ها و نوشته‌های دیگری نیز هست، مانند "راه کمال عظیم" که اصول حرکات را توضیح می‌دهد؛ کتاب‌های کمکی مانند "Essentials for Further Advancement"؛ و سخنرانی‌های استاد در جاهای مختلف (با پاسخ به بسیاری از پرسش‌های تمرین‌کنندگان)...
 
 تمرین‌کنندگان همچنین می‌توانند برای آخرین اخبار و مقالات مهم به minghui.org مراجعه کنند، مانند سه کاری که شاگردان دافا باید انجام دهند، مقالهٔ «انسان چگونه پدید آمد» و بیشتر.
 
@@ -439,8 +439,8 @@ Al leer libros o escrituras, los practicantes deben colocarlos en lugares limpio
 Le Falun Gong est une pratique de cultivation de l'école du Bouddha qui permet de cultiver dans la société ordinaire — à la maison, au travail, à l'école, etc. Il met l'accent sur la correction d'états d'esprit malsains comme la jalousie, le désir de se montrer, la mentalité de compétition, et plus encore.
 
 Pratiquer les 5 exercices aide les pratiquants à devenir plus sains grâce à des changements positifs dans le corps.
-Pour cultiver le xinxing, les pratiquants doivent étudier le Fa en écoutant les 9 conférences du Maître ou en lisant les livres — le livre principal étant Zhuan Falun (même contenu que les 9 conférences).
-Sur le site officiel www.falundafa.org se trouvent aussi d'autres livres et écritures, comme La Grande Voie de la Consommation, qui explique les principes des mouvements ; d'autres livres de soutien comme Essentials for Further Advancement ; et les conférences du Maître dans divers lieux (avec des réponses à de nombreuses questions des pratiquants)...
+Pour cultiver le xinxing, les pratiquants doivent étudier le Fa en écoutant les 9 conférences du Maître ou en lisant les livres — le livre principal étant "Zhuan Falun" (même contenu que les 9 conférences).
+Sur le site officiel www.falundafa.org se trouvent aussi d'autres livres et écritures, comme "La Grande Voie de la Consommation", qui explique les principes des mouvements ; d'autres livres de soutien comme "Essentials for Further Advancement" ; et les conférences du Maître dans divers lieux (avec des réponses à de nombreuses questions des pratiquants)...
 
 Les pratiquants peuvent aussi consulter minghui.org pour les dernières nouvelles et articles importants, comme les Trois Choses que les disciples de Dafa devraient faire, l'article « Comment l'humanité est apparue », etc.
 
@@ -451,8 +451,8 @@ En lisant livres ou écritures, les pratiquants devraient les placer dans des en
 פאלון גונג הוא תרגול קולטיבציה של אסכולת הבודהה המאפשר לקולטיבציה בחברה הרגילה — בבית, בעבודה, בבית הספר וכו'. הוא מדגיש תיקון הלכי רוח לא בריאים כמו קנאה, רצון להתרברב, תחרותיות ועוד.
 
 תרגול 5 התרגילים עוזר למתרגלים להיות בריאים יותר באמצעות שינויים חיוביים בגוף.
-כדי לקולטיבציה של הסינסינג, מתרגלים צריכים ללמוד את הפא בהאזנה ל־9 ההרצאות של המורה או בקריאת הספרים — הספר העיקרי הוא ג'ואן פאלון (אותו תוכן כמו 9 ההרצאות).
-באתר הרשמי www.falundafa.org יש גם ספרים וכתבים נוספים, כמו הדרך הגדולה של ההשלמה, המסבירה את עקרונות התנועות; ספרי תמיכה כמו Essentials for Further Advancement; והרצאות המורה במקומות שונים (עם תשובות לשאלות רבות של מתרגלים)...
+כדי לקולטיבציה של הסינסינג, מתרגלים צריכים ללמוד את הפא בהאזנה ל־9 ההרצאות של המורה או בקריאת הספרים — הספר העיקרי הוא "ג'ואן פאלון" (אותו תוכן כמו 9 ההרצאות).
+באתר הרשמי www.falundafa.org יש גם ספרים וכתבים נוספים, כמו "הדרך הגדולה של ההשלמה", המסבירה את עקרונות התנועות; ספרי תמיכה כמו "Essentials for Further Advancement"; והרצאות המורה במקומות שונים (עם תשובות לשאלות רבות של מתרגלים)...
 
 מתרגלים יכולים גם לבקר ב־minghui.org לחדשות האחרונות ומאמרים חשובים של התרגול, כמו שלושת הדברים שתלמידי דאפא צריכים לעשות, המאמר « כיצד נוצרה האנושות » ועוד.
 
@@ -463,8 +463,8 @@ En lisant livres ou écritures, les pratiquants devraient les placer dans des en
 Falun Gong je praksa kultivacije budističke škole koja omogućava kultivaciju u običnom društvu — kod kuće, na poslu, u školi itd. Naglašava ispravljanje nezdravih načina razmišljanja kao što su ljubomora, želja za pokazivanjem, takmičarski mentalitet i drugo.
 
 Vježbanje 5 vježbi pomaže vježbačima da postanu zdraviji kroz pozitivne promjene u tijelu.
-Da bi kultivirali xinxing, vježbači trebaju učiti Fa slušajući 9 predavanja Učitelja ili čitajući knjige — glavna knjiga je Zhuan Falun (isti sadržaj kao 9 predavanja).
-Na službenoj stranici www.falundafa.org postoje i druge knjige i spisi, poput Velikog puta savršenstva, koji objašnjava principe pokreta; pomoćne knjige kao Essentials for Further Advancement; i Učiteljeva predavanja na raznim mjestima (s odgovorima na mnoga pitanja vježbača)...
+Da bi kultivirali xinxing, vježbači trebaju učiti Fa slušajući 9 predavanja Učitelja ili čitajući knjige — glavna knjiga je "Zhuan Falun" (isti sadržaj kao 9 predavanja).
+Na službenoj stranici www.falundafa.org postoje i druge knjige i spisi, poput "Velikog puta savršenstva", koji objašnjava principe pokreta; pomoćne knjige kao "Essentials for Further Advancement"; i Učiteljeva predavanja na raznim mjestima (s odgovorima na mnoga pitanja vježbača)...
 
 Vježbači također mogu posjetiti minghui.org za najnovije vijesti i važne članke prakse, poput Tri stvari koje učenici Dafe trebaju raditi, članak « Kako je nastalo čovječanstvo » itd.
 
@@ -475,8 +475,8 @@ Pri čitanju knjiga ili spisa, vježbači ih trebaju staviti na čista, uzdignut
 Falun Gong adalah praktik kultivasi aliran Buddha yang memungkinkan orang berkultivasi dalam masyarakat biasa—di rumah, di tempat kerja, di sekolah, dan sebagainya. Ia menekankan koreksi pola pikir yang tidak sehat seperti kecemburuan, keinginan pamer, mentalitas bersaing, dan lainnya.
 
 Melatih 5 gerakan membantu praktisi menjadi lebih sehat melalui perubahan positif pada tubuh.
-Untuk mengkultivasi xinxing, praktisi perlu mempelajari Fa dengan mendengarkan 9 kuliah Guru atau membaca buku—buku utamanya adalah Zhuan Falun (isi sama dengan 9 kuliah).
-Di situs resmi www.falundafa.org ada juga buku dan kitab lain, seperti Jalan Kesempurnaan Agung yang menjelaskan prinsip gerakan; buku pendukung seperti Essentials for Further Advancement; dan kuliah Guru di berbagai tempat (dengan jawaban atas banyak pertanyaan praktisi)...
+Untuk mengkultivasi xinxing, praktisi perlu mempelajari Fa dengan mendengarkan 9 kuliah Guru atau membaca buku—buku utamanya adalah "Zhuan Falun" (isi sama dengan 9 kuliah).
+Di situs resmi www.falundafa.org ada juga buku dan kitab lain, seperti "Jalan Kesempurnaan Agung" yang menjelaskan prinsip gerakan; buku pendukung seperti "Essentials for Further Advancement"; dan kuliah Guru di berbagai tempat (dengan jawaban atas banyak pertanyaan praktisi)...
 
 Praktisi juga dapat mengunjungi minghui.org untuk berita terbaru dan artikel penting praktik, seperti Tiga Hal yang harus dilakukan murid Dafa, artikel « Bagaimana umat manusia muncul », dll.
 
@@ -487,8 +487,8 @@ Saat membaca buku atau kitab, praktisi harus meletakkannya di tempat bersih dan 
 Il Falun Gong è una pratica di coltivazione della scuola del Buddha che permette di coltivare nella società ordinaria — a casa, al lavoro, a scuola, ecc. Enfatizza la correzione di mentalità malsane come gelosia, desiderio di mettersi in mostra, mentalità competitiva e altro.
 
 Praticare i 5 esercizi aiuta i praticanti a diventare più sani attraverso cambiamenti positivi nel corpo.
-Per coltivare lo xinxing, i praticanti devono studiare il Fa ascoltando le 9 lezioni del Maestro o leggendo i libri — il libro principale è Zhuan Falun (stesso contenuto delle 9 lezioni).
-Sul sito ufficiale www.falundafa.org ci sono anche altri libri e scritture, come La Grande Via della Consumazione, che spiega i principi dei movimenti; altri libri di supporto come Essentials for Further Advancement; e lezioni del Maestro in vari luoghi (con risposte a molte domande dei praticanti)...
+Per coltivare lo xinxing, i praticanti devono studiare il Fa ascoltando le 9 lezioni del Maestro o leggendo i libri — il libro principale è "Zhuan Falun" (stesso contenuto delle 9 lezioni).
+Sul sito ufficiale www.falundafa.org ci sono anche altri libri e scritture, come "La Grande Via della Consumazione", che spiega i principi dei movimenti; altri libri di supporto come "Essentials for Further Advancement"; e lezioni del Maestro in vari luoghi (con risposte a molte domande dei praticanti)...
 
 I praticanti possono anche visitare minghui.org per le ultime notizie e articoli importanti della pratica, come le Tre Cose che i discepoli di Dafa dovrebbero fare, l'articolo « Come è nata l'umanità » e altro.
 
@@ -499,8 +499,8 @@ Quando si leggono libri o scritture, i praticanti dovrebbero posizionarli in luo
 法輪功は仏家の修煉法で、家庭・職場・学校など日常社会の中で修煉できます。嫉妬、見せびらかし、争いの心など、良くない心性を正すことを重視します。
 
 5つの功法を練習すると、体の良い変化により健康になります。
-心性を修煉するには、師の9つの講義を聴くか本を読んで法を学ぶ必要があります——主な本は転法輪です（9つの講義と同じ内容）。
-公式サイト www.falundafa.org には他の書物・経文もあります。例えば動作の原理を説明する大円満法、精進要旨などの補助書、各地での師の講法（学習者の多くの質問への回答付き）などです...
+心性を修煉するには、師の9つの講義を聴くか本を読んで法を学ぶ必要があります——主な本は「転法輪」です（9つの講義と同じ内容）。
+公式サイト www.falundafa.org には他の書物・経文もあります。例えば動作の原理を説明する「大円満法」、「精進要旨」などの補助書、各地での師の講法（学習者の多くの質問への回答付き）などです...
 
 また minghui.org で最新ニュースや重要な文章——大法弟子がすべき三つのこと、「なぜ人類がいるのか」など——を見ることができます。
 
@@ -511,8 +511,8 @@ Quando si leggono libri o scritture, i praticanti dovrebbero posizionarli in luo
 파룬궁은 불가의 수련법으로, 가정·직장·학교 등 일상 사회에서 수련할 수 있습니다. 질투심, 과시심, 투쟁심 등 좋지 않은 심성을 바로잡는 것을 중시합니다.
 
 5가지 공법을 연마하면 몸의 긍정적인 변화로 건강해집니다.
-심성을 수련하려면 스승님의 9개 강의를 듣거나 책을 읽어 법을 배워야 합니다——주요 책은 전법륜입니다(9개 강의와 같은 내용).
-공식 사이트 www.falundafa.org 에는 다른 책과 경문도 있습니다. 예를 들어 동작의 원리를 설명하는 대원만법, 정진요지 같은 보조 서적, 각지에서의 스승님 강법(수련생들의 많은 질문에 대한 답변 포함) 등입니다...
+심성을 수련하려면 스승님의 9개 강의를 듣거나 책을 읽어 법을 배워야 합니다——주요 책은 「전법륜」입니다(9개 강의와 같은 내용).
+공식 사이트 www.falundafa.org 에는 다른 책과 경문도 있습니다. 예를 들어 동작의 원리를 설명하는 「대원만법」, 「정진요지」 같은 보조 서적, 각지에서의 스승님 강법(수련생들의 많은 질문에 대한 답변 포함) 등입니다...
 
 또한 minghui.org 에서 최신 소식과 중요한 글——대법제자가 해야 할 세 가지, 「인류가 왜 있는가」 등——을 볼 수 있습니다.
 
@@ -523,8 +523,8 @@ Quando si leggono libri o scritture, i praticanti dovrebbero posizionarli in luo
 Falun Gong to praktyka kultywacji szkoły Buddy, która pozwala kultywować w zwykłym społeczeństwie — w domu, w pracy, w szkole itd. Podkreśla korygowanie niezdrowych nastawień, takich jak zazdrość, chęć popisania się, mentalność rywalizacji i inne.
 
 Ćwiczenie 5 ćwiczeń pomaga praktykującym stać się zdrowszymi dzięki pozytywnym zmianom w ciele.
-Aby kultywować xinxing, praktykujący muszą studiować Fa, słuchając 9 wykładów Mistrza lub czytając książki — główną jest Zhuan Falun (ta sama treść co 9 wykładów).
-Na oficjalnej stronie www.falundafa.org są też inne książki i pisma, np. Wielka Droga Spełnienia, wyjaśniająca zasady ruchów; książki pomocnicze jak Essentials for Further Advancement; oraz wykłady Mistrza w różnych miejscach (z odpowiedziami na wiele pytań praktykujących)...
+Aby kultywować xinxing, praktykujący muszą studiować Fa, słuchając 9 wykładów Mistrza lub czytając książki — główną jest "Zhuan Falun" (ta sama treść co 9 wykładów).
+Na oficjalnej stronie www.falundafa.org są też inne książki i pisma, np. "Wielka Droga Spełnienia", wyjaśniająca zasady ruchów; książki pomocnicze jak "Essentials for Further Advancement"; oraz wykłady Mistrza w różnych miejscach (z odpowiedziami na wiele pytań praktykujących)...
 
 Praktykujący mogą też odwiedzać minghui.org po najnowsze wiadomości i ważne artykuły praktyki, np. Trzy Rzeczy, które powinni robić uczniowie Dafa, artykuł « Jak powstała ludzkość » itd.
 
@@ -535,8 +535,8 @@ Czytając książki lub pisma, należy kłaść je w czystych, wyniesionych miej
 O Falun Gong é uma prática de cultivo da escola de Buda que permite cultivar na sociedade comum — em casa, no trabalho, na escola, etc. Enfatiza corrigir mentalidades pouco saudáveis como ciúme, desejo de se exibir, mentalidade competitiva e mais.
 
 Praticar os 5 exercícios ajuda os praticantes a ficarem mais saudáveis por meio de mudanças positivas no corpo.
-Para cultivar o xinxing, os praticantes precisam estudar o Fa ouvindo as 9 palestras do Mestre ou lendo os livros — o principal é Zhuan Falun (mesmo conteúdo das 9 palestras).
-No site oficial www.falundafa.org também há outros livros e escrituras, como O Grande Caminho da Consumação, que explica os princípios dos movimentos; outros livros de apoio como Essentials for Further Advancement; e palestras do Mestre em vários lugares (com respostas a muitas perguntas dos praticantes)...
+Para cultivar o xinxing, os praticantes precisam estudar o Fa ouvindo as 9 palestras do Mestre ou lendo os livros — o principal é "Zhuan Falun" (mesmo conteúdo das 9 palestras).
+No site oficial www.falundafa.org também há outros livros e escrituras, como "O Grande Caminho da Consumação", que explica os princípios dos movimentos; outros livros de apoio como "Essentials for Further Advancement"; e palestras do Mestre em vários lugares (com respostas a muitas perguntas dos praticantes)...
 
 Os praticantes também podem visitar minghui.org para as últimas notícias e artigos importantes, como as Três Coisas que os discípulos de Dafa devem fazer, o artigo « Como a humanidade veio a existir », etc.
 
@@ -548,7 +548,7 @@ Ao ler livros ou escrituras, os praticantes devem colocá-los em lugares limpos 
 
 Выполнение 5 упражнений помогает практикующим стать здоровее благодаря положительным изменениям в теле.
 Чтобы совершенствовать синьсин, практикующим нужно изучать Фа, слушая 9 лекций Учителя или читая книги — главная книга «Чжуань Фалунь» (то же содержание, что и 9 лекций).
-На официальном сайте www.falundafa.org также есть другие книги и писания, например «Великий путь совершенствования», объясняющий принципы движений; вспомогательные книги вроде Essentials for Further Advancement; и лекции Учителя в разных местах (с ответами на многие вопросы практикующих)...
+На официальном сайте www.falundafa.org также есть другие книги и писания, например «Великий путь совершенствования», объясняющий принципы движений; вспомогательные книги вроде "Essentials for Further Advancement"; и лекции Учителя в разных местах (с ответами на многие вопросы практикующих)...
 
 Практикующие также могут посещать minghui.org за новостями и важными статьями практики, например «Три дела, которые должны делать ученики Дафа», статья «Как появилось человечество» и др.
 
@@ -559,8 +559,8 @@ Ao ler livros ou escrituras, os praticantes devem colocá-los em lugares limpos 
 Falun Gong je prax kultivácie budhistickej školy, ktorá umožňuje kultivovať v bežnej spoločnosti — doma, v práci, v škole atď. Zdôrazňuje naprávanie nezdravých postojov, ako sú žiarlivosť, túžba predvádzať sa, súťaživá mentalita a ďalšie.
 
 Cvičenie 5 cvičení pomáha cvičiacim stať sa zdravšími vďaka pozitívnym zmenám v tele.
-Na kultiváciu xinxingu musia cvičiaci študovať Fa počúvaním 9 prednášok Majstra alebo čítaním kníh — hlavná kniha je Zhuan Falun (rovnaký obsah ako 9 prednášok).
-Na oficiálnej stránke www.falundafa.org sú aj iné knihy a spisy, napr. Veľká cesta naplnenia, ktorá vysvetľuje princípy pohybov; podporné knihy ako Essentials for Further Advancement; a prednášky Majstra na rôznych miestach (s odpoveďami na mnohé otázky cvičiacich)...
+Na kultiváciu xinxingu musia cvičiaci študovať Fa počúvaním 9 prednášok Majstra alebo čítaním kníh — hlavná kniha je "Zhuan Falun" (rovnaký obsah ako 9 prednášok).
+Na oficiálnej stránke www.falundafa.org sú aj iné knihy a spisy, napr. "Veľká cesta naplnenia", ktorá vysvetľuje princípy pohybov; podporné knihy ako "Essentials for Further Advancement"; a prednášky Majstra na rôznych miestach (s odpoveďami na mnohé otázky cvičiacich)...
 
 Cvičiaci môžu navštíviť aj minghui.org pre najnovšie správy a dôležité články praxe, napr. Tri veci, ktoré by mali robiť žiaci Dafa, článok « Ako vzniklo ľudstvo » atď.
 
@@ -571,8 +571,8 @@ Pri čítaní kníh alebo spisov ich treba klásť na čisté, vyvýšené miest
 Фалун Гонг је пракса култивације будистичке школе која омогућава култивацију у обичном друштву — код куће, на послу, у школи итд. Наглашава исправљање нездравих начинâ мишљења као што су љубомора, жеља за показивањем, такмичарски менталитет и друго.
 
 Вежбање 5 вежби помаже вежбачима да постану здравији кроз позитивне промене у телу.
-Да би култивирали синсинг, вежбачи треба да уче Фа слушајући 9 предавања Учитеља или читајући књиге — главна књига је Жуан Фалун (исти садржај као 9 предавања).
-На званичном сајту www.falundafa.org постоје и друге књиге и списи, попут Великог пута савршенства, који објашњава принципе покрета; помоћне књиге као Essentials for Further Advancement; и Учитељева предавања на разним местима (са одговорима на многа питања вежбача)...
+Да би култивирали синсинг, вежбачи треба да уче Фа слушајући 9 предавања Учитеља или читајући књиге — главна књига је "Жуан Фалун" (исти садржај као 9 предавања).
+На званичном сајту www.falundafa.org постоје и друге књиге и списи, попут "Великог пута савршенства", који објашњава принципе покрета; помоћне књиге као "Essentials for Further Advancement"; и Учитељева предавања на разним местима (са одговорима на многа питања вежбача)...
 
 Вежбачи такође могу посетити minghui.org за најновије вести и важне чланке праксе, попут Три ствари које ученици Дафе треба да раде, чланак « Како је настало човечанство » итд.
 
@@ -583,8 +583,8 @@ Pri čítaní kníh alebo spisov ich treba klásť na čisté, vyvýšené miest
 ฝ่าหลุนกงเป็นการบำเพ็ญของสำนักพุทธที่ให้คนบำเพ็ญได้ในสังคมปกติ—ที่บ้าน ที่ทำงาน ที่โรงเรียน ฯลฯ เน้นการแก้ไขจิตใจที่ไม่ดี เช่น ความอิจฉา ความอยากอวด ความคิดแข่งขัน และอื่นๆ
 
 การฝึก 5 ท่างช่วยให้ผู้ฝึกแข็งแรงขึ้นผ่านการเปลี่ยนแปลงที่ดีของร่างกาย
-เพื่อบำเพ็ญซินซิง ผู้ฝึกต้องเรียนฝ่าโดยฟังการบรรยาย 9 บทของอาจารย์หรืออ่านหนังสือ—หนังสือหลักคือจวนฝ่าหลุน (เนื้อหาเดียวกับ 9 บท)
-บนเว็บไซต์ทางการ www.falundafa.org ยังมีหนังสือและคัมภีร์อื่นๆ เช่น ทางแห่งความบริบูรณ์อันยิ่งใหญ่ ที่อธิบายหลักการของท่าทาง หนังสือสนับสนุนอื่นๆ เช่น Essentials for Further Advancement และการบรรยายของอาจารย์ตามสถานที่ต่างๆ (พร้อมคำตอบคำถามมากมาย)...
+เพื่อบำเพ็ญซินซิง ผู้ฝึกต้องเรียนฝ่าโดยฟังการบรรยาย 9 บทของอาจารย์หรืออ่านหนังสือ—หนังสือหลักคือ"จวนฝ่าหลุน" (เนื้อหาเดียวกับ 9 บท)
+บนเว็บไซต์ทางการ www.falundafa.org ยังมีหนังสือและคัมภีร์อื่นๆ เช่น "ทางแห่งความบริบูรณ์อันยิ่งใหญ่" ที่อธิบายหลักการของท่าทาง หนังสือสนับสนุนอื่นๆ เช่น "Essentials for Further Advancement" และการบรรยายของอาจารย์ตามสถานที่ต่างๆ (พร้อมคำตอบคำถามมากมาย)...
 
 ผู้ฝึกยังสามารถเข้า minghui.org เพื่อข่าวล่าสุดและบทความสำคัญ เช่น สามสิ่งที่ศิษย์ต้าฝ่าควรทำ บทความ 「มนุษย์เกิดมาได้อย่างไร」 ฯลฯ
 
@@ -595,8 +595,8 @@ Pri čítaní kníh alebo spisov ich treba klásť na čisté, vyvýšené miest
 Falun Gong, sıradan toplumda — evde, işte, okulda vb. — yetiştirmeye olanak tanıyan Budist okul yetiştirme uygulamasıdır. Kıskançlık, gösteriş arzusu, rekabet zihniyeti gibi sağlıksız zihin hallerini düzeltmeyi vurgular.
 
 5 egzersizi uygulamak, bedendeki olumlu değişimler sayesinde uygulayıcıların daha sağlıklı olmasına yardımcı olur.
-Xinxing'i yetiştirmek için uygulayıcılar Usta'nın 9 dersini dinleyerek veya kitapları okuyarak Fa'yı çalışmalıdır — ana kitap Zhuan Falun'dur (9 dersle aynı içerik).
-Resmi site www.falundafa.org adresinde hareketlerin ilkelerini açıklayan Büyük Tamamlanma Yolu gibi başka kitaplar ve yazılar; Essentials for Further Advancement gibi destek kitapları; ve çeşitli yerlerdeki Usta konuşmaları (birçok soruya yanıtlarla) da vardır...
+Xinxing'i yetiştirmek için uygulayıcılar Usta'nın 9 dersini dinleyerek veya kitapları okuyarak Fa'yı çalışmalıdır — ana kitap "Zhuan Falun"'dur (9 dersle aynı içerik).
+Resmi site www.falundafa.org adresinde hareketlerin ilkelerini açıklayan "Büyük Tamamlanma Yolu" gibi başka kitaplar ve yazılar; "Essentials for Further Advancement" gibi destek kitapları; ve çeşitli yerlerdeki Usta konuşmaları (birçok soruya yanıtlarla) da vardır...
 
 Uygulayıcılar ayrıca en son haberler ve önemli makaleler için minghui.org adresini ziyaret edebilir — Dafa müritlerinin yapması gereken Üç Şey, « İnsanlık nasıl ortaya çıktı » makalesi vb.
 
@@ -608,7 +608,7 @@ Kitap veya yazı okurken bunları masa veya stand gibi temiz, yüksek yerlere ko
 
 Виконання 5 вправ допомагає практикувальникам стати здоровішими завдяки позитивним змінам у тілі.
 Щоб вдосконалювати синьсін, потрібно вивчати Фа, слухаючи 9 лекцій Учителя або читаючи книги — головна книга «Чжуань Фалунь» (той самий зміст, що й 9 лекцій).
-На офіційному сайті www.falundafa.org також є інші книги й писання, наприклад «Великий шлях удосконалення», що пояснює принципи рухів; допоміжні книги на кшталт Essentials for Further Advancement; і лекції Учителя в різних місцях (з відповідями на багато запитань)...
+На офіційному сайті www.falundafa.org також є інші книги й писання, наприклад «Великий шлях удосконалення», що пояснює принципи рухів; допоміжні книги на кшталт "Essentials for Further Advancement"; і лекції Учителя в різних місцях (з відповідями на багато запитань)...
 
 Практикувальники також можуть відвідувати minghui.org за новинами й важливими статтями, наприклад «Три справи, які мають робити учні Дафа», стаття «Як з'явилося людство» тощо.
 
@@ -619,8 +619,8 @@ Kitap veya yazı okurken bunları masa veya stand gibi temiz, yüksek yerlere ko
 Falun Gong is a Buddha-school cultivation practice that allows people to cultivate in ordinary society—at home, at work, at school, and so on. It emphasizes correcting unhealthy mindsets such as jealousy, the desire to show off, the competitive mentality, and more.
 
 Practicing the 5 exercises helps practitioners become healthier through positive changes in the body.
-To cultivate xinxing, practitioners need to study the Fa by listening to Master's 9 lectures or by reading the books—the main book being Zhuan Falun (with the same content as the 9 lectures).
-On the official website www.falundafa.org there are also other books and scriptures, such as The Great Consummation Way, which explains the principles of the movements; other supporting books such as Essentials for Further Advancement; and Master's lectures in various places (with answers to many practitioners' questions)...
+To cultivate xinxing, practitioners need to study the Fa by listening to Master's 9 lectures or by reading the books—the main book being "Zhuan Falun" (with the same content as the 9 lectures).
+On the official website www.falundafa.org there are also other books and scriptures, such as "The Great Consummation Way", which explains the principles of the movements; other supporting books such as "Essentials for Further Advancement"; and Master's lectures in various places (with answers to many practitioners' questions)...
 
 Practitioners can also visit minghui.org for the latest news and important articles of the practice, such as the Three Things Dafa disciples should do, the article "How Humankind Came to Be", and more.
 
@@ -708,7 +708,7 @@ When reading books or scriptures, practitioners should place them in clean, elev
 
   static String exerciseBody(NewAreaLang lang) => switch (lang) {
     NewAreaLang.english => '''
-After becoming reasonably familiar over about 1–2 months, practitioners should refine the movements by reading The Great Consummation Way to understand the principles of each movement, or by watching the exercise instruction videos on falundafa.org. They may also ask experienced practitioners for help adjusting the form.
+After becoming reasonably familiar over about 1–2 months, practitioners should refine the movements by reading "The Great Consummation Way" to understand the principles of each movement, or by watching the exercise instruction videos on falundafa.org. They may also ask experienced practitioners for help adjusting the form.
 
 Below is guidance in this app for beginners.
 
@@ -731,7 +731,7 @@ Below is guidance in this app for beginners.
  - Exercise 4: Hands do not touch the body.
  - Exercise 5: Practice for as long as you can.''',
     NewAreaLang.vietnamese => '''
-Sau khi đã tập tương đối quen khoảng 1~2 tháng, học viên cần điều chỉnh động tác cho chính xác bằng cách đọc sách Đại Viên Mãn Pháp để hiểu rõ cơ lý của từng động tác hoặc xem video hướng dẫn tập trong trang falundafa.org. Ngoài ra cũng có thể nhờ các học viên đã tập thành thạo điều chỉnh giúp. 
+Sau khi đã tập tương đối quen khoảng 1~2 tháng, học viên cần điều chỉnh động tác cho chính xác bằng cách đọc sách "Đại Viên Mãn Pháp" để hiểu rõ cơ lý của từng động tác hoặc xem video hướng dẫn tập trong trang falundafa.org. Ngoài ra cũng có thể nhờ các học viên đã tập thành thạo điều chỉnh giúp. 
 
 Sau đây là hướng dẫn của App cho học viên mới tiếp cận.
 
@@ -800,7 +800,7 @@ Sau đây là hướng dẫn của App cho học viên mới tiếp cận.
  - 第4套：手不触及身体。
  - 第5套：能炼多久就炼多久。''',
     NewAreaLang.bosanski => '''
-Nakon što u oko 1–2 mjeseca postanu razumno upoznati, vježbači trebaju usavršiti pokrete čitanjem Velikog puta savršenstva kako bi razumjeli principe svakog pokreta, ili gledanjem instruktivnih videa na falundafa.org. Mogu i pitati iskusne vježbače za pomoć pri korekciji forme.
+Nakon što u oko 1–2 mjeseca postanu razumno upoznati, vježbači trebaju usavršiti pokrete čitanjem "Velikog puta savršenstva" kako bi razumjeli principe svakog pokreta, ili gledanjem instruktivnih videa na falundafa.org. Mogu i pitati iskusne vježbače za pomoć pri korekciji forme.
 
 Ispod je vodič ove aplikacije za početnike.
 
@@ -823,7 +823,7 @@ Ispod je vodič ove aplikacije za početnike.
  - Vježba 4: Ruke ne dodiruju tijelo.
  - Vježba 5: Vježbati što duže možete.''',
     NewAreaLang.deutsch => '''
-Nach etwa 1–2 Monaten Übung sollten Übende die Bewegungen verfeinern, indem sie Der Große Vollendungsweg lesen, um die Prinzipien jeder Bewegung zu verstehen, oder die Übungsvideos auf falundafa.org ansehen. Sie können auch erfahrene Übende um Hilfe bei der Korrektur der Form bitten.
+Nach etwa 1–2 Monaten Übung sollten Übende die Bewegungen verfeinern, indem sie "Der Große Vollendungsweg" lesen, um die Prinzipien jeder Bewegung zu verstehen, oder die Übungsvideos auf falundafa.org ansehen. Sie können auch erfahrene Übende um Hilfe bei der Korrektur der Form bitten.
 
 Nachfolgend die Anleitung in dieser App für Anfänger.
 
@@ -846,7 +846,7 @@ Nachfolgend die Anleitung in dieser App für Anfänger.
  - Übung 4: Hände berühren den Körper nicht.
  - Übung 5: So lange üben, wie möglich.''',
     NewAreaLang.espanol => '''
-Tras familiarizarse razonablemente en unos 1–2 meses, los practicantes deben refinar los movimientos leyendo El Gran Camino de la Consumación para entender los principios de cada movimiento, o viendo los videos de instrucción en falundafa.org. También pueden pedir ayuda a practicantes experimentados.
+Tras familiarizarse razonablemente en unos 1–2 meses, los practicantes deben refinar los movimientos leyendo "El Gran Camino de la Consumación" para entender los principios de cada movimiento, o viendo los videos de instrucción en falundafa.org. También pueden pedir ayuda a practicantes experimentados.
 
 A continuación, la guía de esta aplicación para principiantes.
 
@@ -869,7 +869,7 @@ A continuación, la guía de esta aplicación para principiantes.
  - Ejercicio 4: Las manos no tocan el cuerpo.
  - Ejercicio 5: Practicar tanto como se pueda.''',
     NewAreaLang.farsi => '''
-پس از حدود ۱–۲ ماه که نسبتاً آشنا شدند، باید با خواندن راه کمال عظیم برای فهم اصول هر حرکت، یا تماشای ویدیوهای آموزشی در falundafa.org، حرکات را دقیق‌تر کنند. همچنین می‌توانند از تمرین‌کنندگان باتجربه کمک بخواهند.
+پس از حدود ۱–۲ ماه که نسبتاً آشنا شدند، باید با خواندن "راه کمال عظیم" برای فهم اصول هر حرکت، یا تماشای ویدیوهای آموزشی در falundafa.org، حرکات را دقیق‌تر کنند. همچنین می‌توانند از تمرین‌کنندگان باتجربه کمک بخواهند.
 
 در ادامه راهنمای این برنامه برای مبتدیان آمده است.
 
@@ -892,7 +892,7 @@ A continuación, la guía de esta aplicación para principiantes.
  - تمرین ۴: دست‌ها به بدن برخورد نکنند.
  - تمرین ۵: تا جایی که می‌توانید تمرین کنید.''',
     NewAreaLang.francais => '''
-Après être devenu raisonnablement familier en environ 1–2 mois, les pratiquants devraient affiner les mouvements en lisant La Grande Voie de la Consommation pour comprendre les principes de chaque mouvement, ou en regardant les vidéos d'instruction sur falundafa.org. Ils peuvent aussi demander de l'aide à des pratiquants expérimentés.
+Après être devenu raisonnablement familier en environ 1–2 mois, les pratiquants devraient affiner les mouvements en lisant "La Grande Voie de la Consommation" pour comprendre les principes de chaque mouvement, ou en regardant les vidéos d'instruction sur falundafa.org. Ils peuvent aussi demander de l'aide à des pratiquants expérimentés.
 
 Voici les conseils de cette application pour les débutants.
 
@@ -915,7 +915,7 @@ Voici les conseils de cette application pour les débutants.
  - Exercice 4 : Les mains ne touchent pas le corps.
  - Exercice 5 : Pratiquer aussi longtemps que possible.''',
     NewAreaLang.hebrew => '''
-לאחר היכרות סבירה תוך כ־1–2 חודשים, יש לדייק את התנועות בקריאת הדרך הגדולה של ההשלמה כדי להבין את עקרונות כל תנועה, או בצפייה בסרטוני ההדרכה ב־falundafa.org. אפשר גם לבקש עזרה ממתרגלים מנוסים.
+לאחר היכרות סבירה תוך כ־1–2 חודשים, יש לדייק את התנועות בקריאת "הדרך הגדולה של ההשלמה" כדי להבין את עקרונות כל תנועה, או בצפייה בסרטוני ההדרכה ב־falundafa.org. אפשר גם לבקש עזרה ממתרגלים מנוסים.
 
 להלן ההנחיות באפליקציה זו למתחילים.
 
@@ -938,7 +938,7 @@ Voici les conseils de cette application pour les débutants.
  - תרגיל 4: הידיים אינן נוגעות בגוף.
  - תרגיל 5: לתרגל כמה שאפשר.''',
     NewAreaLang.hrvatski => '''
-Nakon što u oko 1–2 mjeseca postanu razumno upoznati, vježbači trebaju usavršiti pokrete čitanjem Velikog puta savršenstva kako bi razumjeli principe svakog pokreta, ili gledanjem instruktivnih videa na falundafa.org. Mogu i pitati iskusne vježbače za pomoć pri korekciji forme.
+Nakon što u oko 1–2 mjeseca postanu razumno upoznati, vježbači trebaju usavršiti pokrete čitanjem "Velikog puta savršenstva" kako bi razumjeli principe svakog pokreta, ili gledanjem instruktivnih videa na falundafa.org. Mogu i pitati iskusne vježbače za pomoć pri korekciji forme.
 
 Ispod je vodič ove aplikacije za početnike.
 
@@ -961,7 +961,7 @@ Ispod je vodič ove aplikacije za početnike.
  - Vježba 4: Ruke ne dodiruju tijelo.
  - Vježba 5: Vježbati što duže možete.''',
     NewAreaLang.indonesia => '''
-Setelah cukup terbiasa dalam sekitar 1–2 bulan, praktisi sebaiknya memperbaiki gerakan dengan membaca Jalan Kesempurnaan Agung untuk memahami prinsip setiap gerakan, atau menonton video panduan di falundafa.org. Bisa juga minta bantuan praktisi berpengalaman untuk menyesuaikan bentuk.
+Setelah cukup terbiasa dalam sekitar 1–2 bulan, praktisi sebaiknya memperbaiki gerakan dengan membaca "Jalan Kesempurnaan Agung" untuk memahami prinsip setiap gerakan, atau menonton video panduan di falundafa.org. Bisa juga minta bantuan praktisi berpengalaman untuk menyesuaikan bentuk.
 
 Berikut panduan aplikasi ini untuk pemula.
 
@@ -984,7 +984,7 @@ Berikut panduan aplikasi ini untuk pemula.
  - Latihan 4: Tangan tidak menyentuh tubuh.
  - Latihan 5: Latihan selama mungkin.''',
     NewAreaLang.italiano => '''
-Dopo aver acquisito una certa familiarità in circa 1–2 mesi, i praticanti dovrebbero raffinare i movimenti leggendo La Grande Via della Consumazione per comprendere i principi di ogni movimento, o guardando i video di istruzione su falundafa.org. Possono anche chiedere aiuto a praticanti esperti.
+Dopo aver acquisito una certa familiarità in circa 1–2 mesi, i praticanti dovrebbero raffinare i movimenti leggendo "La Grande Via della Consumazione" per comprendere i principi di ogni movimento, o guardando i video di istruzione su falundafa.org. Possono anche chiedere aiuto a praticanti esperti.
 
 Di seguito la guida di questa app per principianti.
 
@@ -1076,7 +1076,7 @@ Poniżej wskazówki tej aplikacji dla początkujących.
  - Ćwiczenie 4: Ręce nie dotykają ciała.
  - Ćwiczenie 5: Ćwiczyć tak długo, jak można.''',
     NewAreaLang.portugues => '''
-Após familiarizar-se razoavelmente em cerca de 1–2 meses, os praticantes devem refinar os movimentos lendo O Grande Caminho da Consumação para entender os princípios de cada movimento, ou assistindo aos vídeos de instrução em falundafa.org. Também podem pedir ajuda a praticantes experientes.
+Após familiarizar-se razoavelmente em cerca de 1–2 meses, os praticantes devem refinar os movimentos lendo "O Grande Caminho da Consumação" para entender os princípios de cada movimento, ou assistindo aos vídeos de instrução em falundafa.org. Também podem pedir ajuda a praticantes experientes.
 
 A seguir, a orientação deste aplicativo para iniciantes.
 
@@ -1145,7 +1145,7 @@ Nižšie je sprievodca tejto aplikácie pre začiatočníkov.
  - Cvičenie 4: Ruky sa nedotýkajú tela.
  - Cvičenie 5: Cvičiť čo najdlhšie.''',
     NewAreaLang.srpski => '''
-Након што за око 1–2 месеца постану разумно упознати, вежбачи треба да усаврше покрете читањем Великог пута савршенства како би разумели принципе сваког покрета, или гледањем инструктивних видеа на falundafa.org. Могу и питати искусне вежбаче за помоћ при корекцији форме.
+Након што за око 1–2 месеца постану разумно упознати, вежбачи треба да усаврше покрете читањем "Великог пута савршенства" како би разумели принципе сваког покрета, или гледањем инструктивних видеа на falundafa.org. Могу и питати искусне вежбаче за помоћ при корекцији форме.
 
 Испод је водич ове апликације за почетнике.
 
@@ -1191,7 +1191,7 @@ Nižšie je sprievodca tejto aplikácie pre začiatočníkov.
  - ท่า 4: มือไม่สัมผัสร่างกาย
  - ท่า 5: ฝึกให้นานเท่าที่ทำได้''',
     NewAreaLang.turkce => '''
-Yaklaşık 1–2 ayda makul ölçüde alıştıktan sonra, her hareketin ilkelerini anlamak için Büyük Tamamlanma Yolu'nu okuyarak veya falundafa.org üzerindeki öğretim videolarını izleyerek hareketleri düzeltmelidir. Deneyimli uygulayıcılardan yardım da istenebilir.
+Yaklaşık 1–2 ayda makul ölçüde alıştıktan sonra, her hareketin ilkelerini anlamak için "Büyük Tamamlanma Yolu"'nu okuyarak veya falundafa.org üzerindeki öğretim videolarını izleyerek hareketleri düzeltmelidir. Deneyimli uygulayıcılardan yardım da istenebilir.
 
 Aşağıda bu uygulamanın yeni başlayanlar için rehberi vardır.
 
@@ -1237,7 +1237,7 @@ Aşağıda bu uygulamanın yeni başlayanlar için rehberi vardır.
  - Вправа 4: Руки не торкаються тіла.
  - Вправа 5: Виконувати стільки, скільки можете.''',
     _ => '''
-After becoming reasonably familiar over about 1–2 months, practitioners should refine the movements by reading The Great Consummation Way to understand the principles of each movement, or by watching the exercise instruction videos on falundafa.org. They may also ask experienced practitioners for help adjusting the form.
+After becoming reasonably familiar over about 1–2 months, practitioners should refine the movements by reading "The Great Consummation Way" to understand the principles of each movement, or by watching the exercise instruction videos on falundafa.org. They may also ask experienced practitioners for help adjusting the form.
 
 Below is guidance in this app for beginners.
 

@@ -1,4 +1,6 @@
 import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 import 'package:webview_flutter_android/webview_flutter_android.dart';
 import 'package:webview_flutter_wkwebview/webview_flutter_wkwebview.dart';
@@ -10,6 +12,10 @@ import 'package:webview_flutter_wkwebview/webview_flutter_wkwebview.dart';
 /// hoặc AVD 4KB. Chrome ẩn/hiện dùng overlay (không resize WebView).
 class AppWebViewConfig {
   AppWebViewConfig._();
+
+  static const MethodChannel _fullscreenChannel = MethodChannel(
+    'com.mvdragon.falundafapracticesupports/webview_fullscreen',
+  );
 
   /// User-Agent mobile Chrome (giảm chặn ảnh/CDN trên site như minghui.org).
   static const String chromeMobileUserAgent =
@@ -35,15 +41,20 @@ class AppWebViewConfig {
   /// [allowsBackForwardNavigationGestures]: iOS WKWebView lịch sử qua vuốt.
   /// Tắt trên trang đọc dài để không tranh gesture với scroll.
   /// [optimizeForEmbeddedVideo]: cookie bên thứ 3 + media inline (Ganjing iframe).
+  /// Trên iOS không ép UA Android — player video cần Safari UA để bật fullscreen.
   static Future<void> applyPlatformSettings(
     WebViewController controller, {
     bool enableAndroidDebugging = false,
     bool allowsBackForwardNavigationGestures = true,
     bool optimizeForEmbeddedVideo = false,
   }) async {
-    await controller.setUserAgent(chromeMobileUserAgent);
-
     final platform = controller.platform;
+    final isIosVideo = optimizeForEmbeddedVideo &&
+        defaultTargetPlatform == TargetPlatform.iOS;
+    if (!isIosVideo) {
+      await controller.setUserAgent(chromeMobileUserAgent);
+    }
+
     if (platform is AndroidWebViewController) {
       if (enableAndroidDebugging) {
         AndroidWebViewController.enableDebugging(true);
@@ -65,6 +76,58 @@ class AppWebViewConfig {
       await platform.setAllowsBackForwardNavigationGestures(
         allowsBackForwardNavigationGestures,
       );
+    }
+  }
+
+  /// Bật fullscreen cho video HTML/iframe trong WebView.
+  ///
+  /// Android: nhận `onShowCustomView` và đẩy widget fullscreen.
+  /// iOS: bật `WKPreferences.isElementFullscreenEnabled` (mặc định tắt).
+  static Future<void> enableEmbeddedVideoFullscreen(
+    WebViewController controller,
+    BuildContext context,
+  ) async {
+    final platform = controller.platform;
+    if (platform is AndroidWebViewController) {
+      var fullscreenOpen = false;
+      await platform.setCustomWidgetCallbacks(
+        onShowCustomWidget: (Widget widget, void Function() onHidden) {
+          if (fullscreenOpen) return;
+          fullscreenOpen = true;
+          Navigator.of(context, rootNavigator: true)
+              .push(
+            MaterialPageRoute<void>(
+              fullscreenDialog: true,
+              builder: (BuildContext routeContext) {
+                return Scaffold(
+                  backgroundColor: Colors.black,
+                  body: widget,
+                );
+              },
+            ),
+          )
+              .whenComplete(() {
+            fullscreenOpen = false;
+            onHidden();
+          });
+        },
+        onHideCustomWidget: () {
+          if (!fullscreenOpen) return;
+          final navigator = Navigator.of(context, rootNavigator: true);
+          if (navigator.canPop()) {
+            navigator.pop();
+          }
+        },
+      );
+      return;
+    }
+
+    if (platform is WebKitWebViewController) {
+      try {
+        await _fullscreenChannel.invokeMethod<int>('enableElementFullscreen');
+      } catch (e, st) {
+        debugPrint('AppWebViewConfig enableElementFullscreen: $e\n$st');
+      }
     }
   }
 

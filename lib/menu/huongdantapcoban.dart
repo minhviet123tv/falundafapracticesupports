@@ -163,7 +163,7 @@ class _HuongDanTapCoBanPageState extends State<HuongDanTapCoBanPage> {
               context: context,
               linkUrl:
                   'https://www.ganjingworld.com/vi-VN/embed/1feprapkl1i77D9YXA1UBoCtd10s1c',
-              title: 'Bài 1: Phật Triển Thiên Thủ Pháp',
+              title: _ui.exerciseDemoTitle(1),
               textHuongDan: _ui.tipMirror,
             );
           },
@@ -179,7 +179,7 @@ class _HuongDanTapCoBanPageState extends State<HuongDanTapCoBanPage> {
               context: context,
               linkUrl:
                   'https://www.ganjingworld.com/embed/1fdmq7mob016ej27ndenbGNr21511c',
-              title: 'Bài 2: Pháp Luân Trang Pháp',
+              title: _ui.exerciseDemoTitle(2),
               textHuongDan: _ui.tipSame,
             );
           },
@@ -195,7 +195,7 @@ class _HuongDanTapCoBanPageState extends State<HuongDanTapCoBanPage> {
               context: context,
               linkUrl:
                   'https://www.ganjingworld.com/embed/1fdmqjv549d5B8SAxJfBd7M5F11u1c',
-              title: 'Bài 3: Quán Thông Lưỡng Cực Pháp',
+              title: _ui.exerciseDemoTitle(3),
               textHuongDan: _ui.tipMirror,
             );
           },
@@ -211,7 +211,7 @@ class _HuongDanTapCoBanPageState extends State<HuongDanTapCoBanPage> {
               context: context,
               linkUrl:
                   'https://www.ganjingworld.com/embed/1fdmtv3fpd19ENgfFOQCoXuu41fe1c',
-              title: 'Bài 4: Pháp Luân Chu Thiên Pháp',
+              title: _ui.exerciseDemoTitle(4),
               textHuongDan: _ui.tipExercise4,
             );
           },
@@ -227,7 +227,7 @@ class _HuongDanTapCoBanPageState extends State<HuongDanTapCoBanPage> {
               context: context,
               linkUrl:
                   'https://www.ganjingworld.com/embed/1fdnvgqme2u2yk7Jy0s0VWcsL1ev1c',
-              title: 'Bài 5: Thần Thông Gia Trì Pháp',
+              title: _ui.exerciseDemoTitle(5),
               textHuongDan: _ui.tipMirror,
             );
           },

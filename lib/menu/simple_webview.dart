@@ -176,7 +176,7 @@ class _WebViewBrowserState extends State<WebViewBrowser> {
               onPressed: (){
                 _launchInBrowser(Uri.parse(widget.linkUrl));
               },
-              icon: const Icon(Icons.zoom_out_map, size: 20, color: Colors.black87),
+              icon: const Icon(Icons.open_in_new, size: 20, color: Colors.black87),
             ),
           ],
         ),
@@ -223,7 +223,7 @@ class _WebViewBrowserState extends State<WebViewBrowser> {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Text(ui.chooseToExpandBefore, style: textSize16,),
-                Icon(Icons.zoom_out_map,),
+                Icon(Icons.open_in_new,),
                 Text(ui.chooseToExpandAfter, style: textSize16,),
                 SizedBox(width: 10,),
               ],
